@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "adversarial-segmentation-toolkit"
+version = "0.1.0"
+description = "A toolkit for segmentation models and adversarial attacks"
+authors = ["Egor Vorobyev <voro6yov.egor@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^2.0.1"
+matplotlib = "^3.9.2"
+torch = "^2.4.0"
+torchvision = "^0.19.0"
+torchattacks = "^3.5.1"
+
+[tool.poetry.group.lint.dependencies]
+ruff = "^0.5.7"
+mypy = "^1.11.1"
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+preview = true
+src = ["adversarial_segmentation_toolkit"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 72
+quote-style = "double"
+
+[tool.ruff.lint]
+extend-select = ["Q", "RUF100", "C90", "UP", "I", "E501", "E302", "E305", "E231", "E711"]
+extend-ignore = ["F841"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
