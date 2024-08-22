@@ -13,17 +13,17 @@ def visualize_segmentation(output: Tensor):
     plt.show()
 
 
-def denormalize(image: Tensor) -> Tensor:
+def denormalize(image: np.ndarray) -> np.ndarray:
     """Denormalizes input image.
 
     During the pre-processing stage, normalization is applied to the input image.
     This function denormalizes it.
 
     Args:
-        image (torch.Tensor): The image tensor with shape `[1, C, H, W]`.
+        image (np.ndarray): The image tensor with shape `[1, C, H, W]`.
 
     Returns:
-        torch.Tensor: Denormalized image.
+        np.ndarray: Denormalized image.
     """
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
