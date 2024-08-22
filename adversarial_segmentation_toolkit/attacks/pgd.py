@@ -5,6 +5,17 @@ from .attack import AdversarialAttack
 
 
 class PGD(AdversarialAttack):
+    """Projected Gradient Descent (PGD) method from "Towards Deep Learning Models Resistant to Adversarial Attacks".
+    Paper: https://arxiv.org/abs/1706.06083
+
+    Attributes:
+        model (SegmentationModel): The model that the adversarial attack will be applied to.
+        eps (float): The magnitude of the perturbation.
+        alpha (float): The step size for each iteration.
+        iters (int): The number of iterations.
+        targeted (bool): Indicates whether the attack is targeted or not.
+    """
+
     def __init__(
         self,
         model: SegmentationModel,
@@ -13,13 +24,26 @@ class PGD(AdversarialAttack):
         iters: int = 10,
         targeted: bool = False,
     ):
-        super(PGD, self).__init__(model)
+        """Initializes PGD attack.
+
+        Args:
+            model (SegmentationModel): The model that the adversarial attack will be applied to.
+            eps (float, optional): The magnitude of the perturbation. Defaults to 2/255.
+            alpha (float, optional): The step size for each iteration. Defaults to 2/255.
+            iters (int, optional): The number of iterations. Defaults to 10.
+            targeted (bool, optional): If True, performs a targeted attack; otherwise, performs
+                an untargeted attack. Defaults to False.
+        """
+        super().__init__(model)
         self.eps = eps
         self.alpha = alpha
         self.iters = iters
         self.targeted = targeted
 
     def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        """
+        Overriden.
+        """
         device = next(self.model.parameters()).device
 
         image.to(device)
