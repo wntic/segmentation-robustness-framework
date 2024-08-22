@@ -7,16 +7,27 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-numpy = "^2.0.1"
+numpy = "^1.23.0"
 matplotlib = "^3.9.2"
 torch = "^2.4.0"
 torchvision = "^0.19.0"
 torchattacks = "^3.5.1"
+segmentation-models-pytorch = "^0.3.3"
+opencv-python = "^4.10.0.84"
+ultralytics = "^8.2.77"
+visdom = "^0.2.4"
+scikit-learn = "^1.5.1"
+albumentations = "^1.4.14"
+pandas = "^2.2.2"
 
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.5.7"
 mypy = "^1.11.1"
 isort = "^5.13.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core"]
@@ -34,7 +45,7 @@ docstring-code-line-length = 72
 quote-style = "double"
 
 [tool.ruff.lint]
-extend-select = ["Q", "RUF100", "C90", "UP", "I", "E501", "E302", "E305", "E231", "E711"]
+extend-select = ["Q", "RUF100", "C90", "UP", "I"]
 extend-ignore = ["F841"]
 
 [tool.ruff.lint.pydocstyle]
