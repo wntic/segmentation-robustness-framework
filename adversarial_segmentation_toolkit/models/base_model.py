@@ -4,39 +4,40 @@ import torch
 class SegmentationModel(torch.nn.Module):
     """Base class for all segmentation models.
 
-    Classes implementing different segmentation model architectures must inherit this base class.
+    This class serves as a template for creating segmentation models with a specified encoder
+    and a number of output classes.
 
     Attributes:
-        encoder_name (str): The name of the encoder to be used in the model.
-        encoder_weights (str): The pretrained weights for the encoder model.
+        encoder_name (str): The name of the encoder to be used in the segmentation model.
+        encoder_weights (str): The pretrained weights for the encoder.
         num_classes (int): Number of classes in the dataset used.
+        model (SegmentationModel): The segmentation model, to be defined by subclasses.
     """
-
     def __init__(self, encoder_name: str, encoder_weights: str, num_classes: int):
         """Initializes the SegmentationModel with the given encoder name, encoder weights, and number of classes.
 
         Args:
-            encoder_name (str): The name of the encoder to be used in the model.
-            encoder_weights (str): The pretrained weights for the encoder.
-            num_classes (int, optional): Number of classes in the dataset used.
+            encoder_name (str): The name of the backbone encoder to be used in the segmentation model.
+            encoder_weights (str): Backbone encoder pretrained weights.
+            num_classes (int): Number of classes in the dataset used.
         """
-        super(SegmentationModel, self).__init__()
+        super().__init__()
         self.encoder_name = encoder_name
         self.encoder_weights = encoder_weights
         self.num_classes = num_classes
         self.model = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the segmentation model.
+        """Defines the forward pass of the model. Must be implemented by subclasses.
 
         Args:
-            x (torch.Tensor): An input tensor.
+            x (torch.Tensor): 4D input image tensor with shape `[1, C, H, W]`.
 
         Returns:
             torch.Tensor: The output tensor after passing through the segmentation model.
 
         Raises:
-            NotImplementedError: If the segmentation model has not been defined in a subclass.
+            NotImplementedError: If called directly from this base class.
         """
         if self.model is None:
             raise NotImplementedError("This method should be implemented by subclasses.")

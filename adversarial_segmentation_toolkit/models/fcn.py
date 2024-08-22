@@ -9,7 +9,8 @@ FCN_ENCODERS = {
 
 
 class FCN(SegmentationModel):
-    """Fully Convolutional Network (FCN) for semantic segmentation using ResNet as the backbone.
+    """Fully Convolutional Network (FCN) from "Fully Convolutional Networks for Semantic Segmentation".
+    Paper: https://arxiv.org/abs/1605.06211v1
 
     This class implements the FCN architecture using either a ResNet50 or ResNet101
     encoder. It initializes the model based on the specified encoder.
@@ -18,7 +19,10 @@ class FCN(SegmentationModel):
     "Fully Convolutional Networks for Semantic Segmentation" [https://arxiv.org/abs/1605.06211v1].
 
     Attributes:
-        encoder_name (str): The name of the encoder used in the FCN model. Defaults to "resnet50".
+        encoder_name (str): The name of the encoder used in the FCN model. Supported encoders
+            are "resnet50" and "resnet101". Defaults to "resnet50".
+        encoder_weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
+            Defaults to "coco_with_voc_labels".
         num_classes (int): The number of output classes for the segmentation task. Defaults to 21.
     """
 
@@ -37,7 +41,7 @@ class FCN(SegmentationModel):
         Raises:
             ValueError: If the specified encoder is not supported.
         """
-        super(FCN, self).__init__(encoder_name, encoder_weights, num_classes)
+        super().__init__(encoder_name, encoder_weights, num_classes)
         if encoder_name == "resnet50":
             self.model = models.fcn_resnet50(weights=FCN_ENCODERS["resnet50"], num_classes=self.num_classes)
         elif encoder_name == "resnet101":
