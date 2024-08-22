@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from torch import Tensor, argmax
 import numpy as np
+from torch import Tensor, argmax
 
 
 def visualize_segmentation(output: Tensor):
@@ -13,24 +13,43 @@ def visualize_segmentation(output: Tensor):
     plt.show()
 
 
-def denormalize(image, mean, std):
-    mean = np.array(mean)
-    std = np.array(std)
-    image = std * image + mean
-    return image
+def denormalize(image: Tensor) -> Tensor:
+    """Denormalizes input image.
+
+    During the pre-processing stage, normalization is applied to the input image.
+    This function denormalizes it.
+
+    Args:
+        image (torch.Tensor): The image tensor with shape `[1, C, H, W]`.
+
+    Returns:
+        torch.Tensor: Denormalized image.
+    """
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+
+    return std * image + mean
 
 
 def show_image(original_image: Tensor, segmentation_mask: Tensor):
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
+    """Displays original image and its corresponding segmentation mask.
 
-    image = original_image.squeeze().permute(1, 2, 0).cpu().numpy()
-    image = denormalize(image, mean, std)
+    Args:
+        original_image (torch.Tensor): The original image tensor with shape `[1, C, H, W]`.
+        segmentation_mask (torch.Tensor): The segmentation mask tensor with shape `[H, W]`.
+
+    Returns:
+        None
+    """
+    if original_image.ndimension() != 4:
+        raise ValueError(f"Expected original image with shape [1, C, H, W], but got {list(original_image.shape)}")
+    if segmentation_mask.ndimension() != 2:
+        raise ValueError(f"Expected segmentation mask with shape [H, W], but got {list(segmentation_mask.shape)}")
+
+    image = original_image.squeeze().permute(1, 2, 0).cpu().detach().numpy()
+    image = denormalize(image)
     image = np.clip(image, 0, 1)
     mask = segmentation_mask.cpu().detach().numpy()
-
-    print(image.shape)
-    print(mask.shape)
 
     fig = plt.figure(figsize=(10, 5))
     fig.add_subplot(1, 2, 1)
