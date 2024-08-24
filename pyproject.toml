@@ -20,6 +20,7 @@ visdom = "^0.2.4"
 scikit-learn = "^1.5.1"
 albumentations = "^1.4.14"
 pandas = "^2.2.2"
+pyyaml = "^6.0.2"
 
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.5.7"
