@@ -47,7 +47,7 @@ class FCN(SegmentationModel):
         elif encoder_name == "resnet101":
             self.model = models.fcn_resnet101(weights=FCN_ENCODERS["resnet101"], num_classes=self.num_classes)
         else:
-            raise ValueError(f"Encoder `{encoder_name}` is not supported for the FCN.")
+            raise ValueError(f'Encoder "{encoder_name}" is not supported for the FCN.')
 
     def forward(self, x):
         """Forward pass of the FCN model.
