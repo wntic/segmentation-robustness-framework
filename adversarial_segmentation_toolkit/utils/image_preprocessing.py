@@ -13,7 +13,7 @@ def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = N
 
     Args:
         image_path (str): Path to the image file.
-        image_shape (Optional[Tuple[int, int]], optional): The desired image shape as a tuple (height, width).
+        image_shape (Tuple[int, int], optional): The desired image shape as a tuple (height, width).
             If None, the image is resized to the closest dimensions that are divisible by stride 8. Defaults to None.
 
     Returns:
@@ -27,12 +27,17 @@ def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = N
 
     image = Image.open(image_path).convert("RGB")
 
+    # Check and validate image shape
     if image_shape is None:
         w, h = image.size
         h = (h // 8 + 1) * 8 if h % 8 != 0 else h  # height must be divisible by stride 8
         w = (w // 8 + 1) * 8 if w % 8 != 0 else w  # width must be divisible by stride 8
+    elif not isinstance(image_shape, Tuple):
+        raise TypeError(f"Expected a tuple (height, width), but got {image_shape}")
     elif len(image_shape) == 2:
         h, w = image_shape[0], image_shape[1]
+        if not isinstance(h, int) and not isinstance(w, int):
+            raise TypeError(f"Expected type (int, int), but got {(type(h).__name__, type(w).__name__)}")
     else:
         raise ValueError(f"Expected a tuple (height, width), but got {image_shape}")
 
