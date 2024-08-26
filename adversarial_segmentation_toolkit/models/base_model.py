@@ -1,7 +1,7 @@
-import torch
+from torch import Tensor, nn
 
 
-class SegmentationModel(torch.nn.Module):
+class SegmentationModel(nn.Module):
     """Base class for all segmentation models.
 
     This class serves as a template for creating segmentation models with a specified encoder
@@ -13,6 +13,7 @@ class SegmentationModel(torch.nn.Module):
         num_classes (int): Number of classes in the dataset used.
         model (SegmentationModel): The segmentation model, to be defined by subclasses.
     """
+
     def __init__(self, encoder_name: str, encoder_weights: str, num_classes: int):
         """Initializes the SegmentationModel with the given encoder name, encoder weights, and number of classes.
 
@@ -27,7 +28,7 @@ class SegmentationModel(torch.nn.Module):
         self.num_classes = num_classes
         self.model = None
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor):
         """Defines the forward pass of the model. Must be implemented by subclasses.
 
         Args:
@@ -39,6 +40,4 @@ class SegmentationModel(torch.nn.Module):
         Raises:
             NotImplementedError: If called directly from this base class.
         """
-        if self.model is None:
-            raise NotImplementedError("This method should be implemented by subclasses.")
-        return self.model(x)
+        raise NotImplementedError("This method should be implemented by subclasses.")
