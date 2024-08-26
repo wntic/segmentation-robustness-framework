@@ -4,8 +4,8 @@ import tempfile
 import numpy as np
 import pytest
 import torch
-from adversarial_segmentation_toolkit.utils.image_preprocessing import preprocess_image
-from adversarial_segmentation_toolkit.utils.image_utils import denormalize
+from segmentation_robustness_framework.utils.image_preprocessing import preprocess_image
+from segmentation_robustness_framework.utils.image_utils import denormalize
 from PIL import Image
 
 # from adversarial_segmentation_toolkit.utils.visualization import visualize_segmentation

@@ -1,7 +1,7 @@
 import pytest
 import torch
-from adversarial_segmentation_toolkit.attacks import FGSM, PGD, AdversarialAttack
-from adversarial_segmentation_toolkit.models import SegmentationModel
+from segmentation_robustness_framework.attacks import FGSM, PGD, AdversarialAttack
+from segmentation_robustness_framework.models import SegmentationModel
 
 
 class TestBaseAttack:

@@ -1,8 +1,9 @@
 import pytest
 import torch
-from adversarial_segmentation_toolkit.models import SegmentationModel, FCN, DeepLabV3
-from adversarial_segmentation_toolkit.models.fcn import FCN_ENCODERS
-from adversarial_segmentation_toolkit.models.deeplab import DEEPLABV3_ENCODERS
+from segmentation_robustness_framework.models import FCN, DeepLabV3, SegmentationModel
+from segmentation_robustness_framework.models.deeplab import DEEPLABV3_ENCODERS
+from segmentation_robustness_framework.models.fcn import FCN_ENCODERS
+
 
 class TestBaseModel:
     def test_base_model(self):
