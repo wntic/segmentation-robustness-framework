@@ -36,6 +36,8 @@ class FGSM(AdversarialAttack):
         """
         Overriden.
         """
+        self.model.eval()
+
         device = next(self.model.parameters()).device
 
         image.to(device)
