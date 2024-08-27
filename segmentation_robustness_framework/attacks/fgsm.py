@@ -32,6 +32,9 @@ class FGSM(AdversarialAttack):
         self.eps = eps
         self.targeted = targeted
 
+    def __repr__(self) -> str:
+        return f"FGSM attack: eps={self.eps}, targeted={self.targeted}"
+
     def __call__(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Allows the object to be called like a function to perform the attack."""
         return self.attack(image, labels)
