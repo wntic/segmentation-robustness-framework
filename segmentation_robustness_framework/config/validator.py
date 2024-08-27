@@ -1,5 +1,5 @@
 import os
-from typing import List, Literal, Optional
+from typing import Literal, Optional, List, Union
 
 from pydantic import BaseModel, Field, ValidationInfo, conlist, field_validator, model_validator
 from typing_extensions import Annotated
@@ -17,37 +17,34 @@ class ModelConfig(BaseModel):
     def validate_encoder(cls, v: str, info: ValidationInfo) -> str:
         name = info.data.get("name")
         if name == "FCN" and v not in {"resnet50", "resnet101"}:
-            raise ValueError(f"Encoder {v} is not supported for FCN. Choose either 'resnet50' or 'resnet101'")
+            raise ValueError(f'Encoder {v} is not supported for FCN. Choose either "resnet50" or "resnet101"')
         elif name == "DeepLabV3" and v not in {"resnet50", "resnet101", "mobilenet_v3_large"}:
             raise ValueError(
-                f"Encoder {v} is not supported for DeepLabV3. Choose 'resnet50', 'resnet101', or 'mobilenet_v3_large'"
+                f'Encoder {v} is not supported for DeepLabV3. Choose "resnet50", "resnet101", or "mobilenet_v3_large"'
             )
         return v
 
 
 class AttackConfig(BaseModel):
     name: Literal["FGSM", "PGD"]
-    epsilon: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1)  # type: ignore
+    epsilon: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1) = None  # type: ignore
     alpha: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1) = None  # type: ignore
     steps: Optional[Annotated[int, Field(strict=True, gt=0)]] = None
     targeted: bool
 
     @model_validator(mode="after")
     def validate_attack_parameters(self):
+        # FGSM attack params validation
         if self.name == "FGSM":
-            if self.alpha is not None:
-                raise ValueError(
-                    "FGSM attack does not support 'alpha' parameter. Valid parameters are 'epsilon' and 'targeted'"
-                )
-            if self.steps is not None:
-                raise ValueError(
-                    "FGSM attack does not support 'steps' parameter. Valid parameters are 'epsilon' and 'targeted'"
-                )
+            if self.alpha is not None or self.steps is not None:
+                raise ValueError("FGSM attack got unexpected parameter. Valid parameters are 'epsilon' and 'targeted'")
+            if self.epsilon is None:
+                raise ValueError("For FGSM, parameter 'epsilon'  should not be None")
+
+        # PGD attack params validation
         if self.name == "PGD":
-            if self.alpha is None:
-                raise ValueError("PGD ​​attack requires 'alpha' parameter")
-            if self.steps is None:
-                raise ValueError("PGD ​​attack requires 'steps' parameter")
+            if self.epsilon is None or self.alpha is None or self.steps is None:
+                raise ValueError("For PGD, parameters 'epsilon', 'alpha' and 'steps' should not be None")
         return self
 
 
@@ -56,6 +53,48 @@ class DatasetConfig(BaseModel):
     root: str
     split: Optional[Literal["train", "val", "test", "train_extra", "trainval"]] = None
     mode: Optional[Literal["fine", "coarse"]] = None
+    target_type: Optional[
+        Union[
+            conlist(Literal["semantic", "instance", "color", "polygon"], min_length=1, max_length=4),  # type: ignore
+            Literal["semantic", "instance", "color", "polygon"],
+        ]
+    ] = None  # type: ignore
+    image_shape: Optional[conlist(Annotated[int, Field(strict=True, gt=0)], min_length=2, max_length=2)]  # type: ignore
+
+    @model_validator(mode="after")
+    def validate_dataset_parameters(self):
+        # Pascal VOC dataset params validation
+        if self.name == "PascalVOC":
+            if self.mode is not None or self.target_type is not None:
+                raise ValueError("Invalid configuration: 'mode' and 'target_type' should be None for Pascal VOC")
+            if self.split is None:
+                raise ValueError("For Pascal VOC, 'split' must be 'train', 'val' or 'trainval'")
+
+        # StanfordBackground dataset params validation
+        if self.name == "StanfordBackground":
+            if self.split is not None or self.mode is not None or self.target_type is not None:
+                raise ValueError(
+                    "Invalid configuration: 'split', 'mode', and 'target_type' should be None for StanfordBackground"
+                )
+
+        # ADE20K dataset params validation
+        if self.name == "ADE20K":
+            if self.mode is not None or self.target_type is not None:
+                raise ValueError("Invalid configuration: 'mode' and 'target_type' should be None for ADE20K")
+            if self.split is None:
+                raise ValueError("For ADE20K, 'split' must be either 'train' or 'val'")
+
+        # Cityscapes dataset params validation
+        if self.name == "Cityscapes":
+            if self.split is None:
+                raise ValueError("For Cityscapes, 'split' must be 'train', 'train_extra', 'val' or 'test'")
+            if self.mode is None:
+                raise ValueError("For Cityscapes, 'mode' must be either 'fine' or 'coarse'")
+            if self.target_type is None:
+                raise ValueError("For Cityscapes, 'target_type' must be one of ['semantic', 'instance', 'color', 'polygon'] or multiple as a list")
+            if self.split == "train_extra" and self.mode == "fine":
+                raise ValueError("'train_extra' split is not available for 'fine' mode. Use 'coarse' mode instead")
+        return self
 
     @field_validator("root")
     @classmethod
@@ -69,7 +108,7 @@ class DatasetConfig(BaseModel):
     def validate_split(cls, v: str, info: ValidationInfo) -> str:
         name = info.data.get("name")
         if name == "StanfordBackground" and v is not None:
-            raise ValueError("The 'split' field should be None for StanfordBackground")
+            raise ValueError("The 'split' field should be None for StanfordBackground.")
         if name == "Cityscapes" and v not in {"train", "val", "test", "train_extra"}:
             raise ValueError("For Cityscapes, 'split' must be one of 'train', 'val', 'test', or 'train_extra'")
         if name == "ADE20K" and v not in {"train", "val"}:
@@ -78,14 +117,14 @@ class DatasetConfig(BaseModel):
             raise ValueError("For Pascal VOC, 'split' must be one of 'train', 'val', or 'trainval'")
         return v
 
-    @field_validator("mode")
+    @field_validator("target_type")
     @classmethod
-    def validate_mode(cls, v: str, info: ValidationInfo) -> str:
+    def validate_target_type(cls, v: str, info: ValidationInfo) -> str:
         name = info.data.get("name")
         if name != "Cityscapes" and v is not None:
-            raise ValueError(f"The 'mode' field should only be used with Cityscapes and should be None for {name}")
-        if name == "Cityscapes" and v not in {"fine", "coarse"}:
-            raise ValueError("For Cityscapes, 'mode' must be either 'fine' or 'coarse'")
+            raise ValueError(
+                f"The 'target_type' field should only be used with Cityscapes and should be None for {name}."
+            )
         return v
 
 
