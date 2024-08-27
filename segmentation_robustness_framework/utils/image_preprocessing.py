@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Callable
 
 from PIL import Image
 from torch import Tensor
@@ -50,3 +50,32 @@ def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = N
     image = preprocess(image)
     image = image.unsqueeze(0)
     return image
+
+
+def get_preprocessing_fn(image_shape: List[int]) -> Callable:
+    # Check and validate image shape
+    if not isinstance(image_shape, List):
+        raise TypeError(f"Expected a list [height, width], but got {image_shape}")
+
+    if len(image_shape) == 2:
+        h, w = image_shape[0], image_shape[1]
+        if not isinstance(h, int) and not isinstance(w, int):
+            raise TypeError(f"Expected type [int, int], but got {[type(h).__name__, type(w).__name__]}")
+    else:
+        raise ValueError(f"Expected image_shape of length 2, but got {len(image_shape)}")
+
+    h = (h // 8 + 1) * 8 if h % 8 != 0 else h  # height must be divisible by stride 8
+    w = (w // 8 + 1) * 8 if w % 8 != 0 else w  # width must be divisible by stride 8
+
+    preprocess = transforms.Compose([
+        transforms.Resize((h, w)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
+    target_preprocess = transforms.Compose([
+        transforms.Resize((h, w)),
+        transforms.ToTensor(),
+    ])
+
+    return preprocess, target_preprocess
