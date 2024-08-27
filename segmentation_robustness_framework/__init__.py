@@ -8,6 +8,7 @@ from .datasets.stanford_background import StanfordBackground
 from .datasets.voc import VOCSegmentation
 from .datasets.ade20k import ADE20K
 from .datasets.cityscapes import Cityscapes
+from .config.validator import Config
 
 __all__ = [
     "FCN",
@@ -21,4 +22,5 @@ __all__ = [
     "preprocess_image",
     "visualize_segmentation",
     "show_image",
+    "Config",
 ]
