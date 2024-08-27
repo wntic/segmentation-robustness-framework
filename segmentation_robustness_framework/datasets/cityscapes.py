@@ -72,6 +72,9 @@ class Cityscapes(Dataset):
         if split == "test" and mode == "coarse":
             raise ValueError("The 'test' split is not available for 'coarse' mode. Use 'fine' mode instead.")
 
+        if split == "train_extra" and mode == "fine":
+            raise ValueError("The 'train_extra' split is not available for 'fine' mode. Use 'coarse' mode instead.")
+
         self.root = root
         self.split = split
         self.mode = "gtFine" if mode == "fine" else "gtCoarse"
@@ -79,7 +82,14 @@ class Cityscapes(Dataset):
         self.transform = transform
         self.target_transform = target_transform
 
-        self.images_dir = os.path.join(root, "leftImg8bit", split)
+        if split == "train_extra":
+            self.images_dir = os.path.join(root, "leftImg8bit_trainextra", split)
+            if not os.path.exists(self.images_dir):
+                raise ValueError(
+                    f"Directory '{self.images_dir}' does not exist. Download 'leftImg8bit_trainextra.zip' and extract to the {root} directory or use another split ('train or 'val)"
+                )
+        else:
+            self.images_dir = os.path.join(root, "leftImg8bit", split)
         self.targets_dir = os.path.join(root, self.mode, split)
 
         self.images = []
