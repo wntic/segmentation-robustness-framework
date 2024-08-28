@@ -23,11 +23,10 @@ class TestBaseAttack:
 class TestFGSM:
     def test_initialization(self):
         model = SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
-        atk = FGSM(model=model, eps=0.05, targeted=False)
+        atk = FGSM(model=model, eps=0.05)
 
         assert atk.model == model
         assert atk.eps == 0.05
-        assert not atk.targeted
 
 
 class TestPGD:
