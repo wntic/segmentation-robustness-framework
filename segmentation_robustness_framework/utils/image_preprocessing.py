@@ -58,7 +58,7 @@ def get_preprocessing_fn(image_shape: List[int]) -> Callable:
         raise TypeError(f"Expected a list [height, width], but got {image_shape}")
 
     if len(image_shape) == 2:
-        h, w = image_shape[0], image_shape[1]
+        w, h = image_shape[0], image_shape[1]
         if not isinstance(h, int) and not isinstance(w, int):
             raise TypeError(f"Expected type [int, int], but got {[type(h).__name__, type(w).__name__]}")
     else:
