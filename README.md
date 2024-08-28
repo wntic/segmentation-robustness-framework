@@ -130,7 +130,7 @@ This section specifies the dataset to be used for the segmentation task, includi
 
 There are four datasets available for selection, each with specific configurations.
 
-When configuring a dataset, you can specify the size of the images to which they will be resized: `image_shape: [512, 256]`.
+When configuring a dataset, you can specify the size of the images to which they will be resized: `image_shape: [512, 256]`.
 
 You can also specify the maximum number of images that will be processed: `max_images: 100`.
 
