@@ -30,14 +30,14 @@ class AttackConfig(BaseModel):
     epsilon: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1) = None  # type: ignore
     alpha: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1) = None  # type: ignore
     steps: Optional[Annotated[int, Field(strict=True, gt=0)]] = None
-    targeted: bool
+    targeted: bool = None
 
     @model_validator(mode="after")
     def validate_attack_parameters(self):
         # FGSM attack params validation
         if self.name == "FGSM":
-            if self.alpha is not None or self.steps is not None:
-                raise ValueError("FGSM attack got unexpected parameter. Valid parameters are 'epsilon' and 'targeted'")
+            if self.alpha is not None or self.steps is not None or self.targeted is not None:
+                raise ValueError("FGSM attack got unexpected parameter. Valid parameter is 'epsilon' only")
             if self.epsilon is None:
                 raise ValueError("For FGSM, parameter 'epsilon'  should not be None")
 

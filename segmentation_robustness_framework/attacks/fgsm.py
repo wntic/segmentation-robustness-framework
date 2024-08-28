@@ -18,7 +18,6 @@ class FGSM(AdversarialAttack):
         self,
         model: SegmentationModel,
         eps: float = 2 / 255,
-        targeted: bool = False,
     ):
         """Initializes FGSM attack.
 
@@ -30,7 +29,6 @@ class FGSM(AdversarialAttack):
         """
         super().__init__(model)
         self.eps = eps
-        self.targeted = targeted
 
     def __repr__(self) -> str:
         return f"FGSM attack: eps={self.eps}, targeted={self.targeted}"
@@ -59,10 +57,6 @@ class FGSM(AdversarialAttack):
         cost = loss(outputs, labels)
         cost.backward()
 
-        if self.targeted:
-            adv_image = image - self.eps * image.grad.sign()
-        else:
-            adv_image = image + self.eps * image.grad.sign()
-
+        adv_image = image + self.eps * image.grad.sign()
         adv_image = torch.clamp(adv_image, 0, 1)
         return adv_image
