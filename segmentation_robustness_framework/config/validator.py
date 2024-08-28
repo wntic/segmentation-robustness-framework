@@ -75,6 +75,7 @@ class DatasetConfig(BaseModel):
         ]
     ] = None  # type: ignore
     image_shape: Optional[conlist(Annotated[int, Field(strict=True, gt=0)], min_length=2, max_length=2)]  # type: ignore
+    max_images: int = None
 
     @model_validator(mode="after")
     def validate_dataset_parameters(self):
