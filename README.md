@@ -61,7 +61,9 @@ srf.run()
 ```
 
 ## Configuring SRF
+
 This section provides details on how to configure the tool for performing adversarial attacks on image segmentation models. The configuration is done using a YAML file. Basic configuration files are located in the `configs/` directory. Below is an example of a configuration file and a detailed description of its parameters:
+
 ```yaml
 model:
   name: "FCN"
@@ -81,7 +83,7 @@ attacks:
     target_label: 12
 
 dataset:
-  name: "PascalVOC"
+  name: "VOC"
   root: "path/to/datasets/VOCdevkit/VOC2012/"
   split: "val"
   image_shape: [512, 256]
@@ -130,11 +132,14 @@ This section specifies the dataset to be used for the segmentation task, includi
 
 There are four datasets available for selection, each with specific configurations.
 
+Available datasets: "ADE20K", "StanfordBackground", "VOC", "Cityscapes".
+
 When configuring a dataset, you can specify the size of the images to which they will be resized: `image_shape: [512, 256]`.
 
 You can also specify the maximum number of images that will be processed: `max_images: 100`.
 
 #### Pascal VOC
+
 Pascal VOC contains 20 object categories including vehicles, household, animals, and other: aeroplane, bicycle, boat, bus, car, motorbike, train, bottle, chair, dining table, potted plant, sofa, TV/monitor, bird, cat, cow, dog, horse, sheep, and person.
 
 Configuration parameters:
@@ -143,6 +148,7 @@ Configuration parameters:
 	- Available Splits: `train`, `val`, `trainval`
 
 #### Stanford Background Dataset
+
 The Stanford Background dataset contains 715 RGB images and the corresponding label images. Images are approximately 240×320 pixels in size and pixels are classified into eight different categories:  sky, tree, road, grass, water, building, mountain, foreground, unknown.
 
 Configuration parameters:
@@ -150,6 +156,7 @@ Configuration parameters:
 2. **split**: The dataset does not have split sets of images. Do it yourself, for example with `random_split`, or use the entire dataset.
 
 #### ADE20K
+
 The ADE20K semantic segmentation dataset contains more than 20K scene-centric images exhaustively annotated with pixel-level objects and object parts labels. There are totally 150 semantic categories, which include stuffs like sky, road, grass, and discrete objects like person, car, bed.
 
 Configuration parameters:
@@ -158,9 +165,11 @@ Configuration parameters:
 	- Available Splits: `train`, `val`
 
 #### Cityscapes
+
 Cityscapes is a large-scale database which focuses on semantic understanding of urban street scenes. It provides semantic, instance-wise, and dense pixel annotations for 30 classes grouped into 8 categories (flat surfaces, humans, vehicles, constructions, objects, nature, sky, and void). The dataset consists of around 5000 `fine` annotated images and 20000 `coarse` annotated ones.
 
 Configuration parameters:
+
 1. **root**: Path to Cityscapes dataset.
 2. **split**: The data split to use.
 	- Available Splits: `train`, `val`, `test`, `train_extra`
