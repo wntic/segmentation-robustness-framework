@@ -64,7 +64,7 @@ class AttackConfig(BaseModel):
 
 
 class DatasetConfig(BaseModel):
-    name: Literal["StanfordBackground", "Cityscapes", "ADE20K", "PascalVOC"]
+    name: Literal["StanfordBackground", "Cityscapes", "ADE20K", "VOC"]
     root: str
     split: Optional[Literal["train", "val", "test", "train_extra", "trainval"]] = None
     mode: Optional[Literal["fine", "coarse"]] = None
@@ -79,8 +79,8 @@ class DatasetConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_dataset_parameters(self):
-        # Pascal VOC dataset params validation
-        if self.name == "PascalVOC":
+        # VOC dataset params validation
+        if self.name == "VOC":
             if self.mode is not None or self.target_type is not None:
                 raise ValueError("Invalid configuration: 'mode' and 'target_type' should be None for Pascal VOC")
             if self.split is None:
@@ -129,7 +129,7 @@ class DatasetConfig(BaseModel):
             raise ValueError("For Cityscapes, 'split' must be one of 'train', 'val', 'test', or 'train_extra'")
         if name == "ADE20K" and v not in {"train", "val"}:
             raise ValueError("For ADE20K, 'split' must be one of 'train', or 'val'")
-        if name == "PascalVOC" and v not in {"train", "val", "trainval"}:
+        if name == "VOC" and v not in {"train", "val", "trainval"}:
             raise ValueError("For Pascal VOC, 'split' must be one of 'train', 'val', or 'trainval'")
         return v
 
