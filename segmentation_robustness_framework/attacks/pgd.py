@@ -41,7 +41,7 @@ class PGD(AdversarialAttack):
         self.targeted = targeted
 
     def __repr__(self) -> str:
-        return f"PGD attack: eps={self.eps}, alpha={self.alpha}, iters={self.iters} targeted={self.targeted}"
+        return f"PGD attack: eps={self.eps}, alpha={self.alpha}, iters={self.iters}, targeted={self.targeted}"
 
     def __call__(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Allows the object to be called like a function to perform the attack."""
