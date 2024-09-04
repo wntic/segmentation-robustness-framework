@@ -21,3 +21,7 @@ dataset:
   split: "val"
   image_shape: [512, 376]
   max_images: 2
+
+output:
+  save_dir: "./runs/"
+  save_images: true
