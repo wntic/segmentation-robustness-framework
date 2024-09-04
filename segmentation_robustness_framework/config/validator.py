@@ -153,7 +153,7 @@ class OutputConfig(BaseModel):
     @classmethod
     def validate_save_dir(cls, v: str) -> str:
         if not os.path.exists(v):
-            raise ValueError(f"The specified save directory does not exist: {v}")
+            os.makedirs(v)
         return v
 
 
