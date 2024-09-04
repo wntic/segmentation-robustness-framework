@@ -1,3 +1,4 @@
+import os
 from typing import List, Tuple
 
 import matplotlib.colors as mcolors
@@ -5,59 +6,75 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import Tensor
 
-from .colormaps import tab20_colors, voc_classes
+from . import _classes as classes
+from . import _colors as colors
 from .image_utils import denormalize
 
 
-def create_legend(mask: np.ndarray, classes: list, colors: list) -> Tuple[List[plt.Rectangle], List[str]]:
+def get_class_colors(ds_name: str) -> Tuple[List[str], List[Tuple[int]]]:
+    if ds_name == "VOC":
+        return classes.VOC_classes, colors.VOC_colors
+    raise ValueError(f"Invalide dataset {ds_name}")
+
+
+def create_legend(mask: np.ndarray, classes: List[str], colors: List[Tuple[int]]):
     unique_classes = np.unique(mask)
 
     filtered_classes = [classes[i] for i in unique_classes]
     filtered_colormap = [colors[i] for i in unique_classes]
-
     handles = [plt.Rectangle((0, 0), 1, 1, facecolor=color) for color in filtered_colormap]
+
     return handles, filtered_classes
 
 
-def visualize_segmentation(
-    original_image: Tensor,
+def visualize_results(
+    image: Tensor,
+    ground_truth: Tensor,
     mask: Tensor,
     adv_mask: Tensor,
-    classes=voc_classes,
-    colors=tab20_colors,
-    fname: str = "output",
+    dataset_name: str,
+    title: str,
+    save: bool = False,
+    save_dir: str = "runs/",
 ) -> None:
-    """Displays original image, its corresponding segmentation mask and adversarial segmentation mask.
-
-    Args:
-        original_image (torch.Tensor): The original image tensor with shape `[1, C, H, W]`.
-        mask (torch.Tensor): The segmentation mask tensor with shape `[1, H, W]`.
-        adv_mask (torch.Tensor): The perturbed segmentation mask tensor with shape `[1, H, W]`.
-
-    Returns:
-        None
-    """
-    if original_image.ndimension() != 4:
-        raise ValueError(f"Expected original image with shape [1, C, H, W], but got {list(original_image.shape)}")
+    if image.ndimension() != 4:
+        raise ValueError(f"Expected original image with shape [1, C, H, W], but got {list(image.shape)}")
+    if ground_truth.ndimension() != 3:
+        raise ValueError(f"Expected ground truth with shape [1, H, W], but got {list(ground_truth.shape)}")
     if mask.ndimension() != 3:
         raise ValueError(f"Expected segmentation mask with shape [1, H, W], but got {list(mask.shape)}")
+    if adv_mask.ndimension() != 3:
+        raise ValueError(f"Expected adversarial segmentation mask with shape [1, H, W], but got {list(adv_mask.shape)}")
 
-    image = original_image.squeeze().permute(1, 2, 0).cpu().detach().numpy()
+    if save:
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+    image = image.squeeze().permute(1, 2, 0).cpu().detach().numpy()
     image = denormalize(image)
     image = np.clip(image, 0, 1)
+
+    np_ground_truth = ground_truth.squeeze().cpu().detach().numpy()
     np_mask = mask.squeeze().cpu().detach().numpy()
     np_adv_mask = adv_mask.squeeze().cpu().detach().numpy()
 
-    fig = plt.figure(figsize=(15, 5))
-
-    fig.add_subplot(1, 3, 1)
-    plt.imshow(image)
-    plt.axis("off")
-
+    classes, colors = get_class_colors(dataset_name)
+    colors = np.array(colors) / 255.0
     cmap = mcolors.ListedColormap(colors)
     norm = mcolors.BoundaryNorm(np.arange(len(classes) + 1) - 0.5, len(classes))
 
-    fig.add_subplot(1, 3, 2)
+    fig = plt.figure(figsize=(16, 4))
+    fig.suptitle(title, y=0.95)
+
+    fig.add_subplot(1, 4, 1)
+    plt.imshow(image)
+    plt.axis("off")
+
+    fig.add_subplot(1, 4, 2)
+    plt.imshow(np_ground_truth, cmap=cmap, norm=norm)
+    plt.axis("off")
+
+    fig.add_subplot(1, 4, 3)
     plt.imshow(np_mask, cmap=cmap, norm=norm)
     handles, filtered_classes = create_legend(np_mask, classes, colors)
     plt.legend(
@@ -67,11 +84,11 @@ def visualize_segmentation(
         loc="upper center",
         borderaxespad=0.0,
         fancybox=True,
-        ncols=3,
+        ncols=2,
     )
     plt.axis("off")
 
-    fig.add_subplot(1, 3, 3)
+    fig.add_subplot(1, 4, 4)
     plt.imshow(np_adv_mask, cmap=cmap, norm=norm)
     handles, filtered_classes = create_legend(np_adv_mask, classes, colors)
     plt.legend(
@@ -81,12 +98,13 @@ def visualize_segmentation(
         loc="upper center",
         borderaxespad=0.0,
         fancybox=True,
-        ncols=3,
+        ncols=2,
     )
     plt.axis("off")
 
     plt.subplots_adjust(wspace=0.05)
-    plt.savefig(f"outputs/{fname}.jpg")
+    if save:
+        plt.savefig(f"{save_dir}/{len(os.listdir(save_dir))}.jpg")
     plt.show()
 
 
