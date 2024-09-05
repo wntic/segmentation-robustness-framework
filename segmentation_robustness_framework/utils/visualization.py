@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import Tensor
 
-from . import _classes as classes
+from ..datasets import _classes as classes
 from . import _colors as colors
 from .image_utils import denormalize
 
