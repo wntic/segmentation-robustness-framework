@@ -12,8 +12,25 @@ from .image_utils import denormalize
 
 
 def get_class_colors(ds_name: str) -> Tuple[List[str], List[Tuple[int]]]:
+    """Provides the class and associated colors for the specified dataset.
+
+    Args:
+        ds_name (str): Dataset name.
+
+    Raises:
+        ValueError: If the specified dataset does not exist.
+
+    Returns:
+        Tuple[List[str], List[Tuple[int]]]: Tuple of classes and colors.
+    """
     if ds_name == "VOC":
         return classes.VOC_classes, colors.VOC_colors
+    if ds_name == "ADE20K":
+        return classes.ADE20K_classes, colors.ADE20K_colors
+    if ds_name == "StanfordBackground":
+        return classes.StanfordBackground_classes, colors.StanfordBackground_colors
+    if ds_name == "Cityscapes":
+        return classes.Cityscapes_classes, colors.Cityscapes_colors
     raise ValueError(f"Invalide dataset {ds_name}")
 
 
@@ -64,7 +81,7 @@ def visualize_results(
     norm = mcolors.BoundaryNorm(np.arange(len(classes) + 1) - 0.5, len(classes))
 
     fig = plt.figure(figsize=(16, 4))
-    fig.suptitle(title, y=0.95)
+    fig.suptitle(title)
 
     fig.add_subplot(1, 4, 1)
     plt.imshow(image)
