@@ -94,6 +94,8 @@ class RobustnessEvaluation:
                 split=self.dataset_config.split,
                 mode=self.dataset_config.mode,
                 target_type=self.dataset_config.target_type,
+                transform=preprocess,
+                target_transform=target_preprocess,
             )
         else:
             raise ValueError(f"Invalid dataset {self.dataset_config.name}")
