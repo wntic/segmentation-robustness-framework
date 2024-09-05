@@ -121,7 +121,7 @@ def visualize_results(
 
     plt.subplots_adjust(wspace=0.05)
     if save:
-        plt.savefig(f"{save_dir}/{len(os.listdir(save_dir))}.jpg")
+        plt.savefig(f"{save_dir}/{len(os.listdir(save_dir))}.jpg", bbox_inches="tight")
     plt.show()
 
 
