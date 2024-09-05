@@ -135,9 +135,9 @@ class Cityscapes(Dataset):
 
         if self.target_transform:
             if isinstance(target, list):
-                target = [self.transform(t) if not isinstance(t, dict) else t for t in target]
+                target = [self.target_transform(t) if not isinstance(t, dict) else t for t in target]
             else:
-                target = self.transform(target)
+                target = self.target_transform(target)
 
         return image, target
 
