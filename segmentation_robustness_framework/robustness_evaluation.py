@@ -48,7 +48,7 @@ class RobustnessEvaluation:
         self.output_config = config.output
 
         self.save_images = self.output_config.save_images
-        self.save_dir = self.output_config.save_dir
+        self.save_dir = Path("./runs/") if self.output_config.save_dir is None else self.output_config.save_dir
 
     def _load_model(self) -> nn.Module:
         if self.model_config.name == "FCN":
@@ -114,7 +114,8 @@ class RobustnessEvaluation:
 
         for group_idx, attack_group in enumerate(attacks_list):
             for attack_idx, attack in enumerate(attack_group):
-                attack_dir = os.path.join(run_dir, f"{attack_idx + 1}. {attack.__repr__()}")
+                if self.save_images:
+                    attack_dir = os.path.join(run_dir, f"{attack_idx + 1}. {attack.__repr__()}")
                 for idx in range(num_images):
                     image, ground_truth = dataset[idx]
                     image = image.to(self.device)
@@ -147,5 +148,5 @@ class RobustnessEvaluation:
                         dataset_name=self.dataset_config.name,
                         title=attack.__repr__(),
                         save=self.save_images,
-                        save_dir=attack_dir,
+                        save_dir=attack_dir if self.save_images else None,
                     )

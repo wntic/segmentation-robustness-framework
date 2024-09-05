@@ -145,7 +145,7 @@ class DatasetConfig(BaseModel):
 
 
 class OutputConfig(BaseModel):
-    save_dir: str
+    save_dir: Optional[str] = None
     save_images: bool
     save_log: bool
 

@@ -52,7 +52,7 @@ def visualize_results(
     dataset_name: str,
     title: str,
     save: bool = False,
-    save_dir: str = "runs/",
+    save_dir: str = None,
 ) -> None:
     if image.ndimension() != 4:
         raise ValueError(f"Expected original image with shape [1, C, H, W], but got {list(image.shape)}")
