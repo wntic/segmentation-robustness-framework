@@ -50,6 +50,8 @@ class StanfordBackground(Dataset):
 
         if self.transform is not None:
             image = self.transform(image).unsqueeze(0)  # shape [1, C, H, W]
+
+        if self.target_transform is not None:
             mask = self.target_transform(mask)  # shape [C, H, W]
 
         return image, mask
