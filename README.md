@@ -90,7 +90,7 @@ dataset:
   max_images: 500
 
 output:
-  save_dir: "./input/"
+  save_dir: "./outputs/"
   save_images: true
   save_log: true
 ```
@@ -180,6 +180,13 @@ Configuration parameters:
 	- Note: You can use one or more annotation types:
 		- One target type: `target_type="semantic"`
 		- Several target types: `target_type=["semantic", "instance"]`
+
+### Output Configuration
+
+Available parameters:
+
+1. **save_dir**
+2. **save_images**
 
 ## Contributing
 
