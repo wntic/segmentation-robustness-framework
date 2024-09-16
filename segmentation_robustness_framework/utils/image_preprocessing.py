@@ -68,13 +68,13 @@ def get_preprocessing_fn(image_shape: List[int]) -> Callable:
     w = (w // 8 + 1) * 8 if w % 8 != 0 else w  # width must be divisible by stride 8
 
     preprocess = transforms.Compose([
-        transforms.Resize((h, w)),
+        transforms.Resize((h, w), interpolation=transforms.InterpolationMode.NEAREST),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     target_preprocess = transforms.Compose([
-        transforms.Resize((h, w)),
+        transforms.Resize((h, w), interpolation=transforms.InterpolationMode.NEAREST),
         transforms.ToTensor(),
     ])
 
