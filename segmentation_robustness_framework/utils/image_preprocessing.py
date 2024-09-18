@@ -1,11 +1,12 @@
 from typing import Optional, Tuple, List, Callable
 
 from PIL import Image
-from torch import Tensor
+import torch
+import numpy as np
 from torchvision.transforms import transforms
 
 
-def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = None) -> Tensor:
+def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = None) -> torch.Tensor:
     """Preprocess an image for input into a segmentation model.
 
     This function loads an image from the specified file path, resizes it to the target shape if provided,
@@ -73,9 +74,13 @@ def get_preprocessing_fn(image_shape: List[int]) -> Callable:
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    target_preprocess = transforms.Compose([
-        transforms.Resize((h, w), interpolation=transforms.InterpolationMode.NEAREST),
-        transforms.ToTensor(),
-    ])
+    def target_preprocess(mask: Image, ignore_index: int = None) -> torch.Tensor:
+        np_mask = np.array(mask)
+        mask_tensor = torch.from_numpy(np_mask).long()
+        if ignore_index is not None:
+            mask_tensor[mask_tensor == ignore_index] = -1
+        resize = transforms.Resize((h, w), interpolation=transforms.InterpolationMode.NEAREST)
+        resized_mask_tensor = resize(mask_tensor.unsqueeze(0))
+        return resized_mask_tensor
 
     return preprocess, target_preprocess
