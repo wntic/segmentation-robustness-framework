@@ -8,7 +8,23 @@ from torch import Tensor
 
 from . import _classes as classes
 from . import _colors as colors
-from .image_utils import denormalize
+
+
+def denormalize(image: np.ndarray) -> np.ndarray:
+    """Denormalizes input image.
+
+    During the pre-processing stage, normalization is applied to the input image.
+    This function denormalizes it.
+
+    Args:
+        image (np.ndarray): The 3D tensor with shape `[H, W, C]`.
+
+    Returns:
+        np.ndarray: Denormalized image.
+    """
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    return std * image + mean
 
 
 def get_class_colors(ds_name: str) -> Tuple[List[str], List[Tuple[int]]]:
