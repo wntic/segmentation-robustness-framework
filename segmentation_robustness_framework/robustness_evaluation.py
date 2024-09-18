@@ -184,6 +184,7 @@ class RobustnessEvaluation:
         """
         # Load model, dataset, attacks
         model = self._load_model()
+        model.eval()
 
         dataset = self._load_dataset()
         attacks_list = [_get_attacks(model.to(self.device), attack) for attack in self.attack_config]
