@@ -181,6 +181,11 @@ class RobustnessEvaluation:
         Raises:
             ValueError: If an unknown attack is specified.
         """
+        clean_mean_iou = []
+        adv_mean_iou = []
+        clean_acc = []
+        adv_acc = []
+
         # Load model, dataset, attacks
         model = self._load_model()
         model.eval()
@@ -207,6 +212,16 @@ class RobustnessEvaluation:
                     output = model(image)
                     preds = torch.argmax(output, dim=1)
 
+                    # Computing clean metrics
+                    clean_metric = utils.metrics.SegmentationMetric(
+                        targets=ground_truth,
+                        preds=preds,
+                        num_classes=dataset.num_classes,
+                    )
+
+                    clean_mean_iou.append(clean_metric.mean_iou())
+                    clean_acc.append(clean_metric.pixel_accuracy())
+
                     # Create a target tensor if the attack is targeted, else use predictions
                     if hasattr(attack, "targeted"):
                         if attack.targeted:
@@ -226,6 +241,16 @@ class RobustnessEvaluation:
                     adv_output = model(adv_image)
                     adv_preds = torch.argmax(adv_output, dim=1)
 
+                    # Computing adv metrics
+                    adv_metric = utils.metrics.SegmentationMetric(
+                        targets=ground_truth,
+                        preds=adv_preds,
+                        num_classes=dataset.num_classes,
+                    )
+
+                    adv_mean_iou.append(adv_metric.mean_iou())
+                    adv_acc.append(adv_metric.pixel_accuracy())
+
                     # Visualize image, ground truth mask, predicted mask and adversarial mask
                     utils.visualize_results(
                         image=image,
@@ -237,3 +262,8 @@ class RobustnessEvaluation:
                         save=self.save_images,
                         save_dir=attack_dir if self.save_images else None,
                     )
+
+        print(clean_mean_iou)
+        print(clean_acc)
+        print(adv_mean_iou)
+        print(adv_acc)
