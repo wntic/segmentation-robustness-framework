@@ -60,7 +60,7 @@ class SegmentationMetric:
                 iou = np.nan
             else:
                 iou = intersection / union if union > 0 else 0.0
-            iou_scores.append(iou)
+            iou_scores.append(round(iou, 3))
 
         return iou_scores
 
@@ -71,7 +71,8 @@ class SegmentationMetric:
             float: Mean IoU score.
         """
         iou_per_class = self.iou()
-        return np.nanmean(iou_per_class)
+        mean_iou = np.nanmean(iou_per_class)
+        return round(mean_iou, 3)
 
     def pixel_accuracy(self) -> float:
         """Compute pixel accuracy for semantic segmentation.
@@ -81,7 +82,7 @@ class SegmentationMetric:
         """
         correct_pixels = (self.pred_mask == self.true_mask).sum()
         total_pixels = self.true_mask.size
-        return correct_pixels / total_pixels
+        return round(correct_pixels / total_pixels, 3)
 
     def precision_recall_f1(self) -> tuple[dict[str, float]]:
         """Compute precision, recall, and F1 score for multiclass segmentation.
@@ -134,9 +135,9 @@ class SegmentationMetric:
             else np.nan
         )
 
-        precision = {"macro": macro_precision, "micro": micro_precision}
-        recall = {"macro": macro_recall, "micro": micro_recall}
-        f1_score = {"macro": macro_f1, "micro": micro_f1}
+        precision = {"macro": round(macro_precision, 3), "micro": round(micro_precision, 3)}
+        recall = {"macro": round(macro_recall, 3), "micro": round(micro_recall, 3)}
+        f1_score = {"macro": round(macro_f1, 3), "micro": round(micro_f1, 3)}
 
         return precision, recall, f1_score
 
@@ -174,4 +175,4 @@ class SegmentationMetric:
             else np.nan
         )
 
-        return {"macro": macro_dice, "micro": micro_dice}
+        return {"macro": round(macro_dice, 3), "micro": round(micro_dice, 3)}
