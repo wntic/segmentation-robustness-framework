@@ -66,7 +66,8 @@ def visualize_results(
     mask: Tensor,
     adv_mask: Tensor,
     dataset_name: str,
-    title: str,
+    denormalize_image: bool = True,
+    title: str = None,
     save: bool = False,
     save_dir: str = None,
 ) -> None:
@@ -84,7 +85,8 @@ def visualize_results(
             os.makedirs(save_dir)
 
     image = image.squeeze().permute(1, 2, 0).cpu().detach().numpy()
-    image = denormalize(image)
+    if denormalize_image:
+        image = denormalize(image)
     image = np.clip(image, 0, 1)
 
     np_ground_truth = ground_truth.squeeze().cpu().detach().numpy()
@@ -97,7 +99,8 @@ def visualize_results(
     norm = mcolors.BoundaryNorm(np.arange(len(classes) + 1) - 0.5, len(classes))
 
     fig = plt.figure(figsize=(16, 4))
-    fig.suptitle(title)
+    if title is not None:
+        fig.suptitle(title)
 
     fig.add_subplot(1, 4, 1)
     plt.imshow(image)
