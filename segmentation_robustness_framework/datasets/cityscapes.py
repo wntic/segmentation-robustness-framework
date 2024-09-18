@@ -114,6 +114,8 @@ class Cityscapes(Dataset):
 
                 self.targets.append(target_paths)
 
+        self.num_classes = 35
+
     def __len__(self):
         return len(self.images)
 

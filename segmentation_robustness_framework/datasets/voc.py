@@ -49,6 +49,8 @@ class VOCSegmentation(Dataset):
         with open(os.path.join(root, "ImageSets/Segmentation", f"{split}.txt")) as f:
             self.images = f.read().splitlines()
 
+        self.num_classes = 21
+
     def __len__(self):
         return len(self.images)
 

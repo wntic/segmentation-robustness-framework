@@ -53,6 +53,8 @@ class ADE20K(Dataset):
         self.target_transform = target_transform
         self.images = os.listdir(self.images_dir)
 
+        self.num_classes = 150
+
     def __len__(self):
         return len(self.images)
 
