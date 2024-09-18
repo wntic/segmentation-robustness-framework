@@ -7,8 +7,7 @@ import torch.nn as nn
 import yaml
 from torch.utils.data import Dataset
 
-from segmentation_robustness_framework import attacks, datasets, get_preprocessing_fn, models, utils
-from segmentation_robustness_framework.config import validator
+from segmentation_robustness_framework import attacks, datasets, models, utils, validator
 
 
 def _get_attacks(model: nn.Module, attack_config: validator.AttackConfig) -> List[attacks.AdversarialAttack]:
@@ -136,7 +135,7 @@ class RobustnessEvaluation:
         Raises:
             ValueError: If the dataset name is not recognized.
         """
-        preprocess, target_preprocess = get_preprocessing_fn(self.dataset_config.image_shape)
+        preprocess, target_preprocess = utils.get_preprocessing_fn(self.dataset_config.image_shape)
 
         if self.dataset_config.name == "VOC":
             ds = datasets.VOCSegmentation(
@@ -205,7 +204,6 @@ class RobustnessEvaluation:
                     image, ground_truth = dataset[idx]
                     image = image.to(self.device)
 
-                    print(image.shape)
                     output = model(image)
                     preds = torch.argmax(output, dim=1)
 
