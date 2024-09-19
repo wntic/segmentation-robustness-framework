@@ -39,8 +39,6 @@ def _get_attacks(model: nn.Module, attack_config: validator.AttackConfig) -> Lis
             for epsilon in epsilon_values
             for alpha in alpha_values
         ]
-    else:
-        raise ValueError(f"Unknown attack: {attack_name}")
 
 
 def _get_target_label(attack_config: validator.AttackConfig) -> int:
@@ -90,15 +88,24 @@ class RobustnessEvaluation:
         Args:
             config_path (Union[Path, str]): Path to the configuration YAML file.
         """
+        self.logger = utils.log.get_logger()
+
+        self.logger.info("Loading configs...")
         with open(config_path) as f:
             data = yaml.load(f, yaml.SafeLoader)
-        config = validator.Config(**data)
+
+        from pydantic import ValidationError
+        try:
+            config = validator.Config(**data)
+        except ValidationError:
+            self.logger.exception("Config validation error. See details below.")
 
         self.model_config = config.model
         self.device = torch.device(config.model.device)
         self.attack_config = config.attacks
         self.dataset_config = config.dataset
         self.output_config = config.output
+        self.logger.info("Configs are loaded.")
 
         self.save_images = self.output_config.save_images
         self.save_dir = Path("./runs/") if self.output_config.save_dir is None else self.output_config.save_dir
@@ -166,8 +173,6 @@ class RobustnessEvaluation:
                 transform=preprocess,
                 target_transform=target_preprocess,
             )
-        else:
-            raise ValueError(f"Invalid dataset {self.dataset_config.name}")
         return ds
 
     def run(self) -> None:
@@ -181,17 +186,26 @@ class RobustnessEvaluation:
         Raises:
             ValueError: If an unknown attack is specified.
         """
+        self.logger.info("Starting robustness evaluation.")
         clean_mean_iou = []
         adv_mean_iou = []
         clean_acc = []
         adv_acc = []
 
         # Load model, dataset, attacks
+        self.logger.info("Loading model...")
         model = self._load_model()
         model.eval()
+        self.logger.info(f"{self.model_config.name} model loaded and switched to eval mode.")
 
+        self.logger.info("Loading dataset...")
         dataset = self._load_dataset()
+        self.logger.info(f"{self.dataset_config.name} dataset loaded.")
+
+        self.logger.info("Parsing attacks...")
         attacks_list = [_get_attacks(model.to(self.device), attack) for attack in self.attack_config]
+        self.logger.info("Attacks ready to use.")
+
         num_images = self.dataset_config.max_images if len(dataset) > self.dataset_config.max_images else len(dataset)
 
         # Create save path if not exists
@@ -267,3 +281,4 @@ class RobustnessEvaluation:
         print(clean_acc)
         print(adv_mean_iou)
         print(adv_acc)
+        self.logger.info("Robustness evaluation completed.")
