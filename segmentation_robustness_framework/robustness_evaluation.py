@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import List, Union
@@ -95,6 +96,7 @@ class RobustnessEvaluation:
             data = yaml.load(f, yaml.SafeLoader)
 
         from pydantic import ValidationError
+
         try:
             config = validator.Config(**data)
         except ValidationError:
@@ -187,10 +189,6 @@ class RobustnessEvaluation:
             ValueError: If an unknown attack is specified.
         """
         self.logger.info("Starting robustness evaluation.")
-        clean_mean_iou = []
-        adv_mean_iou = []
-        clean_acc = []
-        adv_acc = []
 
         # Load model, dataset, attacks
         self.logger.info("Loading model...")
@@ -214,9 +212,47 @@ class RobustnessEvaluation:
                 os.makedirs(self.save_dir)
             run_dir = os.path.join(self.save_dir, f"run_{len(os.listdir(self.save_dir))}")
 
+        # Initialize structure to store metrics
+        metrics_storage = {}
+
         # SRF main loop
         for group_idx, attack_group in enumerate(attacks_list):
+            # Name of the attack group (e.g., "FGSM" or "PGD")
+            attack_group_name = self.attack_config[group_idx].name
+            metrics_storage[attack_group_name] = {"attacks": []}
+
             for attack_idx, attack in enumerate(attack_group):
+                attack_metrics = {
+                    "params": {},  # Parameters of the attack (e.g., epsilon, alpha)
+                    "clean_metrics": {
+                        "mean_iou": [],
+                        "pixel_accuracy": [],
+                        "precision_macro": [],
+                        "precision_micro": [],
+                        "recall_macro": [],
+                        "recall_micro": [],
+                        "f1_macro": [],
+                        "f1_micro": [],
+                        "dice_score_macro": [],
+                        "dice_score_micro": [],
+                    },
+                    "adv_metrics": {
+                        "mean_iou": [],
+                        "pixel_accuracy": [],
+                        "precision_macro": [],
+                        "precision_micro": [],
+                        "recall_macro": [],
+                        "recall_micro": [],
+                        "f1_macro": [],
+                        "f1_micro": [],
+                        "dice_score_macro": [],
+                        "dice_score_micro": [],
+                    },
+                }
+
+                # Save attack parameters (e.g., epsilon, alpha)
+                attack_metrics["params"] = attack.get_params()
+
                 if self.save_images:
                     attack_dir = os.path.join(run_dir, f"{attack_idx + 1}. {attack.__repr__()}")
                 for idx in range(num_images):
@@ -227,14 +263,30 @@ class RobustnessEvaluation:
                     preds = torch.argmax(output, dim=1)
 
                     # Computing clean metrics
-                    clean_metric = utils.metrics.SegmentationMetric(
+                    clean_metrics = utils.metrics.SegmentationMetric(
                         targets=ground_truth,
                         preds=preds,
                         num_classes=dataset.num_classes,
                     )
 
-                    clean_mean_iou.append(clean_metric.mean_iou())
-                    clean_acc.append(clean_metric.pixel_accuracy())
+                    # Append individual image metrics for clean data
+                    attack_metrics["clean_metrics"]["mean_iou"].append(clean_metrics.mean_iou())
+                    attack_metrics["clean_metrics"]["pixel_accuracy"].append(clean_metrics.pixel_accuracy())
+
+                    clean_precision, clean_recall, clean_f1_score = clean_metrics.precision_recall_f1()
+
+                    attack_metrics["clean_metrics"]["precision_macro"].append(clean_precision["macro"])
+                    attack_metrics["clean_metrics"]["precision_micro"].append(clean_precision["micro"])
+
+                    attack_metrics["clean_metrics"]["recall_macro"].append(clean_recall["macro"])
+                    attack_metrics["clean_metrics"]["recall_micro"].append(clean_recall["micro"])
+
+                    attack_metrics["clean_metrics"]["f1_macro"].append(clean_f1_score["macro"])
+                    attack_metrics["clean_metrics"]["f1_micro"].append(clean_f1_score["micro"])
+
+                    clean_dice_score = clean_metrics.dice_coefficient()
+                    attack_metrics["clean_metrics"]["dice_score_macro"].append(clean_dice_score["macro"])
+                    attack_metrics["clean_metrics"]["dice_score_micro"].append(clean_dice_score["micro"])
 
                     # Create a target tensor if the attack is targeted, else use predictions
                     if hasattr(attack, "targeted"):
@@ -256,14 +308,30 @@ class RobustnessEvaluation:
                     adv_preds = torch.argmax(adv_output, dim=1)
 
                     # Computing adv metrics
-                    adv_metric = utils.metrics.SegmentationMetric(
+                    adv_metrics = utils.metrics.SegmentationMetric(
                         targets=ground_truth,
                         preds=adv_preds,
                         num_classes=dataset.num_classes,
                     )
 
-                    adv_mean_iou.append(adv_metric.mean_iou())
-                    adv_acc.append(adv_metric.pixel_accuracy())
+                    # Append individual image metrics for adversarial data
+                    attack_metrics["adv_metrics"]["mean_iou"].append(adv_metrics.mean_iou())
+                    attack_metrics["adv_metrics"]["pixel_accuracy"].append(adv_metrics.pixel_accuracy())
+
+                    adv_precision, adv_recall, adv_f1_score = adv_metrics.precision_recall_f1()
+
+                    attack_metrics["adv_metrics"]["precision_macro"].append(adv_precision["macro"])
+                    attack_metrics["adv_metrics"]["precision_micro"].append(adv_precision["micro"])
+
+                    attack_metrics["adv_metrics"]["recall_macro"].append(adv_recall["macro"])
+                    attack_metrics["adv_metrics"]["recall_micro"].append(adv_recall["micro"])
+
+                    attack_metrics["adv_metrics"]["f1_macro"].append(adv_f1_score["macro"])
+                    attack_metrics["adv_metrics"]["f1_micro"].append(adv_f1_score["micro"])
+
+                    adv_dice_score = adv_metrics.dice_coefficient()
+                    attack_metrics["adv_metrics"]["dice_score_macro"].append(adv_dice_score["macro"])
+                    attack_metrics["adv_metrics"]["dice_score_micro"].append(adv_dice_score["micro"])
 
                     # Visualize image, ground truth mask, predicted mask and adversarial mask
                     utils.visualize_results(
@@ -276,9 +344,12 @@ class RobustnessEvaluation:
                         save=self.save_images,
                         save_dir=attack_dir if self.save_images else None,
                     )
+                # Store the metrics for the current attack
+            metrics_storage[attack_group_name]["attacks"].append(attack_metrics)
 
-        print(clean_mean_iou)
-        print(clean_acc)
-        print(adv_mean_iou)
-        print(adv_acc)
+        # Save metrics to JSON after evaluation
+        metrics_file = os.path.join(run_dir, "metrics.json")
+        with open(metrics_file, "w") as f:
+            json.dump(metrics_storage, f, indent=4)
+
         self.logger.info("Robustness evaluation completed.")
