@@ -17,7 +17,7 @@ def _get_attacks(model: nn.Module, attack_config: validator.AttackConfig) -> Lis
     Args:
         model (nn.Module): The segmentation model to attack.
         attack_config (validator.AttackConfig): Configuration for the adversarial attack,
-            which includes the type of attack and its parameters.
+            including the type of attack and its parameters.
 
     Raises:
         ValueError: If the specified attack type in `attack_config.name` is not recognized.
@@ -40,6 +40,7 @@ def _get_attacks(model: nn.Module, attack_config: validator.AttackConfig) -> Lis
             for epsilon in epsilon_values
             for alpha in alpha_values
         ]
+    raise ValueError(f"Unknown attack type: {attack_name}")
 
 
 def _get_target_label(attack_config: validator.AttackConfig) -> int:
@@ -47,7 +48,7 @@ def _get_target_label(attack_config: validator.AttackConfig) -> int:
 
     Args:
         attack_config (validator.AttackConfig): Configuration for the adversarial attack,
-            which includes the target label.
+            including the target label.
 
     Returns:
         int: The target class label for the adversarial attack.
@@ -56,31 +57,19 @@ def _get_target_label(attack_config: validator.AttackConfig) -> int:
 
 
 class RobustnessEvaluation:
-    """A class to evaluate the robustness of image segmentation models to adversarial attacks.
+    """Evaluates the robustness of segmentation models against adversarial attacks.
 
-    This class loads a segmentation model, dataset, and specified adversarial attacks, then evaluates
-    the robustness of the model by generating adversarial examples, computing the resulting predictions and metrics.
+    Loads the segmentation model, dataset, and specified adversarial attacks, then evaluates
+    the robustness by generating adversarial examples, computing predictions and metrics.
 
     Attributes:
         model_config (validator.ModelConfig): Configuration for the model to be loaded.
-        device (torch.device): The device on which the model will be run ('cpu' or 'cuda').
+        device (torch.device): Device on which the model will be run ('cpu' or 'cuda').
         attack_config (validator.AttackConfig): Configuration for the adversarial attacks.
         dataset_config (validator.DatasetConfig): Configuration for the dataset used in evaluation.
         output_config (validator.OutputConfig): Configuration for saving images and results.
-        save_images (bool): Whether to save the generated adversarial images and results.
+        save_images (bool): Whether to save generated adversarial images and results.
         save_dir (Path): Directory to save the evaluation results.
-
-    Methods:
-        _load_model() -> nn.Module:
-            Loads the segmentation model based on the configuration.
-
-        _load_dataset() -> Dataset:
-            Loads the dataset based on the configuration and applies preprocessing.
-
-        run() -> None:
-            Executes the robustness evaluation by running the model on the dataset,
-            applying the adversarial attacks, computing multiclass metrics and saving
-            the results if configured.
     """
 
     def __init__(self, config_path: Union[Path, str]) -> None:
@@ -113,7 +102,7 @@ class RobustnessEvaluation:
         self.save_dir = Path("./runs/") if self.output_config.save_dir is None else self.output_config.save_dir
 
     def _load_model(self) -> nn.Module:
-        """Loads a segmentation model based on the model configuration.
+        """Loads the segmentation model based on the model configuration.
 
         Returns:
             nn.Module: The loaded model.
@@ -133,6 +122,9 @@ class RobustnessEvaluation:
                 encoder_weights=self.model_config.weights,
                 num_classes=self.model_config.num_classes,
             )
+        else:
+            raise ValueError(f"Unknown model: {self.model_config.name}")
+
         return model.to(self.device)
 
     def _load_dataset(self) -> Dataset:
@@ -175,15 +167,21 @@ class RobustnessEvaluation:
                 transform=preprocess,
                 target_transform=target_preprocess,
             )
+        else:
+            raise ValueError(f"Unknown dataset: {self.dataset_config.name}")
+
         return ds
 
-    def run(self) -> None:
+    def run(self, show: bool = False) -> None:
         """Executes the robustness evaluation.
 
-        Loads the model, dataset, and adversarial attacks, then applies the attacks to the dataset
+        Loads the model, dataset, and adversarial attacks, applies the attacks to the dataset,
         and evaluates the model's performance on both clean and adversarial images.
 
         If configured, it saves the generated adversarial images and results.
+
+        Args:
+            show (bool): If True, visualizes images for every evaluation iteration.
 
         Raises:
             ValueError: If an unknown attack is specified.
@@ -207,15 +205,14 @@ class RobustnessEvaluation:
         num_images = self.dataset_config.max_images if len(dataset) > self.dataset_config.max_images else len(dataset)
 
         # Create save path if not exists
-        if self.save_images:
-            if not os.path.exists(self.save_dir):
-                os.makedirs(self.save_dir)
-            run_dir = os.path.join(self.save_dir, f"run_{len(os.listdir(self.save_dir))}")
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+        run_dir = os.path.join(self.save_dir, f"run_{len(os.listdir(self.save_dir))}")
+        os.makedirs(run_dir)
 
         # Initialize structure to store metrics
         metrics_storage = {}
 
-        # Step 1: Compute clean metrics once
+        # Step 1: Evaluate clean metrics once
         clean_metrics_storage = {
             "mean_iou": [],
             "pixel_accuracy": [],
@@ -233,8 +230,9 @@ class RobustnessEvaluation:
             image, ground_truth = dataset[idx]
             image = image.to(self.device)
 
-            output = model(image)
-            preds = torch.argmax(output, dim=1)
+            with torch.no_grad():
+                output = model(image)
+                preds = torch.argmax(output, dim=1)
 
             # Compute clean metrics
             clean_metrics = utils.metrics.SegmentationMetric(
@@ -261,7 +259,7 @@ class RobustnessEvaluation:
 
         metrics_storage["clean_metrics"] = clean_metrics_storage
 
-        # Step 2: Perform attacks and use already computed clean metrics
+        # Step 2: Apply adversarial attacks and compute metrics
         for group_idx, attack_group in enumerate(attacks_list):
             attack_group_name = self.attack_config[group_idx].name
             metrics_storage[attack_group_name] = {"attacks": []}
@@ -294,7 +292,8 @@ class RobustnessEvaluation:
                     image = image.to(self.device)
 
                     # Create a target tensor if the attack is targeted, else use predictions
-                    preds = torch.argmax(model(image), dim=1)
+                    output = model(image)
+                    preds = torch.argmax(output, dim=1)
                     if hasattr(attack, "targeted"):
                         if attack.targeted:
                             target_labels = torch.full_like(
@@ -310,10 +309,25 @@ class RobustnessEvaluation:
 
                     # Create adversarial image and do predictions
                     adv_image = attack(image, target_labels)
-                    adv_output = model(adv_image)
-                    adv_preds = torch.argmax(adv_output, dim=1)
 
-                    # Compute adv metrics
+                    with torch.no_grad():
+                        adv_output = model(adv_image)
+                        adv_preds = torch.argmax(adv_output, dim=1)
+
+                    # Visualize image, ground truth mask, predicted mask and adversarial mask
+                    if show:
+                        utils.visualize_results(
+                            image=image,
+                            ground_truth=ground_truth,
+                            mask=preds,
+                            adv_mask=adv_preds,
+                            dataset_name=self.dataset_config.name,
+                            title=attack.__repr__(),
+                            save=self.save_images,
+                            save_dir=attack_dir if self.save_images else None,
+                        )
+
+                    # Compute metrics on adversarial data
                     adv_metrics = utils.metrics.SegmentationMetric(
                         targets=ground_truth,
                         preds=adv_preds,
@@ -335,18 +349,6 @@ class RobustnessEvaluation:
                     adv_dice_score = adv_metrics.dice_coefficient()
                     attack_metrics["adv_metrics"]["dice_score_macro"].append(adv_dice_score["macro"])
                     attack_metrics["adv_metrics"]["dice_score_micro"].append(adv_dice_score["micro"])
-
-                    # Visualize image, ground truth mask, predicted mask and adversarial mask
-                    utils.visualize_results(
-                        image=image,
-                        ground_truth=ground_truth,
-                        mask=preds,
-                        adv_mask=adv_preds,
-                        dataset_name=self.dataset_config.name,
-                        title=attack.__repr__(),
-                        save=self.save_images,
-                        save_dir=attack_dir if self.save_images else None,
-                    )
 
                 # Store the metrics for the current attack
                 metrics_storage[attack_group_name]["attacks"].append(attack_metrics)
