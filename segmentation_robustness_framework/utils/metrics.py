@@ -118,21 +118,32 @@ class SegmentationMetric:
                 f1_score[cls] = 2 * (precision[cls] * recall[cls]) / (precision[cls] + recall[cls])
 
         # Macro Average
-        macro_precision = np.nanmean(precision)
-        macro_recall = np.nanmean(recall)
-        macro_f1 = np.nanmean(f1_score)
+        if np.all(np.isnan(precision)):
+            macro_precision = 0.0
+        else:
+            macro_precision = np.nanmean(precision)
+
+        if np.all(np.isnan(recall)):
+            macro_recall = 0.0
+        else:
+            macro_recall = np.nanmean(recall)
+
+        if np.all(np.isnan(f1_score)):
+            macro_f1 = 0.0
+        else:
+            macro_f1 = np.nanmean(f1_score)
 
         # Micro Average
         total_tp = (np.logical_and(self.pred_mask == self.true_mask, self.true_mask != -1)).sum()
         total_fp = (np.logical_and(self.pred_mask != self.true_mask, self.pred_mask != -1)).sum()
         total_fn = (np.logical_and(self.pred_mask != self.true_mask, self.true_mask != -1)).sum()
 
-        micro_precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else np.nan
-        micro_recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else np.nan
+        micro_precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0.0
+        micro_recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0.0
         micro_f1 = (
             2 * (micro_precision * micro_recall) / (micro_precision + micro_recall)
             if (micro_precision + micro_recall) > 0
-            else np.nan
+            else 0.0
         )
 
         precision = {"macro": round(macro_precision, 3), "micro": round(micro_precision, 3)}
@@ -162,7 +173,10 @@ class SegmentationMetric:
                 dice_scores[cls] = 2 * intersection / (pred_sum + true_sum)
 
         # Macro Average
-        macro_dice = np.nanmean(dice_scores)
+        if np.all(np.isnan(dice_scores)):
+            macro_dice = 0.0
+        else:
+            macro_dice = np.nanmean(dice_scores)
 
         # Micro Average
         total_intersection = np.logical_and(self.pred_mask == self.true_mask, self.true_mask != -1).sum()
@@ -172,7 +186,7 @@ class SegmentationMetric:
         micro_dice = (
             2 * total_intersection / (total_pred_sum + total_true_sum)
             if (total_pred_sum + total_true_sum) > 0
-            else np.nan
+            else 0.0
         )
 
         return {"macro": round(macro_dice, 3), "micro": round(micro_dice, 3)}
