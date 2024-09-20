@@ -37,6 +37,9 @@ class FGSM(AdversarialAttack):
         """Allows the object to be called like a function to perform the attack."""
         return self.attack(image, labels)
 
+    def get_params(self) -> dict[str, float]:
+        return {"epsilon": self.eps}
+
     def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """
         Overriden.
