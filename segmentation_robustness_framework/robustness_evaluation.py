@@ -78,25 +78,16 @@ class RobustnessEvaluation:
         Args:
             config_path (Union[Path, str]): Path to the configuration YAML file.
         """
-        self.logger = utils.log.get_logger()
 
-        self.logger.info("Loading configs...")
         with open(config_path) as f:
             data = yaml.load(f, yaml.SafeLoader)
-
-        from pydantic import ValidationError
-
-        try:
-            config = validator.Config(**data)
-        except ValidationError:
-            self.logger.exception("Config validation error. See details below.")
+        config = validator.Config(**data)
 
         self.model_config = config.model
         self.device = torch.device(config.model.device)
         self.attack_config = config.attacks
         self.dataset_config = config.dataset
         self.output_config = config.output
-        self.logger.info("Configs are loaded.")
 
         self.save_images = self.output_config.save_images
         self.save_dir = Path("./runs/") if self.output_config.save_dir is None else self.output_config.save_dir
@@ -186,21 +177,12 @@ class RobustnessEvaluation:
         Raises:
             ValueError: If an unknown attack is specified.
         """
-        self.logger.info("Starting robustness evaluation.")
-
         # Load model, dataset, attacks
-        self.logger.info("Loading model...")
         model = self._load_model()
         model.eval()
-        self.logger.info(f"{self.model_config.name} model loaded and switched to eval mode.")
 
-        self.logger.info("Loading dataset...")
         dataset = self._load_dataset()
-        self.logger.info(f"{self.dataset_config.name} dataset loaded.")
-
-        self.logger.info("Parsing attacks...")
         attacks_list = [_get_attacks(model.to(self.device), attack) for attack in self.attack_config]
-        self.logger.info("Attacks ready to use.")
 
         num_images = self.dataset_config.max_images if len(dataset) > self.dataset_config.max_images else len(dataset)
 
@@ -357,5 +339,3 @@ class RobustnessEvaluation:
         metrics_file = os.path.join(run_dir, "metrics.json")
         with open(metrics_file, "w") as f:
             json.dump(metrics_storage, f, indent=4)
-
-        self.logger.info("Robustness evaluation completed.")
