@@ -1,5 +1,7 @@
+import json
 import os
-from typing import List, Tuple
+from pathlib import Path
+from typing import List, Tuple, Union
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -141,4 +143,55 @@ def visualize_images(
     plt.subplots_adjust(wspace=0.05)
     if save:
         plt.savefig(f"{save_dir}/{len(os.listdir(save_dir))}.jpg", bbox_inches="tight")
+    plt.show()
+
+
+def visualize_metrics(json_data: Union[Path, str, dict[str, any]], attack_name, attack_param, metric_name) -> None:
+    if isinstance(json_data, (str, Path)):
+        file_path = Path(json_data)
+        if file_path.suffix == ".json":
+            try:
+                with open(file_path, encoding="utf-8") as file:
+                    json_data = json.load(file)
+            except FileNotFoundError:
+                print(f"File {file_path} does not exist.")
+            except json.JSONDecodeError:
+                print(f"Error decoding JSON from file {file_path}.")
+
+    if attack_name not in json_data:
+        raise ValueError(f"Attack {attack_name} not found in the JSON data.")
+
+    clean_metrics = json_data["clean_metrics"][metric_name]
+    mean_clean_metric = np.mean(clean_metrics)
+
+    attack_data = json_data[attack_name]["attacks"]
+
+    param_values = []
+    adv_metrics = []
+
+    for attack in attack_data:
+        param_value = attack["params"][attack_param]
+        param_values.append(param_value)
+
+        mean_adv_metric = np.mean(attack["adv_metrics"][metric_name])
+        adv_metrics.append(mean_adv_metric)
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(param_values, adv_metrics, marker="o", label=f"{attack_name} {metric_name}", color="b")
+
+    plt.axhline(y=mean_clean_metric, color="r", label=f"Clean {metric_name}")
+    plt.text(
+        x=plt.xlim()[1],  # Используем правую границу оси X
+        y=mean_clean_metric,
+        s=f"{mean_clean_metric:.2f}",  # Текст с округленным значением
+        color="black",
+        va="bottom",  # Вертикальное выравнивание по центру
+        ha="right",  # Горизонтальное выравнивание по правой стороне
+    )
+
+    plt.title(f"{metric_name} vs {attack_param} for {attack_name} Attack")
+    plt.xlabel(attack_param)
+    plt.ylabel(metric_name)
+    plt.legend()
+    plt.grid(True)
     plt.show()
