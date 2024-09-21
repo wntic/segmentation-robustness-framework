@@ -1,18 +1,17 @@
 import pytest
 import torch
-from segmentation_robustness_framework.attacks import FGSM, PGD, AdversarialAttack
-from segmentation_robustness_framework.models import SegmentationModel
+from segmentation_robustness_framework import attacks, models
 
 
 class TestBaseAttack:
     def test_base_attack(self):
-        model = SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
-        atk = AdversarialAttack(model)
+        model = models.SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
+        atk = attacks.AdversarialAttack(model)
         assert atk.model == model
 
     def test_attack(self):
-        model = SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
-        atk = AdversarialAttack(model)
+        model = models.SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
+        atk = attacks.AdversarialAttack(model)
         image = torch.rand(1, 3, 16, 16)
         labels = torch.rand(1, 3, 16, 16)
 
@@ -22,8 +21,8 @@ class TestBaseAttack:
 
 class TestFGSM:
     def test_initialization(self):
-        model = SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
-        atk = FGSM(model=model, eps=0.05)
+        model = models.SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
+        atk = attacks.FGSM(model=model, eps=0.05)
 
         assert atk.model == model
         assert atk.eps == 0.05
@@ -31,8 +30,8 @@ class TestFGSM:
 
 class TestPGD:
     def test_initialization(self):
-        model = SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
-        atk = PGD(model=model, eps=0.05, alpha=2 / 255, iters=10, targeted=False)
+        model = models.SegmentationModel(encoder_name="resnet50", encoder_weights="imagenet", num_classes=21)
+        atk = attacks.PGD(model=model, eps=0.05, alpha=2 / 255, iters=10, targeted=False)
 
         assert atk.model == model
         assert atk.eps == 0.05
