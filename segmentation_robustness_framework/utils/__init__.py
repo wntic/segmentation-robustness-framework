@@ -1,8 +1,8 @@
 from .image_preprocessing import preprocess_image, get_preprocessing_fn
-from .visualization import visualize_results
+from .visualization import visualize_images
 
 __all__ = [
     "preprocess_image",
     "get_preprocessing_fn",
-    "visualize_results",
+    "visualize_images",
 ]

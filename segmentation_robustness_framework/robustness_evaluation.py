@@ -333,7 +333,7 @@ class RobustnessEvaluation:
 
                 # Visualize image, ground truth mask, predicted mask and adversarial mask
                 if show:
-                    utils.visualize_results(
+                    utils.visualize_images(
                         image=image,
                         ground_truth=ground_truth,
                         mask=preds,

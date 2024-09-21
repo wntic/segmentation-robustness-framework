@@ -60,7 +60,7 @@ def create_legend(mask: np.ndarray, classes: List[str], colors: List[Tuple[int]]
     return handles, filtered_classes
 
 
-def visualize_results(
+def visualize_images(
     image: Tensor,
     ground_truth: Tensor,
     mask: Tensor,
