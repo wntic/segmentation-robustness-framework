@@ -6,8 +6,8 @@ model:
   device: "cuda"
 
 attacks:
-  # - name: "FGSM"
-    # epsilon: [0.125]
+  - name: "FGSM"
+    epsilon: [0.125]
   - name: "PGD"
     epsilon: [0.05]
     alpha: [0.007]
@@ -21,7 +21,3 @@ dataset:
   split: "val"
   image_shape: [512, 376]
   max_images: 5
-
-output:
-  save_images: true
-  save_log: true
