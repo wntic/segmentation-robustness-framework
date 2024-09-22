@@ -1,3 +1,3 @@
-from .validator import ModelConfig, AttackConfig, DatasetConfig, OutputConfig, Config
+from .validator import ModelConfig, AttackConfig, DatasetConfig, Config
 
-__all__ = ["ModelConfig", "AttackConfig", "DatasetConfig", "OutputConfig", "Config"]
+__all__ = ["ModelConfig", "AttackConfig", "DatasetConfig", "Config"]

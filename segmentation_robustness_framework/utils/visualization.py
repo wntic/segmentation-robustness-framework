@@ -70,6 +70,7 @@ def visualize_images(
     dataset_name: str,
     denormalize_image: bool = True,
     title: str = None,
+    show: bool = False,
     save: bool = False,
     save_dir: str = None,
 ) -> None:
@@ -141,9 +142,13 @@ def visualize_images(
     plt.axis("off")
 
     plt.subplots_adjust(wspace=0.05)
+    
     if save:
         plt.savefig(f"{save_dir}/{len(os.listdir(save_dir))}.jpg", bbox_inches="tight")
-    plt.show()
+        plt.close()
+
+    if show:
+        plt.show()
 
 
 def visualize_metrics(json_data: Union[Path, str, dict[str, any]], attack_name, attack_param, metric_name) -> None:

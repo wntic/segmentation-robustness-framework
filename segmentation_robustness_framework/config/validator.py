@@ -144,21 +144,7 @@ class DatasetConfig(BaseModel):
         return v
 
 
-class OutputConfig(BaseModel):
-    save_dir: Optional[str] = None
-    save_images: bool
-    save_log: bool
-
-    @field_validator("save_dir")
-    @classmethod
-    def validate_save_dir(cls, v: str) -> str:
-        if not os.path.exists(v):
-            os.makedirs(v)
-        return v
-
-
 class Config(BaseModel):
     model: ModelConfig
     attacks: List[AttackConfig]
     dataset: DatasetConfig
-    output: OutputConfig
