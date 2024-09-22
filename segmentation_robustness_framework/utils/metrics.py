@@ -184,9 +184,7 @@ class SegmentationMetric:
         total_true_sum = (self.true_mask != -1).sum()
 
         micro_dice = (
-            2 * total_intersection / (total_pred_sum + total_true_sum)
-            if (total_pred_sum + total_true_sum) > 0
-            else 0.0
+            2 * total_intersection / (total_pred_sum + total_true_sum) if (total_pred_sum + total_true_sum) > 0 else 0.0
         )
 
         return {"macro": round(macro_dice, 3), "micro": round(micro_dice, 3)}

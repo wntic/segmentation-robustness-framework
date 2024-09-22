@@ -1,8 +1,8 @@
-from typing import Optional, Callable
+from typing import Callable, Optional
 
-from PIL import Image
-import torch
 import numpy as np
+import torch
+from PIL import Image
 from torchvision.transforms import transforms
 
 

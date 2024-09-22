@@ -13,6 +13,7 @@ class Cityscapes(Dataset):
     Attributes:
 
     """
+
     VALID_SPLITS = ["train", "val", "test", "train_extra"]
     VALID_MODES = ["fine", "coarse"]
     VALID_TARGET_TYPES = ["semantic", "instance", "color", "polygon"]

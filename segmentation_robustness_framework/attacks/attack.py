@@ -7,6 +7,7 @@ class AdversarialAttack:
     Attributes:
         model (SegmentationModel): Segmentation model to be attacked.
     """
+
     def __init__(self, model: SegmentationModel):
         """Initializes adversarial attack.
 

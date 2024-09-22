@@ -49,12 +49,7 @@ class AttackConfig(BaseModel):
 
         # PGD attack params validation
         if self.name == "PGD":
-            if (
-                self.epsilon is None
-                or self.alpha is None
-                or self.steps is None
-                or self.targeted is None
-            ):
+            if self.epsilon is None or self.alpha is None or self.steps is None or self.targeted is None:
                 raise ValueError("For PGD, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None")
             if self.targeted and self.target_label is None:
                 raise ValueError("For a targeted attack, 'target_label' must not be None")
@@ -107,7 +102,9 @@ class DatasetConfig(BaseModel):
             if self.mode is None:
                 raise ValueError("For Cityscapes, 'mode' must be either 'fine' or 'coarse'")
             if self.target_type is None:
-                raise ValueError("For Cityscapes, 'target_type' must be one of ['semantic', 'instance', 'color', 'polygon'] or multiple as a list")
+                raise ValueError(
+                    "For Cityscapes, 'target_type' must be one of ['semantic', 'instance', 'color', 'polygon'] or multiple as a list"
+                )
             if self.split == "train_extra" and self.mode == "fine":
                 raise ValueError("'train_extra' split is not available for 'fine' mode. Use 'coarse' mode instead")
         return self
