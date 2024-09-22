@@ -240,9 +240,14 @@ def visualize_metrics(
     plt.figure(figsize=(10, 6))
 
     for metric in metric_names:
-        plt.plot(param_values, metrics_data[metric], marker="o", label=f"{attack_name} {metric}")
+        plt.plot(param_values, metrics_data[metric], marker="o", label=f"{metric}")
 
     plt.title(f"Metrics vs {attack_param} for {attack_name} Attack")
+    plt.xlabel(attack_param)
+    plt.ylabel("Metric Value")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 def print_clean_metrics(
