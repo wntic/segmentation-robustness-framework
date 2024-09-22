@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Optional, List, Union
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field, ValidationInfo, conlist, field_validator, model_validator
 from typing_extensions import Annotated
@@ -146,5 +146,5 @@ class DatasetConfig(BaseModel):
 
 class Config(BaseModel):
     model: ModelConfig
-    attacks: List[AttackConfig]
+    attacks: list[AttackConfig]
     dataset: DatasetConfig

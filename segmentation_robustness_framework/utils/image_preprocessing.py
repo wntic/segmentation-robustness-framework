@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List, Callable
+from typing import Optional, Callable
 
 from PIL import Image
 import torch
@@ -6,7 +6,7 @@ import numpy as np
 from torchvision.transforms import transforms
 
 
-def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = None) -> torch.Tensor:
+def preprocess_image(image_path: str, image_shape: Optional[tuple[int, int]] = None) -> torch.Tensor:
     """Preprocess an image for input into a segmentation model.
 
     This function loads an image from the specified file path, resizes it to the target shape if provided,
@@ -14,7 +14,7 @@ def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = N
 
     Args:
         image_path (str): Path to the image file.
-        image_shape (Tuple[int, int], optional): The desired image shape as a tuple (height, width).
+        image_shape (tuple[int, int], optional): The desired image shape as a tuple (height, width).
             If None, the image is resized to the closest dimensions that are divisible by stride 8. Defaults to None.
 
     Returns:
@@ -33,7 +33,7 @@ def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = N
         w, h = image.size
         h = (h // 8 + 1) * 8 if h % 8 != 0 else h  # height must be divisible by stride 8
         w = (w // 8 + 1) * 8 if w % 8 != 0 else w  # width must be divisible by stride 8
-    elif not isinstance(image_shape, Tuple):
+    elif not isinstance(image_shape, tuple):
         raise TypeError(f"Expected a tuple (height, width), but got {image_shape}")
     elif len(image_shape) == 2:
         h, w = image_shape[0], image_shape[1]
@@ -53,9 +53,9 @@ def preprocess_image(image_path: str, image_shape: Optional[Tuple[int, int]] = N
     return image
 
 
-def get_preprocessing_fn(image_shape: List[int]) -> Callable:
+def get_preprocessing_fn(image_shape: list[int]) -> Callable:
     # Check and validate image shape
-    if not isinstance(image_shape, List):
+    if not isinstance(image_shape, list):
         raise TypeError(f"Expected a list [height, width], but got {image_shape}")
 
     if len(image_shape) == 2:

@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import Union
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ def denormalize(image: np.ndarray) -> np.ndarray:
     return std * image + mean
 
 
-def get_class_colors(ds_name: str) -> Tuple[List[str], List[Tuple[int]]]:
+def get_class_colors(ds_name: str) -> tuple[list[str], list[tuple[int]]]:
     """Provides the class and associated colors for the specified dataset.
 
     Args:
@@ -39,7 +39,7 @@ def get_class_colors(ds_name: str) -> Tuple[List[str], List[Tuple[int]]]:
         ValueError: If the specified dataset does not exist.
 
     Returns:
-        Tuple[List[str], List[Tuple[int]]]: Tuple of classes and colors.
+        tuple[list[str], list[tuple[int]]]: tuple of classes and colors.
     """
     if ds_name == "VOC":
         return classes.VOC_classes, colors.VOC_colors
@@ -52,7 +52,7 @@ def get_class_colors(ds_name: str) -> Tuple[List[str], List[Tuple[int]]]:
     raise ValueError(f"Invalide dataset {ds_name}")
 
 
-def create_legend(mask: np.ndarray, classes: List[str], colors: List[Tuple[int]]):
+def create_legend(mask: np.ndarray, classes: list[str], colors: list[tuple[int]]):
     unique_classes = np.unique(mask)
 
     filtered_classes = [classes[i] for i in unique_classes]
