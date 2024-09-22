@@ -64,7 +64,9 @@ class TestDeepLabV3:
 
         deeplabv3 = models.deeplab.DeepLabV3(encoder_name="resnet50")
 
-        mock_deeplabv3_resnet50.assert_called_once_with(weights=models.deeplab.DEEPLABV3_ENCODERS["resnet50"], num_classes=21)
+        mock_deeplabv3_resnet50.assert_called_once_with(
+            weights=models.deeplab.DEEPLABV3_ENCODERS["resnet50"], num_classes=21
+        )
         assert deeplabv3.model == mock_deeplabv3_resnet50.return_value
 
     def test_resnet101_encoder(self, mocker):
@@ -73,7 +75,9 @@ class TestDeepLabV3:
 
         deeplabv3 = models.deeplab.DeepLabV3(encoder_name="resnet101")
 
-        mock_deeplabv3_resnet101.assert_called_once_with(weights=models.deeplab.DEEPLABV3_ENCODERS["resnet101"], num_classes=21)
+        mock_deeplabv3_resnet101.assert_called_once_with(
+            weights=models.deeplab.DEEPLABV3_ENCODERS["resnet101"], num_classes=21
+        )
         assert deeplabv3.model == mock_deeplabv3_resnet101.return_value
 
     def test_mobilenetv3_encoder(self, mocker):

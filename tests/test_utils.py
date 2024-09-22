@@ -4,8 +4,8 @@ import tempfile
 import numpy as np
 import pytest
 import torch
-from segmentation_robustness_framework import utils
 from PIL import Image
+from segmentation_robustness_framework import utils
 
 
 @pytest.fixture
