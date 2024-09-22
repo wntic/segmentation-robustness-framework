@@ -49,7 +49,7 @@ class RobustnessEvaluation:
         self.attack_config = config.attacks
         self.dataset_config = config.dataset
 
-        self.output_dir = Path("./runs/") if output_dir is None else output_dir
+        self.output_dir = Path("./runs/") if output_dir is None else Path(output_dir)
 
     def run(self, show: bool = False, save: bool = False) -> None:
         """Executes the robustness evaluation by applying adversarial attacks and calculating metrics.
@@ -194,7 +194,7 @@ class RobustnessEvaluation:
 
     def _prepare_output_dir(self) -> None:
         """Prepares the directory for saving evaluation results and adversarial images."""
-        os.makedirs(self.output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.run_dir = os.path.join(self.output_dir, f"run_{len(os.listdir(self.output_dir))}")
         os.makedirs(self.run_dir)
 
