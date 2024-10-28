@@ -26,7 +26,7 @@ class ModelConfig(BaseModel):
 
 
 class AttackConfig(BaseModel):
-    name: Literal["FGSM", "PGD"]
+    name: Literal["FGSM", "RFGSM", "PGD", "TPGD"]
     epsilon: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1) = None  # type: ignore
     alpha: conlist(Annotated[float, Field(strict=True, gt=0, le=1)], min_length=1) = None  # type: ignore
     steps: Optional[Annotated[int, Field(strict=True, gt=0)]] = None
@@ -45,16 +45,35 @@ class AttackConfig(BaseModel):
             ):
                 raise ValueError("FGSM attack got unexpected parameter. Valid parameter is 'epsilon' only")
             if self.epsilon is None:
-                raise ValueError("For FGSM, parameter 'epsilon'  should not be None")
+                raise ValueError("For FGSM attack, parameter 'epsilon'  should not be None")
 
-        # PGD attack params validation
-        if self.name == "PGD":
+        # R+FGSM attack params validation
+        if self.name == "RFGSM":
             if self.epsilon is None or self.alpha is None or self.steps is None or self.targeted is None:
-                raise ValueError("For PGD, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None")
+                raise ValueError("For R+FGSM attack, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None")
             if self.targeted and self.target_label is None:
                 raise ValueError("For a targeted attack, 'target_label' must not be None")
             if not self.targeted and self.target_label is not None:
                 raise ValueError("For a untargeted attack, 'target_label' must be None")
+
+        # PGD attack params validation
+        if self.name == "PGD":
+            if self.epsilon is None or self.alpha is None or self.steps is None or self.targeted is None:
+                raise ValueError("For PGD attack, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None")
+            if self.targeted and self.target_label is None:
+                raise ValueError("For a targeted attack, 'target_label' must not be None")
+            if not self.targeted and self.target_label is not None:
+                raise ValueError("For a untargeted attack, 'target_label' must be None")
+
+        # TPGD attack params validation
+        if self.name == "TPGD":
+            if self.targeted is not None or self.target_label is not None:
+                raise ValueError(
+                    "TPGD attack got unexpected parameter. Valid parameter is 'epsilon', 'alpha' and 'steps'"
+                )
+            if self.epsilon is None or self.alpha is None or self.steps is None:
+                raise ValueError("For TPGD attack, parameters 'epsilon', 'alpha' and 'steps' should not be None")
+
         return self
 
 
