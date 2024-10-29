@@ -29,8 +29,22 @@ class RobustnessEvaluation:
         save (bool): Flag indicating whether generated adversarial images and evaluation results should be saved.
         show (bool): Flag indicating whether generated adversarial images and evaluation results should be showed.
     """
+    VALID_METRICS = [
+        "mean_iou",
+        "pixel_accuracy",
+        "precision_macro",
+        "precision_micro",
+        "recall_macro",
+        "recall_micro",
+        "dice_macro",
+        "dice_micro",
+    ]
 
-    def __init__(self, config_path: Union[Path, str], output_dir: Union[Path, str] = None) -> None:
+    def __init__(
+            self,
+            config_path: Union[Path, str],
+            output_dir: Union[Path, str] = None,
+        ) -> None:
         """Initializes RobustnessEvaluation with the given configuration file.
 
         The method loads the YAML configuration file that specifies the model, dataset, and
@@ -38,7 +52,7 @@ class RobustnessEvaluation:
 
         Args:
             config_path (Union[Path, str]): Path to the YAML configuration file.
-            output_dir (Union[Path, str]): Path to the output directory.
+            output_dir (Union[Path, str]): Path to the output directory. Defaults to None.
         """
         with open(config_path) as f:
             data = yaml.load(f, yaml.SafeLoader)
@@ -51,10 +65,26 @@ class RobustnessEvaluation:
 
         self.output_dir = Path("./runs/") if output_dir is None else Path(output_dir)
 
+        self.metrics = None
+        self.metrics_collection = None
+
         self.show = None
         self.save = None
 
-    def run(self, show: bool = False, save: bool = False) -> None:
+    def _validate_metrics(self, metrics: list[str]) -> None:
+        """Validates metrics.
+
+        Args:
+            metrics (list[str]): Metrics for validation.
+
+        Raises:
+            ValueError: If the given metric is not correct.
+        """
+        for metric in metrics:
+            if metric not in self.VALID_METRICS:
+                raise ValueError(f"Got unexpected metric '{metric}'. Valid metrics: {self.VALID_METRICS}")
+
+    def run(self, show: bool = False, save: bool = False, metrics: list[str] = ["mean_iou"]) -> None:
         """Executes the robustness evaluation by applying adversarial attacks and calculating metrics.
 
         This method loads the model, dataset, and adversarial attacks, evaluates the model on clean and
@@ -63,9 +93,13 @@ class RobustnessEvaluation:
         Args:
             show (bool): If True, visualizes images and adversarial examples during evaluation.
             save (bool): If true, saves final images.
+            metrics (list[str]): Metrics to compute for evaluating image segmentation. Defaults to ["mean_iou"].
         """
         self.show = show
         self.save = save
+
+        self._validate_metrics(metrics)
+        self.metrics = metrics
 
         # Load model, dataset, attacks
         model = self._load_model()
@@ -78,7 +112,8 @@ class RobustnessEvaluation:
         # Create save path if not exists
         self._prepare_output_dir()
 
-        # Initialize structure to store metrics
+        # Initialize metrics collection and structure to store metrics
+        self.metrics_collection = utils.metrics.MetricsCollection(num_classes=dataset.num_classes)
         self.metrics_storage = {}
 
         # Step 1: Evaluate clean metrics
@@ -210,18 +245,7 @@ class RobustnessEvaluation:
         Returns:
             dict[str, list[float]]: A dictionary to store lists of performance metrics.
         """
-        return {
-            "mean_iou": [],
-            "pixel_accuracy": [],
-            "precision_macro": [],
-            "precision_micro": [],
-            "recall_macro": [],
-            "recall_micro": [],
-            "f1_macro": [],
-            "f1_micro": [],
-            "dice_score_macro": [],
-            "dice_score_micro": [],
-        }
+        return {key: [] for key in self.metrics}
 
     def _get_model_predictions(self, model: nn.Module, image: torch.Tensor) -> torch.Tensor:
         """Obtains predictions from the segmentation model for a given image.
@@ -239,36 +263,47 @@ class RobustnessEvaluation:
 
         return preds
 
-    def _compute_metrics(self, targets: torch.Tensor, preds: torch.Tensor, num_classes: int) -> dict[str, float]:
+    def _compute_metrics(self, targets: torch.Tensor, preds: torch.Tensor) -> dict[str, float]:
         """Computes performance metrics for segmentation.
 
-        This method calculates various metrics such as mean IoU, pixel accuracy, precision, recall,
-        F1 score, and Dice score.
+        This method calculates various metrics such as mean IoU, pixel accuracy, precision, recall and Dice score.
 
         Args:
             targets (torch.Tensor): The ground truth labels.
             preds (torch.Tensor): The predicted labels from the model.
-            num_classes (int): The number of classes in the segmentation task.
+
+        Raises:
+            ValueError: If metrics collection is not initialized.
+            ValueError: If the given metric is not valid.
 
         Returns:
             dict[str, float]: A dictionary containing calculated metrics.
         """
-        metrics = utils.metrics.SegmentationMetric(targets=targets, preds=preds, num_classes=num_classes)
-        precision, recall, f1_score = metrics.precision_recall_f1()
-        dice_score = metrics.dice_coefficient()
+        if self.metrics_collection is None:
+            raise ValueError("Metrics Collection is empty (None)")
+        results = {}
 
-        return {
-            "mean_iou": metrics.mean_iou(),
-            "pixel_accuracy": metrics.pixel_accuracy(),
-            "precision_macro": precision["macro"],
-            "precision_micro": precision["micro"],
-            "recall_macro": recall["macro"],
-            "recall_micro": recall["micro"],
-            "f1_macro": f1_score["macro"],
-            "f1_micro": f1_score["micro"],
-            "dice_score_macro": dice_score["macro"],
-            "dice_score_micro": dice_score["micro"],
-        }
+        for metric in self.metrics:
+            if metric == "mean_iou":
+                results["mean_iou"] = self.metrics_collection.mean_iou(targets, preds)
+            elif metric == "pixel_accuracy":
+                results["pixel_accuracy"] = self.metrics_collection.pixel_accuracy(targets, preds)
+            elif metric == "precision_macro":
+                results["precision_macro"] = self.metrics_collection.precision(targets, preds, average="macro")
+            elif metric == "precision_micro":
+                results["precision_micro"] = self.metrics_collection.precision(targets, preds, average="micro")
+            elif metric == "recall_macro":
+                results["recall_macro"] = self.metrics_collection.recall(targets, preds, average="macro")
+            elif metric == "recall_micro":
+                results["recall_micro"] = self.metrics_collection.recall(targets, preds, average="micro")
+            elif metric == "dice_macro":
+                results["dice_score_macro"] = self.metrics_collection.dice_score(targets, preds, average="macro")
+            elif metric == "dice_micro":
+                results["dice_score_micro"] = self.metrics_collection.dice_score(targets, preds, average="micro")
+            else:
+                raise ValueError(f"Metric '{metric}' is not valid.")
+
+        return results
 
     def _append_metrics(self, storage: dict[str, list[float]], metrics: dict[str, float]) -> None:
         """Appends calculated metrics to the storage dictionary.
@@ -298,7 +333,7 @@ class RobustnessEvaluation:
             image = image.to(self.device)
             preds = self._get_model_predictions(model, image)
 
-            clean_metrics = self._compute_metrics(targets=ground_truth, preds=preds, num_classes=dataset.num_classes)
+            clean_metrics = self._compute_metrics(targets=ground_truth, preds=preds)
             self._append_metrics(clean_metrics_storage, clean_metrics)
 
         return clean_metrics_storage
@@ -354,9 +389,7 @@ class RobustnessEvaluation:
                     save_dir=attack_dir if self.save else None,
                 )
 
-                adv_metrics = self._compute_metrics(
-                    targets=ground_truth, preds=adv_preds, num_classes=dataset.num_classes
-                )
+                adv_metrics = self._compute_metrics(targets=ground_truth, preds=adv_preds)
                 self._append_metrics(attack_metrics["adv_metrics"], adv_metrics)
 
             attack_group_name = self.attack_config[group_idx].name
