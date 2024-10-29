@@ -174,12 +174,11 @@ def visualize_images(
 
     plt.subplots_adjust(wspace=0.05)
 
-    if show:
-        plt.show()
-
     if save:
         plt.savefig(f"{save_dir}/{len(os.listdir(save_dir))}.jpg", bbox_inches="tight")
-        plt.close()
+    if show:
+        plt.show()
+    plt.close()
 
 
 def visualize_metrics(
