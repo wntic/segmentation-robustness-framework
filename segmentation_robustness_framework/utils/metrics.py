@@ -13,7 +13,7 @@ class SegmentationMetric:
         num_classes (int): The number of classes.
     """
 
-    def __init__(self, targets: torch.Tensor, preds: torch.Tensor, num_classes: int) -> None:
+    def __init__(self, targets: torch.Tensor, preds: torch.Tensor, num_classes: int, ignore_index: int = 255) -> None:
         """Segmentation metric initialization.
 
         Raises:
@@ -41,6 +41,7 @@ class SegmentationMetric:
         if num_classes < 2:
             raise ValueError("The number of classes must be 2 or more")
         self.num_classes = num_classes
+        self.ignore_index = ignore_index
 
     def iou(self) -> list[Optional[float]]:
         """Compute the Intersection over Union (IoU) per class for semantic segmentation.
@@ -50,6 +51,8 @@ class SegmentationMetric:
         """
         iou_scores = []
         for cls in range(self.num_classes):
+            if cls == self.ignore_index:
+                continue
             pred = (self.pred_mask == cls).astype(np.int32)
             true = (self.true_mask == cls).astype(np.int32)
 
@@ -95,6 +98,8 @@ class SegmentationMetric:
         f1_score = np.zeros(self.num_classes)
 
         for cls in range(self.num_classes):
+            if cls == self.ignore_index:
+                continue
             pred_class = self.pred_mask == cls
             true_class = self.true_mask == cls
 
@@ -160,6 +165,8 @@ class SegmentationMetric:
         """
         dice_scores = np.zeros(self.num_classes)
         for cls in range(self.num_classes):
+            if cls == self.ignore_index:
+                continue
             pred_class = self.pred_mask == cls
             true_class = self.true_mask == cls
 
