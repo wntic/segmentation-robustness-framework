@@ -231,6 +231,25 @@ class RobustnessEvaluation:
                 for epsilon in epsilon_values
                 for alpha in alpha_values
             ]
+        elif attack_name == "RFGSM":
+            epsilon_values = attack_config.epsilon
+            alpha_values = attack_config.alpha
+            iters = attack_config.steps
+            targeted = attack_config.targeted
+            return [
+                attacks.RFGSM(model=model, eps=epsilon, alpha=alpha, steps=iters, targeted=targeted)
+                for epsilon in epsilon_values
+                for alpha in alpha_values
+            ]
+        elif attack_name == "TPGD":
+            epsilon_values = attack_config.epsilon
+            alpha_values = attack_config.alpha
+            iters = attack_config.steps
+            return [
+                attacks.TPGD(model=model, eps=epsilon, alpha=alpha, steps=iters)
+                for epsilon in epsilon_values
+                for alpha in alpha_values
+            ]
         raise ValueError(f"Unknown attack type: {attack_name}")
 
     def _prepare_output_dir(self) -> None:
@@ -297,9 +316,9 @@ class RobustnessEvaluation:
             elif metric == "recall_micro":
                 results["recall_micro"] = self.metrics_collection.recall(targets, preds, average="micro")
             elif metric == "dice_macro":
-                results["dice_score_macro"] = self.metrics_collection.dice_score(targets, preds, average="macro")
+                results["dice_macro"] = self.metrics_collection.dice_score(targets, preds, average="macro")
             elif metric == "dice_micro":
-                results["dice_score_micro"] = self.metrics_collection.dice_score(targets, preds, average="micro")
+                results["dice_micro"] = self.metrics_collection.dice_score(targets, preds, average="micro")
             else:
                 raise ValueError(f"Metric '{metric}' is not valid.")
 
