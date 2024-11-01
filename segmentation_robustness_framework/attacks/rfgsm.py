@@ -55,7 +55,7 @@ class RFGSM(AdversarialAttack):
         return self.attack(image, labels)
 
     def get_params(self) -> dict[str, float]:
-        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters}
+        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.steps}
 
     def attack(self, images: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """
