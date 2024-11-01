@@ -16,7 +16,7 @@ attacks:
     target_label: 15
 
 dataset:
-  name: "PascalVOC"
+  name: "VOC"
   root: "path/to/VOCdevkit/VOC2012/"
   split: "val"
   image_shape: [512, 376]
