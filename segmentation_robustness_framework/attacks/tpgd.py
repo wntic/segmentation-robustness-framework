@@ -42,7 +42,6 @@ class TPGD(AdversarialAttack):
         self.eps = eps
         self.alpha = alpha
         self.steps = steps
-        self.device = next(self.model.parameters()).device
 
     def __repr__(self) -> str:
         return f"TPGD attack: eps={self.eps}, alpha={self.alpha}, steps={self.steps}"
@@ -58,7 +57,9 @@ class TPGD(AdversarialAttack):
         """
         Overriden.
         """
-        images = images.clone().detach().to(self.device)
+        device = next(self.model.parameters()).device
+
+        images = images.clone().detach().to(device)
         logit_ori = self.model(images).detach()
 
         adv_images = images + 0.001 * torch.randn_like(images)
