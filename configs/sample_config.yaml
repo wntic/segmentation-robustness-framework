@@ -1,17 +1,42 @@
 model:
   name: "DeepLabV3"
-  encoder: "resnet101"
+  encoder: "resnet50"
   weights: "coco_with_voc_labels"
   num_classes: 21
   device: "cuda"
 
 attacks:
   - name: "FGSM"
-    epsilon: [0.05, 0.125, 0.25, 0.5, 0.66]
+    epsilon: [0.01, 0.25, 0.5, 0.75, 1]
+
   - name: "PGD"
-    epsilon: [0.05, 0.37, 0.5]
-    alpha: [0.003, 0.007]
+    epsilon: [0.01, 0.25, 0.5, 0.75, 1]
+    alpha: [0.007]
     steps: 40
+    targeted: false
+
+  - name: "RFGSM"
+    epsilon: [0.01]
+    alpha: [0.07]
+    steps: 10
+    targeted: false
+
+  - name: "TPGD"
+    epsilon: [0.01, 0.25, 0.5, 0.75, 1]
+    alpha: [0.07]
+    steps: 10
+
+  - name: "PGD"
+    epsilon: [0.01, 0.25, 0.5, 0.75, 1]
+    alpha: [0.007]
+    steps: 10
+    targeted: true
+    target_label: 15
+
+  - name: "RFGSM"
+    epsilon: [0.01, 0.25, 0.5, 0.75, 1]
+    alpha: [0.07]
+    steps: 10
     targeted: true
     target_label: 15
 
@@ -20,4 +45,4 @@ dataset:
   root: "path/to/VOCdevkit/VOC2012/"
   split: "val"
   image_shape: [512, 376]
-  max_images: 100
+  max_images: 2
