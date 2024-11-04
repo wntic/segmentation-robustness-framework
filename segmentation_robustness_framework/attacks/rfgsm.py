@@ -62,7 +62,7 @@ class RFGSM(AdversarialAttack):
         Overriden.
         """
         self.model.eval()
-        
+
         images = images.to(self.device)
         labels = labels.to(self.device)
 

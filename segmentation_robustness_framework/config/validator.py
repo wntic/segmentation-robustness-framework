@@ -50,7 +50,9 @@ class AttackConfig(BaseModel):
         # R+FGSM attack params validation
         if self.name == "RFGSM":
             if self.epsilon is None or self.alpha is None or self.steps is None or self.targeted is None:
-                raise ValueError("For R+FGSM attack, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None")
+                raise ValueError(
+                    "For R+FGSM attack, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None"
+                )
             if self.targeted and self.target_label is None:
                 raise ValueError("For a targeted attack, 'target_label' must not be None")
             if not self.targeted and self.target_label is not None:
@@ -59,7 +61,9 @@ class AttackConfig(BaseModel):
         # PGD attack params validation
         if self.name == "PGD":
             if self.epsilon is None or self.alpha is None or self.steps is None or self.targeted is None:
-                raise ValueError("For PGD attack, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None")
+                raise ValueError(
+                    "For PGD attack, parameters 'epsilon', 'alpha', 'steps' and 'targeted' should not be None"
+                )
             if self.targeted and self.target_label is None:
                 raise ValueError("For a targeted attack, 'target_label' must not be None")
             if not self.targeted and self.target_label is not None:

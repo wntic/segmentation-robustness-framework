@@ -29,6 +29,7 @@ class RobustnessEvaluation:
         save (bool): Flag indicating whether generated adversarial images and evaluation results should be saved.
         show (bool): Flag indicating whether generated adversarial images and evaluation results should be showed.
     """
+
     VALID_METRICS = [
         "mean_iou",
         "pixel_accuracy",
@@ -41,10 +42,10 @@ class RobustnessEvaluation:
     ]
 
     def __init__(
-            self,
-            config_path: Union[Path, str],
-            output_dir: Union[Path, str] = None,
-        ) -> None:
+        self,
+        config_path: Union[Path, str],
+        output_dir: Union[Path, str] = None,
+    ) -> None:
         """Initializes RobustnessEvaluation with the given configuration file.
 
         The method loads the YAML configuration file that specifies the model, dataset, and

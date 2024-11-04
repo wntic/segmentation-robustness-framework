@@ -58,7 +58,7 @@ class TPGD(AdversarialAttack):
         Overriden.
         """
         self.model.eval()
-        
+
         images = images.clone().detach().to(self.device)
         logit_ori = self.model(images).detach()
 

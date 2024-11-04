@@ -55,7 +55,7 @@ class PGD(AdversarialAttack):
         Overriden.
         """
         self.model.eval()
-        
+
         image = image.to(self.device)
         labels = labels.to(self.device)
 

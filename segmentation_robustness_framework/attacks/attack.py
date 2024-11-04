@@ -1,5 +1,6 @@
-from ..models import SegmentationModel
 import torch
+
+from ..models import SegmentationModel
 
 
 class AdversarialAttack:
