@@ -1,4 +1,5 @@
 from ..models import SegmentationModel
+import torch
 
 
 class AdversarialAttack:
@@ -15,6 +16,15 @@ class AdversarialAttack:
             model (SegmentationModel): Segmentation model to be attacked.
         """
         self.model = model
+
+        try:
+            self.device = next(model.parameters()).device
+        except Exception:
+            self.device = None
+            print("Failed to set device. Try set_device().")
+
+    def set_device(self, device):
+        self.device = torch.device(device) if isinstance(device, str) else device
 
     def attack(self, image, labels):
         """Performs an attack on the segmentation model.
