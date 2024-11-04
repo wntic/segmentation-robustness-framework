@@ -3,23 +3,28 @@
 
 ![GitHub License](https://img.shields.io/github/license/wntic/segmentation-robustness-framework) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Segmentation Robustness Framework (SRF) is a tool for testing the robustness of segmentation models to digital adversarial attacks.
+**Segmentation Robustness Framework** (SRF) is a tool for testing the robustness of semantic segmentation models to digital adversarial attacks.
 
 ## Installation
 
 ### Requirements:
-1. Python 3.9+
-2. torch==2.4.0
-3. torchvision==0.19.0
+
+* Python >= 3.12
+* PyTorch >= 2.4.0
+* Torchvision >= 0.19.0
 
 ```bash
 git clone https://github.com/wntic/segmentation-robustness-framework.git
 cd segmentation-robustness-framework
-# Create venv if needed
+
+python3 -m venv venv # Create venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ## Models
+
+Supported models and encoders:
 
 - **Fully Convolutional Network (FCN)** [[paper]](https://arxiv.org/abs/1605.06211v1)
 	- Supported encoders: resnet50, resnet101.
@@ -28,23 +33,12 @@ pip install -r requirements.txt
 
 ## Attack Methods
 
-### FGSM
+Supported attack methods for generating adversarial perturbations:
 
-FGSM stands for Fast Gradient Sign Method, a simple and widely used method for generating adversarial examples.
-
-$$\textbf{adv}_{x} = x + \epsilon*\textbf{sign}(\nabla_xJ(\theta, x, y))$$
-
-**Attack configuration**:
-- **epsilon**: The magnitude of the perturbation for the attack.
-
-#### PGD
-
-The Projected Gradient Descent (PGD) attack is an iterative and more powerful variant of the FGSM.
-
-
-$$X_{t+1} = X_{t} = \alpha * \text{sign}(\nabla_xJ(\theta, X_{t}, y))$$
-
-$$X_{t+1} = \textbf{clip} (X_{t+1}, X_{0} - \epsilon, X_{0} + \epsilon)$$
+- **Fast Gradient Sign Method** (FGSM) [[paper]](https://arxiv.org/abs/1412.6572)
+- **Projected Gradient Descent** (PGD) [[paper]](https://arxiv.org/abs/1706.06083)
+- **Random Fast Gradient Sign Method** (R+FGSM) [[paper]](https://arxiv.org/abs/1705.07204)
+- **PGD based on KL-Divergence loss** (TPGD) [[paper]](https://arxiv.org/abs/1901.08573)
 
 ## Usage
 
@@ -53,11 +47,8 @@ Easy to use in 3 lines of code. Just prepare the configuration file and start th
 ```python
 from segmentation-robustness-framework import RobustnessEvaluation
 
-
-config_path = "configs/config.yaml"
-srf = RobustnessEvaluation(config_path=config_path)
-
-srf.run()
+tester = RobustnessEvaluation(config_path="configs/sample_config.yaml")
+tester.run(save=True, show=True, metrics=["mean_iou", "recall_macro"])
 ```
 
 ## Configuring SRF
@@ -66,7 +57,7 @@ This section provides details on how to configure the tool for performing advers
 
 ```yaml
 model:
-  name: "FCN"
+  name: "DeepLabV3"
   encoder: "resnet101"
   weights: "coco_with_voc_labels"
   num_classes: 21
@@ -74,25 +65,21 @@ model:
 
 attacks:
   - name: "FGSM"
-    epsilon: [0.25]
+    epsilon: [0.05, 0.125, 0.25, 0.5, 0.66]
+
   - name: "PGD"
-    epsilon: [0.05, 0.125, 0.25]
-    alpha: [0.007]
+    epsilon: [0.05, 0.37, 0.5]
+    alpha: [0.003, 0.007]
     steps: 40
     targeted: true
-    target_label: 12
+    target_label: 15
 
 dataset:
   name: "VOC"
-  root: "path/to/datasets/VOCdevkit/VOC2012/"
+  root: "path/to/VOCdevkit/VOC2012/"
   split: "val"
-  image_shape: [512, 256]
-  max_images: 500
-
-output:
-  save_dir: "./outputs/"
-  save_images: true
-  save_log: true
+  image_shape: [512, 376]
+  max_images: 100
 ```
 
 ### Model Configuration
@@ -112,17 +99,17 @@ This section specifies the segmentation model to use, including the model name, 
 
 ### Attacks Configuration
 
-This section lists the adversarial attacks to be applied to the model, along with their respective parameters. Two attack methods are available: FGSM and PGD. Each attack has its own set of parameters (see section [Attack Methods](#Attack Methods))
+This section lists the adversarial attacks to be applied to the model, along with their respective parameters.
 
 You can use multiple attacks at the same time, just put them in the config file.
 
 1. **name**: The name of the adversarial attack method.
-	- Available Attack Methods: FGSM, PGD
+	- Available Attack Methods: FGSM, R+FGSM, PGD, TPGD.
 2. **epsilon**: The magnitude of the perturbation for the attack. This can be a list of values to test different perturbation strengths.
 	- Values are specified as a list, for example `[0.1]` or `[0.125, 0.25, 0.5]`
 3. **alpha**: The step size for iterative attacks like PGD.
 	- Values are specified as a list, for example `[0.07]` or `[0.02, 0.07]`
-4. **steps**: The number of iterations for iterative attacks like PGD.
+4. **iters**: The number of iterations for iterative attacks like PGD.
 5. **targeted**: A flag to indicate whether the attack is targeted or untargeted.
 6. **target_label**: (Required if `targeted` is true) The target class label for a targeted attack.
 
@@ -180,13 +167,6 @@ Configuration parameters:
 	- Note: You can use one or more annotation types:
 		- One target type: `target_type="semantic"`
 		- Several target types: `target_type=["semantic", "instance"]`
-
-### Output Configuration
-
-Available parameters:
-
-1. **save_dir**
-2. **save_images**
 
 ## Contributing
 
