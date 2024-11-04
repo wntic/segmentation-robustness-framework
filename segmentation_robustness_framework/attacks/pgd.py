@@ -48,18 +48,16 @@ class PGD(AdversarialAttack):
         return self.attack(image, labels)
 
     def get_params(self) -> dict[str, float]:
-        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters}
+        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters, "targeted": self.targeted}
 
     def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """
         Overriden.
         """
         self.model.eval()
-
-        device = next(self.model.parameters()).device
-
-        image.to(device)
-        labels.to(device)
+        
+        image = image.to(self.device)
+        labels = labels.to(self.device)
 
         loss = torch.nn.CrossEntropyLoss()
         adv_image = image.clone().detach()

@@ -46,17 +46,15 @@ class FGSM(AdversarialAttack):
         """
         self.model.eval()
 
-        device = next(self.model.parameters()).device
-
-        image.to(device)
+        image = image.to(self.device)
         image.requires_grad = True
-        labels.to(device)
+        labels = labels.to(self.device)
 
         loss = torch.nn.CrossEntropyLoss()
 
         outputs = self.model(image)
         self.model.zero_grad()
-        # Calculate loss
+
         cost = loss(outputs, labels)
         cost.backward()
 

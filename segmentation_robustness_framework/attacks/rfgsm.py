@@ -19,7 +19,7 @@ class RFGSM(AdversarialAttack):
         model (SegmentationModel): The model that the adversarial attack will be applied to.
         eps (float): Strength of the attack or maximum perturbation.
         alpha (float): Step size.
-        steps: (int): Number of steps.
+        iters: (int): Number of iters.
         targeted (bool): Indicates whether the attack is targeted or not.
     """
 
@@ -28,7 +28,7 @@ class RFGSM(AdversarialAttack):
         model: SegmentationModel,
         eps: float = 8 / 255,
         alpha: float = 2 / 255,
-        steps: int = 10,
+        iters: int = 10,
         targeted: bool = False,
     ):
         """Initializes R+FGSM attack.
@@ -37,42 +37,41 @@ class RFGSM(AdversarialAttack):
             model (SegmentationModel): The model that the adversarial attack will be applied to.
             eps (float, optional): Strength of the attack or maximum perturbation. Defaults to 8/255.
             alpha (float, optional): Step size. Defaults to 2/255.
-            steps (int, optional): Number of steps. Defaults to 10.
+            iters (int, optional): Number of iters. Defaults to 10.
             targeted (bool, optional): If True, performs a targeted attack; otherwise, performs
                 an untargeted attack. Defaults to False.
         """
         super().__init__(model)
         self.eps = eps
         self.alpha = alpha
-        self.steps = steps
+        self.iters = iters
         self.targeted = targeted
 
     def __repr__(self) -> str:
-        return f"R+FGSM attack: eps={self.eps}, alpha={self.alpha}, steps={self.steps}, targeted={self.targeted}"
+        return f"R+FGSM attack: eps={self.eps}, alpha={self.alpha}, iters={self.iters}, targeted={self.targeted}"
 
     def __call__(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Allows the object to be called like a function to perform the attack."""
         return self.attack(image, labels)
 
     def get_params(self) -> dict[str, float]:
-        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.steps}
+        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters, "targeted": self.targeted}
 
     def attack(self, images: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """
         Overriden.
         """
         self.model.eval()
-        device = next(self.model.parameters()).device
-
-        images = images.to(device)
-        labels = labels.to(device)
+        
+        images = images.to(self.device)
+        labels = labels.to(self.device)
 
         adv_images = images + (self.eps - self.alpha) * torch.randn_like(images).sign()
         adv_images = torch.clamp(adv_images, min=0, max=1).detach()
 
         loss = torch.nn.CrossEntropyLoss()
 
-        for _ in range(self.steps):
+        for _ in range(self.iters):
             adv_images.requires_grad = True
             outputs = self.model(adv_images)
 

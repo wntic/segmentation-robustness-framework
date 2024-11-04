@@ -20,7 +20,7 @@ class TPGD(AdversarialAttack):
         model (SegmentationModel): The model that the adversarial attack will be applied to.
         eps (float): Strength of the attack or maximum perturbation.
         alpha (float): Step size.
-        steps: (int): Number of steps.
+        iters: (int): Number of iters.
     """
 
     def __init__(
@@ -28,7 +28,7 @@ class TPGD(AdversarialAttack):
         model: SegmentationModel,
         eps: float = 8 / 255,
         alpha: float = 2 / 255,
-        steps: int = 10,
+        iters: int = 10,
     ):
         """Initializes FGSM attack.
 
@@ -36,30 +36,30 @@ class TPGD(AdversarialAttack):
             model (SegmentationModel): The model that the adversarial attack will be applied to.
             eps (float): Strength of the attack or maximum perturbation.
             alpha (float): Step size.
-            steps: (int): Number of steps.
+            iters: (int): Number of iters.
         """
         super().__init__(model)
         self.eps = eps
         self.alpha = alpha
-        self.steps = steps
+        self.iters = iters
 
     def __repr__(self) -> str:
-        return f"TPGD attack: eps={self.eps}, alpha={self.alpha}, steps={self.steps}"
+        return f"TPGD attack: eps={self.eps}, alpha={self.alpha}, iters={self.iters}"
 
     def __call__(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Allows the object to be called like a function to perform the attack."""
         return self.attack(image, labels)
 
     def get_params(self) -> dict[str, float]:
-        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.steps}
+        return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters}
 
     def attack(self, images: torch.Tensor, labels: torch.Tensor = None) -> torch.Tensor:
         """
         Overriden.
         """
-        device = next(self.model.parameters()).device
-
-        images = images.clone().detach().to(device)
+        self.model.eval()
+        
+        images = images.clone().detach().to(self.device)
         logit_ori = self.model(images).detach()
 
         adv_images = images + 0.001 * torch.randn_like(images)
@@ -67,7 +67,7 @@ class TPGD(AdversarialAttack):
 
         loss = torch.nn.KLDivLoss(reduction="sum")
 
-        for _ in range(self.steps):
+        for _ in range(self.iters):
             adv_images.requires_grad = True
             logit_adv = self.model(adv_images)
 
