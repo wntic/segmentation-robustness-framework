@@ -237,7 +237,7 @@ class RobustnessEvaluation:
             iters = attack_config.steps
             targeted = attack_config.targeted
             return [
-                attacks.RFGSM(model=model, eps=epsilon, alpha=alpha, steps=iters, targeted=targeted)
+                attacks.RFGSM(model=model, eps=epsilon, alpha=alpha, iters=iters, targeted=targeted)
                 for epsilon in epsilon_values
                 for alpha in alpha_values
             ]
@@ -246,7 +246,7 @@ class RobustnessEvaluation:
             alpha_values = attack_config.alpha
             iters = attack_config.steps
             return [
-                attacks.TPGD(model=model, eps=epsilon, alpha=alpha, steps=iters)
+                attacks.TPGD(model=model, eps=epsilon, alpha=alpha, iters=iters)
                 for epsilon in epsilon_values
                 for alpha in alpha_values
             ]
