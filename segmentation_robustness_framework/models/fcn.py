@@ -21,7 +21,7 @@ class FCN(SegmentationModel):
     Attributes:
         encoder_name (str): The name of the encoder used in the FCN model. Supported encoders
             are "resnet50" and "resnet101". Defaults to "resnet50".
-        weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
+        encoder_weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
             Defaults to "coco_with_voc_labels".
         num_classes (int): The number of output classes for the segmentation task. Defaults to 21.
     """
@@ -29,7 +29,7 @@ class FCN(SegmentationModel):
     def __init__(
         self,
         encoder_name: str = "resnet50",
-        weights: str = "coco_with_voc_labels",
+        encoder_weights: str = "coco_with_voc_labels",
         num_classes: int = 21,
     ):
         """Initializes the FCN model with the specified encoder, weights and number of classes.
@@ -41,7 +41,7 @@ class FCN(SegmentationModel):
         Raises:
             ValueError: If the specified encoder is not supported.
         """
-        super().__init__(encoder_name, weights, num_classes)
+        super().__init__(encoder_name, encoder_weights, num_classes)
         if encoder_name == "resnet50":
             self.model = models.fcn_resnet50(weights=FCN_ENCODERS["resnet50"], num_classes=self.num_classes)
         elif encoder_name == "resnet101":

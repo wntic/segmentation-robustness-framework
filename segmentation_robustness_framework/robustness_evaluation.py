@@ -143,13 +143,13 @@ class RobustnessEvaluation:
         if self.model_config.name == "FCN":
             model = models.FCN(
                 encoder_name=self.model_config.encoder,
-                weights=self.model_config.weights,
+                encoder_weights=self.model_config.weights,
                 num_classes=self.model_config.num_classes,
             )
         elif self.model_config.name == "DeepLabV3":
             model = models.DeepLabV3(
                 encoder_name=self.model_config.encoder,
-                weights=self.model_config.weights,
+                encoder_weights=self.model_config.weights,
                 num_classes=self.model_config.num_classes,
             )
         else:
