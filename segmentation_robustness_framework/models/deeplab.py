@@ -21,7 +21,7 @@ class DeepLabV3(SegmentationModel):
     Attributes:
         encoder_name (str, optional): The name of the backbone encoder to be used. Supported encoders
             are "resnet50", "resnet101", and "mobilenet_v3_large". Defaults to "resnet50".
-        encoder_weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
+        weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
             Defaults to "coco_with_voc_labels".
         num_classes (int, optional): Number of classes in the dataset used. Defaults to 21.
     """
@@ -29,7 +29,7 @@ class DeepLabV3(SegmentationModel):
     def __init__(
         self,
         encoder_name: str = "resnet50",
-        encoder_weights: str = "coco_with_voc_labels",
+        weights: str = "coco_with_voc_labels",
         num_classes: int = 21,
     ):
         """Initializes the DeepLabV3 segmentation model with the given encoder name, encoder weights,
@@ -38,14 +38,14 @@ class DeepLabV3(SegmentationModel):
         Args:
             encoder_name (str, optional): The name of the backbone encoder to be used. Supported encoders
                 are "resnet50", "resnet101", and "mobilenet_v3_large". Defaults to "resnet50".
-            encoder_weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
+            weights (str, optional): Encoder's pretrained weights. Typically, this is "coco_with_voc_labels".
                 Defaults to "coco_with_voc_labels".
             num_classes (int, optional): Number of classes in the dataset used. Defaults to 21.
 
         Raises:
             ValueError: If the encoder is not supported
         """
-        super().__init__(encoder_name, encoder_weights, num_classes)
+        super().__init__(encoder_name, weights, num_classes)
         if encoder_name == "resnet50":
             self.model = models.deeplabv3_resnet50(
                 weights=DEEPLABV3_ENCODERS["resnet50"],

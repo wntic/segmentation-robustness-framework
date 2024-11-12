@@ -9,22 +9,22 @@ class SegmentationModel(nn.Module):
 
     Attributes:
         encoder_name (str): The name of the encoder to be used in the segmentation model.
-        encoder_weights (str): The pretrained weights for the encoder.
+        weights (str): The pretrained weights for the encoder.
         num_classes (int): Number of classes in the dataset used.
         model (SegmentationModel): The segmentation model, to be defined by subclasses.
     """
 
-    def __init__(self, encoder_name: str, encoder_weights: str, num_classes: int):
+    def __init__(self, encoder_name: str, weights: str, num_classes: int):
         """Initializes the SegmentationModel with the given encoder name, encoder weights, and number of classes.
 
         Args:
             encoder_name (str): The name of the backbone encoder to be used in the segmentation model.
-            encoder_weights (str): Backbone encoder pretrained weights.
+            weights (str): Backbone encoder pretrained weights.
             num_classes (int): Number of classes in the dataset used.
         """
         super().__init__()
         self.encoder_name = encoder_name
-        self.encoder_weights = encoder_weights
+        self.weights = weights
         self.num_classes = num_classes
         self.model = None
 
