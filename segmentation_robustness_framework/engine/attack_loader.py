@@ -1,6 +1,7 @@
-from segmentation_robustness_framework.config import AttackConfig
-from segmentation_robustness_framework import attacks
 import torch.nn as nn
+
+from segmentation_robustness_framework import attacks
+from segmentation_robustness_framework.config import AttackConfig
 
 
 class AttackLoader:

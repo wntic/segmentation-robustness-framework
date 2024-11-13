@@ -1,4 +1,5 @@
 import torch
+
 import segmentation_robustness_framework.models as models
 from segmentation_robustness_framework.config import ModelConfig
 
@@ -12,7 +13,7 @@ class ModelLoader:
         self.num_classes = model_config.num_classes
         self.device = model_config.device
 
-    def load_model(self):
+    def load_model(self) -> torch.nn.Module:
         if self.model_name in ["DeepLabV3", "FCN"]:
             model = self._load_torchvision_model()
         else:
@@ -21,7 +22,7 @@ class ModelLoader:
         model = model.to(self.device)
         return model
 
-    def _load_torchvision_model(self):
+    def _load_torchvision_model(self) -> torch.nn.Module:
         if self.weights == "default":
             self.weights = "coco_with_voc_labels"
 
@@ -45,7 +46,7 @@ class ModelLoader:
 
         return model
 
-    def _load_model(self):
+    def _load_model(self) -> torch.nn.Module:
         try:
             model_class = getattr(models, self.model_name)
         except AttributeError:

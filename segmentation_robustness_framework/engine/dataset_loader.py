@@ -1,6 +1,8 @@
+from torch.utils.data import Dataset
+
 from segmentation_robustness_framework import datasets
-from segmentation_robustness_framework.utils import image_preprocessing
 from segmentation_robustness_framework.config import DatasetConfig
+from segmentation_robustness_framework.utils import image_preprocessing
 
 
 class DatasetLoader:
@@ -10,7 +12,7 @@ class DatasetLoader:
         self.root = self.config.root
         self.images_shape = self.config.image_shape
 
-    def load_dataset(self):
+    def load_dataset(self) -> Dataset:
         preprocess, target_preprocess = image_preprocessing.get_preprocessing_fn(self.config.image_shape)
 
         if self.dataset_name == "VOC":
