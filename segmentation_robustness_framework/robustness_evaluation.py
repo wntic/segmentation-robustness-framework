@@ -138,53 +138,6 @@ class RobustnessEvaluation:
         # Save metrics to JSON
         self._save_metrics()
 
-    def _load_dataset(self) -> Dataset:
-        """Loads the dataset based on the dataset configuration and applies necessary preprocessing.
-
-        This method loads the dataset specified in the `dataset_config` and prepares it with transformations.
-
-        Returns:
-            Dataset: The dataset to be used for evaluation.
-
-        Raises:
-            ValueError: If the dataset name specified in the configuration is not supported.
-        """
-        preprocess, target_preprocess = utils.get_preprocessing_fn(self.dataset_config.image_shape)
-
-        if self.dataset_config.name == "VOC":
-            ds = datasets.VOCSegmentation(
-                root=self.dataset_config.root,
-                split=self.dataset_config.split,
-                transform=preprocess,
-                target_transform=target_preprocess,
-            )
-        elif self.dataset_config.name == "StanfordBackground":
-            ds = datasets.StanfordBackground(
-                root=self.dataset_config.root,
-                transform=preprocess,
-                target_transform=target_preprocess,
-            )
-        elif self.dataset_config.name == "ADE20K":
-            ds = datasets.ADE20K(
-                root=self.dataset_config.root,
-                split=self.dataset_config.split,
-                transform=preprocess,
-                target_transform=target_preprocess,
-            )
-        elif self.dataset_config.name == "Cityscapes":
-            ds = datasets.Cityscapes(
-                root=self.dataset_config.root,
-                split=self.dataset_config.split,
-                mode=self.dataset_config.mode,
-                target_type=self.dataset_config.target_type,
-                transform=preprocess,
-                target_transform=target_preprocess,
-            )
-        else:
-            raise ValueError(f"Unknown dataset: {self.dataset_config.name}")
-
-        return ds
-
     def _get_attacks(self, model: nn.Module, attack_config: validator.AttackConfig) -> list[attacks.AdversarialAttack]:
         """Generates a list of adversarial attacks based on the configuration.
 
