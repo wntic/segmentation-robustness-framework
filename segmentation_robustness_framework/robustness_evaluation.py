@@ -67,6 +67,7 @@ class RobustnessEvaluation:
 
         # Loaders
         self.model_loader = engine.ModelLoader(self.model_config)
+        self.dataset_loader = engine.DatasetLoader(self.dataset_config)
 
         # Metrics
         self.metrics = None
@@ -112,7 +113,7 @@ class RobustnessEvaluation:
         model = self.model_loader.load_model()
         model.eval()
 
-        dataset = self._load_dataset()
+        dataset = self.dataset_loader.load_dataset()
         attacks_list = [self._get_attacks(model.to(self.device), attack) for attack in self.attack_config]
         num_images = self.dataset_config.max_images if len(dataset) > self.dataset_config.max_images else len(dataset)
 
