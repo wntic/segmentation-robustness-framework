@@ -6,6 +6,7 @@ from .robustness_evaluation import RobustnessEvaluation
 from .utils import image_preprocessing, metrics
 from .engine import model_loader
 from .engine import dataset_loader
+from .engine import attack_loader
 
 __all__ = [
     "fcn",

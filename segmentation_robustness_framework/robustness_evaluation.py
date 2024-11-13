@@ -4,11 +4,9 @@ from pathlib import Path
 from typing import Union
 
 import torch
-import torch.nn as nn
 import yaml
-from torch.utils.data import Dataset
 
-from segmentation_robustness_framework import attacks, datasets, models, utils, validator, engine
+from segmentation_robustness_framework import attacks, engine, utils, validator
 
 
 class RobustnessEvaluation:
@@ -67,7 +65,23 @@ class RobustnessEvaluation:
 
         # Loaders
         self.model_loader = engine.ModelLoader(self.model_config)
+        self.model = self.model_loader.load_model()
+        self.model.eval()
+
         self.dataset_loader = engine.DatasetLoader(self.dataset_config)
+        self.dataset = self.dataset_loader.load_dataset()
+
+        self.attack_loader = engine.AttackLoader(self.model, self.attack_config)
+        self.attacks = self.attack_loader.load_attacks()
+
+        # Set the maximum number of images from the dataset to process
+        dataset_len = len(self.dataset)
+        if self.dataset_config.max_images is not None:
+            self.num_images = (
+                self.dataset_config.max_images if dataset_len > self.dataset_config.max_images else dataset_len
+            )
+        else:
+            self.num_images = dataset_len
 
         # Metrics
         self.metrics = None
@@ -78,19 +92,6 @@ class RobustnessEvaluation:
 
         self.show = None
         self.save = None
-
-    def _validate_metrics(self, metrics: list[str]) -> None:
-        """Validates metrics.
-
-        Args:
-            metrics (list[str]): Metrics for validation.
-
-        Raises:
-            ValueError: If the given metric is not correct.
-        """
-        for metric in metrics:
-            if metric not in self.VALID_METRICS:
-                raise ValueError(f"Got unexpected metric '{metric}'. Valid metrics: {self.VALID_METRICS}")
 
     def run(self, show: bool = False, save: bool = False, metrics: list[str] = ["mean_iou"]) -> None:
         """Executes the robustness evaluation by applying adversarial attacks and calculating metrics.
@@ -105,87 +106,40 @@ class RobustnessEvaluation:
         """
         self.show = show
         self.save = save
+        self._prepare_output_dir()  # Create save path if not exists
 
         self._validate_metrics(metrics)
         self.metrics = metrics
 
-        # Load model, dataset, attacks
-        model = self.model_loader.load_model()
-        model.eval()
-
-        dataset = self.dataset_loader.load_dataset()
-        attacks_list = [self._get_attacks(model.to(self.device), attack) for attack in self.attack_config]
-        num_images = self.dataset_config.max_images if len(dataset) > self.dataset_config.max_images else len(dataset)
-
-        # Create save path if not exists
-        self._prepare_output_dir()
-
         # Initialize metrics collection and structure to store metrics
-        self.metrics_collection = utils.metrics.MetricsCollection(num_classes=dataset.num_classes)
+        self.metrics_collection = utils.metrics.MetricsCollection(num_classes=self.dataset.num_classes)
         self.metrics_storage = {}
 
-        # Step 1: Evaluate clean metrics
-        clean_metrics = self._evaluate_clean_images(model, dataset, num_images)
+        # Step 1: Evaluate clean images
+        clean_metrics = self._evaluate_clean_images()
         self.metrics_storage["clean_metrics"] = clean_metrics
 
-        # Step 2: Apply adversarial attacks and compute metrics
-        for group_idx, attack_group in enumerate(attacks_list):
+        # Step 2: Apply adversarial attacks and evaluate perturbed images
+        for group_idx, attack_group in enumerate(self.attacks):
             attack_group_name = self.attack_config[group_idx].name
             self.metrics_storage[attack_group_name] = {"attacks": []}
-
-            self._evaluate_attacks(model, dataset, num_images, group_idx, attack_group)
+            self._evaluate_attacks(group_idx, attack_group)
 
         # Save metrics to JSON
         self._save_metrics()
 
-    def _get_attacks(self, model: nn.Module, attack_config: validator.AttackConfig) -> list[attacks.AdversarialAttack]:
-        """Generates a list of adversarial attacks based on the configuration.
+    def _validate_metrics(self, metrics: list[str]) -> None:
+        """Validates metrics.
 
         Args:
-            model (nn.Module): The segmentation model to attack.
-            attack_config (validator.AttackConfig): Configuration specifying the attack type and parameters.
-
-        Returns:
-            list[attacks.AdversarialAttack]: A list of adversarial attack instances.
+            metrics (list[str]): Metrics for validation.
 
         Raises:
-            ValueError: If the specified attack type is not recognized.
+            ValueError: If the given metric is not correct.
         """
-        attack_name = attack_config.name
-
-        if attack_name == "FGSM":
-            epsilon_values = attack_config.epsilon
-            return [attacks.FGSM(model=model, eps=epsilon) for epsilon in epsilon_values]
-        elif attack_name == "PGD":
-            epsilon_values = attack_config.epsilon
-            alpha_values = attack_config.alpha
-            iters = attack_config.steps
-            targeted = attack_config.targeted
-            return [
-                attacks.PGD(model=model, eps=epsilon, alpha=alpha, iters=iters, targeted=targeted)
-                for epsilon in epsilon_values
-                for alpha in alpha_values
-            ]
-        elif attack_name == "RFGSM":
-            epsilon_values = attack_config.epsilon
-            alpha_values = attack_config.alpha
-            iters = attack_config.steps
-            targeted = attack_config.targeted
-            return [
-                attacks.RFGSM(model=model, eps=epsilon, alpha=alpha, iters=iters, targeted=targeted)
-                for epsilon in epsilon_values
-                for alpha in alpha_values
-            ]
-        elif attack_name == "TPGD":
-            epsilon_values = attack_config.epsilon
-            alpha_values = attack_config.alpha
-            iters = attack_config.steps
-            return [
-                attacks.TPGD(model=model, eps=epsilon, alpha=alpha, iters=iters)
-                for epsilon in epsilon_values
-                for alpha in alpha_values
-            ]
-        raise ValueError(f"Unknown attack type: {attack_name}")
+        for metric in metrics:
+            if metric not in self.VALID_METRICS:
+                raise ValueError(f"Got unexpected metric '{metric}'. Valid metrics: {self.VALID_METRICS}")
 
     def _prepare_output_dir(self) -> None:
         """Prepares the directory for saving evaluation results and adversarial images."""
@@ -201,20 +155,18 @@ class RobustnessEvaluation:
         """
         return {key: [] for key in self.metrics}
 
-    def _get_model_predictions(self, model: nn.Module, image: torch.Tensor) -> torch.Tensor:
+    def _get_model_predictions(self, image: torch.Tensor) -> torch.Tensor:
         """Obtains predictions from the segmentation model for a given image.
 
         Args:
-            model (nn.Module): The segmentation model to use for predictions.
             image (torch.Tensor): The input image tensor.
 
         Returns:
             torch.Tensor: The predicted labels for the input image.
         """
         with torch.no_grad():
-            output = model(image)
+            output = self.model(image)
             preds = torch.argmax(output, dim=1)
-
         return preds
 
     def _compute_metrics(self, targets: torch.Tensor, preds: torch.Tensor) -> dict[str, float]:
@@ -269,23 +221,18 @@ class RobustnessEvaluation:
         for key, value in metrics.items():
             storage[key].append(value)
 
-    def _evaluate_clean_images(self, model: nn.Module, dataset: Dataset, num_images: int) -> dict[str, list[float]]:
+    def _evaluate_clean_images(self) -> dict[str, list[float]]:
         """Evaluates the model on clean images and computes metrics.
-
-        Args:
-            model (nn.Module): The segmentation model to evaluate.
-            dataset (Dataset): The dataset containing images and ground truth labels.
-            num_images (int): The number of images to evaluate.
 
         Returns:
             dict[str, list[float]]: A dictionary of clean evaluation metrics.
         """
         clean_metrics_storage = self._initialize_metrics_storage()
 
-        for idx in range(num_images):
-            image, ground_truth = dataset[idx]
+        for idx in range(self.num_images):
+            image, ground_truth = self.dataset[idx]
             image = image.to(self.device)
-            preds = self._get_model_predictions(model, image)
+            preds = self._get_model_predictions(image)
 
             clean_metrics = self._compute_metrics(targets=ground_truth, preds=preds)
             self._append_metrics(clean_metrics_storage, clean_metrics)
@@ -294,9 +241,6 @@ class RobustnessEvaluation:
 
     def _evaluate_attacks(
         self,
-        model: nn.Module,
-        dataset: Dataset,
-        num_images: int,
         group_idx: int,
         attack_group: int,
     ) -> None:
@@ -305,7 +249,6 @@ class RobustnessEvaluation:
         Args:
             model (nn.Module): The segmentation model to be evaluated.
             dataset (Dataset): The dataset used for generating adversarial examples.
-            num_images (int): The number of images to evaluate.
             group_idx (int): The index of the attack group being evaluated.
             attack_group (list[attacks.AdversarialAttack]): The list of attacks to apply.
         """
@@ -318,17 +261,17 @@ class RobustnessEvaluation:
             if self.save:
                 attack_dir = os.path.join(self.run_dir, f"{attack_idx + 1}. {attack.__repr__()}")
 
-            for idx in range(num_images):
-                image, ground_truth = dataset[idx]
+            for idx in range(self.num_images):
+                image, ground_truth = self.dataset[idx]
                 image = image.to(self.device)
 
                 # Create a target tensor if the attack is targeted, else use predictions
-                preds = self._get_model_predictions(model, image)
+                preds = self._get_model_predictions(image)
                 target_labels = self._get_target_labels(attack, ground_truth, preds, group_idx)
 
                 # Create adversarial image and do predictions
                 adv_image = attack(image, target_labels).to(self.device)
-                adv_preds = self._get_model_predictions(model, adv_image)
+                adv_preds = self._get_model_predictions(adv_image)
 
                 # Visualize image, ground truth mask, predicted mask and adversarial mask
                 utils.visualize_images(
