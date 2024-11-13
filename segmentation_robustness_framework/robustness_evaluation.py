@@ -8,7 +8,7 @@ import torch.nn as nn
 import yaml
 from torch.utils.data import Dataset
 
-from segmentation_robustness_framework import attacks, datasets, models, utils, validator
+from segmentation_robustness_framework import attacks, datasets, models, utils, validator, engine
 
 
 class RobustnessEvaluation:
@@ -59,15 +59,21 @@ class RobustnessEvaluation:
             data = yaml.load(f, yaml.SafeLoader)
         config = validator.Config(**data)
 
+        # Configs
         self.model_config = config.model
         self.device = torch.device(config.model.device)
         self.attack_config = config.attacks
         self.dataset_config = config.dataset
 
-        self.output_dir = Path("./runs/") if output_dir is None else Path(output_dir)
+        # Loaders
+        self.model_loader = engine.ModelLoader(self.model_config)
 
+        # Metrics
         self.metrics = None
         self.metrics_collection = None
+
+        # Output settings
+        self.output_dir = Path("./runs/") if output_dir is None else Path(output_dir)
 
         self.show = None
         self.save = None
@@ -103,7 +109,7 @@ class RobustnessEvaluation:
         self.metrics = metrics
 
         # Load model, dataset, attacks
-        model = self._load_model()
+        model = self.model_loader.load_model()
         model.eval()
 
         dataset = self._load_dataset()
@@ -130,32 +136,6 @@ class RobustnessEvaluation:
 
         # Save metrics to JSON
         self._save_metrics()
-
-    def _load_model(self) -> nn.Module:
-        """Loads the segmentation model based on the model configuration.
-
-        Returns:
-            nn.Module: The loaded model.
-
-        Raises:
-            ValueError: If the model name is not recognized.
-        """
-        if self.model_config.name == "FCN":
-            model = models.FCN(
-                encoder_name=self.model_config.encoder,
-                encoder_weights=self.model_config.weights,
-                num_classes=self.model_config.num_classes,
-            )
-        elif self.model_config.name == "DeepLabV3":
-            model = models.DeepLabV3(
-                encoder_name=self.model_config.encoder,
-                encoder_weights=self.model_config.weights,
-                num_classes=self.model_config.num_classes,
-            )
-        else:
-            raise ValueError(f"Unknown model: {self.model_config.name}")
-
-        return model.to(self.device)
 
     def _load_dataset(self) -> Dataset:
         """Loads the dataset based on the dataset configuration and applies necessary preprocessing.

@@ -4,6 +4,7 @@ from .datasets import ade20k, cityscapes, stanford_background, voc
 from .models import deeplab, fcn
 from .robustness_evaluation import RobustnessEvaluation
 from .utils import image_preprocessing, metrics
+from .engine import model_loader
 
 __all__ = [
     "fcn",
