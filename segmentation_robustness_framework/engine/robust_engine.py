@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from typing import Union
@@ -8,8 +7,10 @@ import yaml
 
 from segmentation_robustness_framework import attacks, loaders, utils, validator
 
+from . import engine_utils
 
-class RobustnessEvaluation:
+
+class RobustEngine:
     """Evaluates the robustness of segmentation models against adversarial attacks.
 
     This class is responsible for loading a segmentation model, dataset, and adversarial attacks,
@@ -28,23 +29,12 @@ class RobustnessEvaluation:
         show (bool): Flag indicating whether generated adversarial images and evaluation results should be showed.
     """
 
-    VALID_METRICS = [
-        "mean_iou",
-        "pixel_accuracy",
-        "precision_macro",
-        "precision_micro",
-        "recall_macro",
-        "recall_micro",
-        "dice_macro",
-        "dice_micro",
-    ]
-
     def __init__(
         self,
         config_path: Union[Path, str],
         output_dir: Union[Path, str] = None,
     ) -> None:
-        """Initializes RobustnessEvaluation with the given configuration file.
+        """Initializes RobustEngine with the given configuration file.
 
         The method loads the YAML configuration file that specifies the model, dataset, and
         attack configurations, and prepares the necessary attributes for evaluation.
@@ -108,7 +98,7 @@ class RobustnessEvaluation:
         self.save = save
         self._prepare_output_dir()  # Create save path if not exists
 
-        self._validate_metrics(metrics)
+        engine_utils.validate_metrics(metrics)
         self.metrics = metrics
 
         # Initialize metrics collection and structure to store metrics
@@ -126,34 +116,13 @@ class RobustnessEvaluation:
             self._evaluate_attacks(group_idx, attack_group)
 
         # Save metrics to JSON
-        self._save_metrics()
-
-    def _validate_metrics(self, metrics: list[str]) -> None:
-        """Validates metrics.
-
-        Args:
-            metrics (list[str]): Metrics for validation.
-
-        Raises:
-            ValueError: If the given metric is not correct.
-        """
-        for metric in metrics:
-            if metric not in self.VALID_METRICS:
-                raise ValueError(f"Got unexpected metric '{metric}'. Valid metrics: {self.VALID_METRICS}")
+        engine_utils.save_metrics(self.run_dir, self.metrics_storage)
 
     def _prepare_output_dir(self) -> None:
         """Prepares the directory for saving evaluation results and adversarial images."""
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.run_dir = os.path.join(self.output_dir, f"run_{len(os.listdir(self.output_dir))}")
         os.makedirs(self.run_dir)
-
-    def _initialize_metrics_storage(self) -> dict[str, list[float]]:
-        """Initializes storage for performance metrics.
-
-        Returns:
-            dict[str, list[float]]: A dictionary to store lists of performance metrics.
-        """
-        return {key: [] for key in self.metrics}
 
     def _get_model_predictions(self, image: torch.Tensor) -> torch.Tensor:
         """Obtains predictions from the segmentation model for a given image.
@@ -211,23 +180,13 @@ class RobustnessEvaluation:
 
         return results
 
-    def _append_metrics(self, storage: dict[str, list[float]], metrics: dict[str, float]) -> None:
-        """Appends calculated metrics to the storage dictionary.
-
-        Args:
-            storage (dict[str, list[float]]): The dictionary where metrics are stored.
-            metrics (dict[str, float]): The metrics to append to the storage.
-        """
-        for key, value in metrics.items():
-            storage[key].append(value)
-
     def _evaluate_clean_images(self) -> dict[str, list[float]]:
         """Evaluates the model on clean images and computes metrics.
 
         Returns:
             dict[str, list[float]]: A dictionary of clean evaluation metrics.
         """
-        clean_metrics_storage = self._initialize_metrics_storage()
+        clean_metrics_storage = engine_utils.initialize_metrics_storage(self.metrics)
 
         for idx in range(self.num_images):
             image, ground_truth = self.dataset[idx]
@@ -235,7 +194,7 @@ class RobustnessEvaluation:
             preds = self._get_model_predictions(image)
 
             clean_metrics = self._compute_metrics(targets=ground_truth, preds=preds)
-            self._append_metrics(clean_metrics_storage, clean_metrics)
+            engine_utils.append_metrics(clean_metrics_storage, clean_metrics)
 
         return clean_metrics_storage
 
@@ -255,7 +214,7 @@ class RobustnessEvaluation:
         for attack_idx, attack in enumerate(attack_group):
             attack_metrics = {
                 "params": attack.get_params(),  # Parameters of the attack (e.g., epsilon, alpha)
-                "adv_metrics": self._initialize_metrics_storage(),
+                "adv_metrics": engine_utils.initialize_metrics_storage(self.metrics),
             }
 
             if self.save:
@@ -267,7 +226,7 @@ class RobustnessEvaluation:
 
                 # Create a target tensor if the attack is targeted, else use predictions
                 preds = self._get_model_predictions(image)
-                target_labels = self._get_target_labels(attack, ground_truth, preds, group_idx)
+                target_labels = self._get_targets(attack, ground_truth, preds, group_idx)
 
                 # Create adversarial image and do predictions
                 adv_image = attack(image, target_labels).to(self.device)
@@ -287,7 +246,7 @@ class RobustnessEvaluation:
                 )
 
                 adv_metrics = self._compute_metrics(targets=ground_truth, preds=adv_preds)
-                self._append_metrics(attack_metrics["adv_metrics"], adv_metrics)
+                engine_utils.append_metrics(attack_metrics["adv_metrics"], adv_metrics)
 
             attack_group_name = self.attack_config[group_idx].name
             self.metrics_storage[attack_group_name]["attacks"].append(attack_metrics)
@@ -303,7 +262,7 @@ class RobustnessEvaluation:
         """
         return self.attack_config[group_idx].target_label
 
-    def _get_target_labels(
+    def _get_targets(
         self, attack: attacks.AdversarialAttack, ground_truth: torch.Tensor, preds: torch.Tensor, group_idx: int
     ):
         """Generates target labels for the adversarial attack.
@@ -328,9 +287,3 @@ class RobustnessEvaluation:
                 device=self.device,
             )
         return preds
-
-    def _save_metrics(self) -> None:
-        """Saves the calculated metrics to a JSON file."""
-        metrics_file = os.path.join(self.run_dir, "metrics.json")
-        with open(metrics_file, "w") as f:
-            json.dump(self.metrics_storage, f, indent=4)
