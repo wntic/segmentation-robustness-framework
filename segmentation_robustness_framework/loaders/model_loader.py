@@ -1,5 +1,6 @@
-import torch
 import importlib
+
+import torch
 
 import segmentation_robustness_framework.models as models
 from segmentation_robustness_framework.config import ModelConfig

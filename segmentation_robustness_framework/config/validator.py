@@ -1,6 +1,6 @@
 import os
-from typing import Literal, Optional, Union
 from pathlib import Path
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field, ValidationInfo, conlist, field_validator, model_validator
 from typing_extensions import Annotated
@@ -42,12 +42,12 @@ class ModelConfig(BaseModel):
         if origin == "smp" and not os.path.exists(v):
             raise ValueError(
                 f'Weights file "{v}" for origin "smp" does not exist. '
-                f'Please specify a valid path to the weights file.'
+                f"Please specify a valid path to the weights file."
             )
         if origin is None and not os.path.exists(v):
             raise ValueError(
                 f'Weights file "{v}" does not exist for a custom model. '
-                f'Please specify a valid path to the weights file.'
+                f"Please specify a valid path to the weights file."
             )
         return v
 
@@ -58,6 +58,7 @@ class ModelConfig(BaseModel):
         if num_classes and num_classes <= 0:
             raise ValueError("Number of classes must be greater than 0")
         return v
+
 
 class AttackConfig(BaseModel):
     name: Literal["FGSM", "RFGSM", "PGD", "TPGD"]
@@ -203,6 +204,7 @@ class DatasetConfig(BaseModel):
         if v is not None and v <= 0:
             raise ValueError("Number max images must be greater than 0")
         return v
+
 
 class Config(BaseModel):
     model: ModelConfig

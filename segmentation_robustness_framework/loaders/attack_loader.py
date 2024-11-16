@@ -14,6 +14,7 @@ class AttackLoader:
         model (nn.Module): The segmentation model to be attacked.
         config (list[AttackConfig]): List of configurations specifying the attack types and parameters.
     """
+
     def __init__(self, model: nn.Module, attack_config: list[AttackConfig]) -> None:
         """Initializes the `AttackLoader` with the given model and attack configuration.
 

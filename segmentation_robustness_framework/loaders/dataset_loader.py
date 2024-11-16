@@ -17,6 +17,7 @@ class DatasetLoader:
         root (str): Root directory where the dataset is located.
         images_shape (tuple[int, int]): Desired image shape for preprocessing (height, width).
     """
+
     def __init__(self, dataset_config: DatasetConfig) -> None:
         """Initializes the `DatasetLoader` with the provided dataset configuration.
 
