@@ -8,6 +8,8 @@ from .loaders import model_loader
 from .loaders import dataset_loader
 from .loaders import attack_loader
 
+from .__version__ import __version__
+
 __all__ = [
     "fcn",
     "deeplab",
