@@ -6,7 +6,30 @@ from segmentation_robustness_framework.config import ModelConfig
 
 
 class ModelLoader:
+    """Loads a segmentation model based on the provided configuration.
+
+    The `ModelLoader` class initializes and loads a model from different sources (TorchVision,
+    segmentation_models_pytorch, or a local model), based on the specified configuration.
+    It also handles model weights loading and device placement.
+
+    Attributes:
+        config (ModelConfig): Configuration object specifying model name, encoder, weights,
+            and other parameters.
+        origin (str): The source of the model, such as "torchvision", "smp", or "local".
+        model_name (str): The name of the model to be loaded (e.g., "FCN", "DeepLabV3").
+        encoder_name (str): The name of the encoder (e.g., "resnet50", "mobilenet_v3_large").
+        weights (str or None): Path to the model weights or "default" for pre-trained weights.
+        num_classes (int): The number of classes for the segmentation task.
+        device (torch.device): The device to which the model should be moved (e.g., CPU or GPU).
+    """
+
     def __init__(self, model_config: ModelConfig):
+        """Initializes the `ModelLoader` with the provided model configuration.
+
+        Args:
+            model_config (ModelConfig): Configuration object specifying the model's parameters
+                such as source, name, encoder, weights, number of classes, and device.
+        """
         self.config = model_config
         self.origin = self.config.origin
         self.model_name = self.config.name
@@ -16,6 +39,19 @@ class ModelLoader:
         self.device = self.config.device
 
     def load_model(self) -> torch.nn.Module:
+        """Loads the model based on the specified configuration and returns it.
+
+        The method loads the model from one of the following sources:
+        - "torchvision": Loads a model from torchvision with the specified encoder and weights.
+        - "smp": Loads a model from segmentation_models_pytorch with the specified encoder.
+        - None: Loads a custom model from the local codebase.
+
+        Returns:
+            torch.nn.Module: The initialized model.
+
+        Raises:
+            ValueError: If the specified model origin is not recognized.
+        """
         if str.lower(self.origin) == "torchvision":
             model = self._load_torchvision_model()
         elif str.lower(self.origin) == "smp":
@@ -29,6 +65,14 @@ class ModelLoader:
         return model
 
     def _load_torchvision_model(self) -> torch.nn.Module:
+        """Loads a model from TorchVision.
+
+        Returns:
+            torch.nn.Module: The initialized TorchVision model.
+
+        Raises:
+            ValueError: If the encoder or model name is invalid.
+        """
         if self.weights == "default":
             self.weights = "coco_with_voc_labels"
 
@@ -50,6 +94,16 @@ class ModelLoader:
         return model
 
     def _load_smp_model(self) -> torch.nn.Module:
+        """Loads a model from segmentation_models_pytorch (smp).
+        Link: https://github.com/qubvel-org/segmentation_models.pytorch/
+
+        Returns:
+            torch.nn.Module: The initialized segmentation_models_pytorch model.
+
+        Raises:
+            ImportError: If the segmentation_models_pytorch module is not installed.
+            ValueError: If the model name is not found in the smp module.
+        """
         try:
             smp = importlib.import_module("segmentation_models_pytorch")
         except ImportError:
@@ -79,6 +133,14 @@ class ModelLoader:
         return model.to(self.device)
 
     def _load_local_model(self) -> torch.nn.Module:
+        """Loads a model from the local `segmentation_robustness_framework.models` module.
+
+        Returns:
+            torch.nn.Module: The initialized local model.
+
+        Raises:
+            ValueError: If the model name is not found in the local models module.
+        """
         try:
             ModelClass = getattr(models, self.model_name)
         except AttributeError:

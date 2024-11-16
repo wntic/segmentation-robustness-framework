@@ -32,6 +32,9 @@ def validate_metrics(metrics: list[str]) -> None:
 def initialize_metrics_storage(metrics: list[str]) -> dict[str, list[float]]:
     """Initializes storage for performance metrics.
 
+    Args:
+        metrics (list[str]): List of metrics to be computed.
+
     Returns:
         dict[str, list[float]]: A dictionary to store lists of performance metrics.
     """
@@ -39,7 +42,12 @@ def initialize_metrics_storage(metrics: list[str]) -> dict[str, list[float]]:
 
 
 def save_metrics(output_dir: Union[str, Path], metrics_storage: dict[str, list[float]]) -> None:
-    """Saves the calculated metrics to a JSON file."""
+    """Saves the calculated metrics to a JSON file.
+
+    Args:
+        output_dir (Union[str, Path]): Path to the output directory to the computed save metrics.
+        metrics_storage (dcit[str, list[float]]): Storage containing metric values.
+    """
     metrics_file = os.path.join(output_dir, "metrics.json")
     with open(metrics_file, "w") as f:
         json.dump(metrics_storage, f, indent=4)
