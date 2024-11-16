@@ -5,8 +5,8 @@ from typing import Union
 import torch
 import yaml
 
+import segmentation_robustness_framework.loaders as L
 from segmentation_robustness_framework import attacks, utils, validator
-from segmentation_robustness_framework.loaders import *
 
 from . import engine_utils
 
@@ -61,14 +61,14 @@ class RobustEngine:
         self.dataset_config = config.dataset
 
         # Loaders
-        self.model_loader = ModelLoader(self.model_config)
+        self.model_loader = L.ModelLoader(self.model_config)
         self.model = self.model_loader.load_model()
         self.model.eval()
 
-        self.dataset_loader = DatasetLoader(self.dataset_config)
+        self.dataset_loader = L.DatasetLoader(self.dataset_config)
         self.dataset = self.dataset_loader.load_dataset()
 
-        self.attack_loader = AttackLoader(self.model, self.attack_config)
+        self.attack_loader = L.AttackLoader(self.model, self.attack_config)
         self.attacks = self.attack_loader.load_attacks()
 
         # Set the maximum number of images from the dataset to process
