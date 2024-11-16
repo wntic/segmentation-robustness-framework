@@ -6,16 +6,17 @@ from segmentation_robustness_framework.config import ModelConfig, AttackConfig, 
 
 class TestModelConfig:
     def test_valid_config(self):
-        config = ModelConfig(name="FCN", encoder="resnet50", weights="some_weights", num_classes=3, device="cuda")
+        config = ModelConfig(origin="torchvision", name="FCN", encoder="resnet50", weights="default", num_classes=3, device="cuda")
+        assert config.origin == "torchvision"
         assert config.name == "FCN"
         assert config.encoder == "resnet50"
-        assert config.weights == "some_weights"
+        assert config.weights == "default"
         assert config.num_classes == 3
         assert config.device == "cuda"
 
     def test_config_invalid_encoder(self):
         with pytest.raises(ValidationError, match="Encoder mobilenet_v3_large is not supported for FCN"):
-            ModelConfig(name="FCN", encoder="mobilenet_v3_large", weights="some_weights", num_classes=3, device="cpu")
+            ModelConfig(origin="torchvision", name="FCN", encoder="mobilenet_v3_large", weights="default", num_classes=3, device="cpu")
 
 
 class TestAttackConfig:
