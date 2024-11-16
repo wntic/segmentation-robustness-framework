@@ -1,6 +1,6 @@
 import torchvision.models.segmentation as models
 
-from .base_model import SegmentationModel
+from ..base_model import SegmentationModel
 
 FCN_ENCODERS = {
     "resnet50": models.FCN_ResNet50_Weights.COCO_WITH_VOC_LABELS_V1,
@@ -8,7 +8,7 @@ FCN_ENCODERS = {
 }
 
 
-class FCN(SegmentationModel):
+class TorchvisionFCN(SegmentationModel):
     """Fully Convolutional Network (FCN) from "Fully Convolutional Networks for Semantic Segmentation".
     Paper: https://arxiv.org/abs/1605.06211v1
 

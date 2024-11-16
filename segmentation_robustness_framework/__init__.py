@@ -1,7 +1,7 @@
 from .attacks import fgsm, pgd
 from .config import validator
 from .datasets import ade20k, cityscapes, stanford_background, voc
-from .models import deeplab, fcn
+from .models import torchvision_models
 from .engine import RobustEngine
 from .utils import image_preprocessing, metrics
 from .loaders import model_loader

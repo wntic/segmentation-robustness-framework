@@ -1,7 +1,7 @@
 import torchvision.models.segmentation as models
 from torch import Tensor
 
-from .base_model import SegmentationModel
+from ..base_model import SegmentationModel
 
 DEEPLABV3_ENCODERS = {
     "resnet50": models.DeepLabV3_ResNet50_Weights.COCO_WITH_VOC_LABELS_V1,
@@ -10,7 +10,7 @@ DEEPLABV3_ENCODERS = {
 }
 
 
-class DeepLabV3(SegmentationModel):
+class TorchvisionDeepLabV3(SegmentationModel):
     """DeepLabV3 segmentation model from "Rethinking Atrous Convolution for Semantic Image Segmentation".
     Paper: https://arxiv.org/abs/1706.05587v3
 
