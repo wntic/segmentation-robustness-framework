@@ -1,8 +1,10 @@
 # Base segmentation models
 from .base_model import SegmentationModel
+from .torchvision_models.deeplabv3 import TorchvisionDeepLabV3
 
-# Segmentation models
-from .deeplab import DeepLabV3
-from .fcn import FCN
+# Torchvision segmentation models
+from .torchvision_models.fcn import TorchvisionFCN
 
-__all__ = ["SegmentationModel", "DeepLabV3", "FCN"]
+# Other models below ...
+
+__all__ = ["SegmentationModel", "TorchvisionDeepLabV3", "TorchvisionFCN"]

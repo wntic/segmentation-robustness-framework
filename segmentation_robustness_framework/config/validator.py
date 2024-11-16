@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field, ValidationInfo, conlist, field_validator, model_validator
@@ -6,22 +7,56 @@ from typing_extensions import Annotated
 
 
 class ModelConfig(BaseModel):
-    name: Literal["FCN", "DeepLabV3"]
-    encoder: Literal["resnet50", "resnet101", "mobilenet_v3_large"]
-    weights: str
+    origin: Optional[Literal["torchvision", "smp"]] = None
+    name: str
+    encoder: str
+    weights: Union[Path, str]
     num_classes: int
     device: Literal["cpu", "cuda"]
 
     @field_validator("encoder")
     @classmethod
-    def validate_encoder(cls, v: str, info: ValidationInfo) -> str:
+    def validate_tv_model_encoder(cls, v: str, info: ValidationInfo) -> str:
         name = info.data.get("name")
-        if name == "FCN" and v not in {"resnet50", "resnet101"}:
-            raise ValueError(f'Encoder {v} is not supported for FCN. Choose either "resnet50" or "resnet101"')
-        elif name == "DeepLabV3" and v not in {"resnet50", "resnet101", "mobilenet_v3_large"}:
+        origin = info.data.get("origin")
+
+        if origin == "torchvision":
+            if name == "FCN" and v not in {"resnet50", "resnet101"}:
+                raise ValueError(f'Encoder {v} is not supported for FCN. Choose either "resnet50" or "resnet101"')
+            elif name == "DeepLabV3" and v not in {"resnet50", "resnet101", "mobilenet_v3_large"}:
+                raise ValueError(
+                    f'Encoder {v} is not supported for DeepLabV3. Choose "resnet50", "resnet101", or "mobilenet_v3_large"'
+                )
+        return v
+
+    @field_validator("weights")
+    @classmethod
+    def validate_weights(cls, v: Union[str, Path], info: ValidationInfo) -> Union[str, Path]:
+        origin = info.data.get("origin")
+
+        if origin == "torchvision" and v not in ["coco_with_voc_labels", "default"]:
             raise ValueError(
-                f'Encoder {v} is not supported for DeepLabV3. Choose "resnet50", "resnet101", or "mobilenet_v3_large"'
+                f'Invalid weights "{v}" for origin "torchvision". '
+                f'Allowed values are "coco_with_voc_labels" or "default".'
             )
+        if origin == "smp" and not os.path.exists(v):
+            raise ValueError(
+                f'Weights file "{v}" for origin "smp" does not exist. '
+                f"Please specify a valid path to the weights file."
+            )
+        if origin is None and not os.path.exists(v):
+            raise ValueError(
+                f'Weights file "{v}" does not exist for a custom model. '
+                f"Please specify a valid path to the weights file."
+            )
+        return v
+
+    @field_validator("num_classes")
+    @classmethod
+    def validate_num_classes(cls, v: int, info: ValidationInfo) -> int:
+        num_classes = info.data.get("num_classes")
+        if num_classes and num_classes <= 0:
+            raise ValueError("Number of classes must be greater than 0")
         return v
 
 
@@ -161,6 +196,13 @@ class DatasetConfig(BaseModel):
             raise ValueError(
                 f"The 'target_type' field should only be used with Cityscapes and should be None for {name}."
             )
+        return v
+
+    @field_validator("max_images")
+    @classmethod
+    def validate_max_images(cls, v: int) -> int:
+        if v is not None and v <= 0:
+            raise ValueError("Number max images must be greater than 0")
         return v
 
 
