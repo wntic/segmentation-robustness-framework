@@ -9,7 +9,7 @@ from typing_extensions import Annotated
 class ModelConfig(BaseModel):
     origin: Optional[Literal["torchvision", "smp"]] = None
     name: str
-    encoder: str
+    encoder: Optional[str] = None
     weights: Union[Path, str]
     num_classes: int
     device: Literal["cpu", "cuda"]
