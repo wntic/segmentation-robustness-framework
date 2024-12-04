@@ -1,7 +1,8 @@
 
 # Segmentation Robustness Framework
 
-![GitHub License](https://img.shields.io/github/license/wntic/segmentation-robustness-framework) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+![Python Version](https://img.shields.io/badge/python-3.12%2B-blue) ![PyTorch Version](https://img.shields.io/badge/PyTorch-2.4.0+-ee4c2c?logo=pytorch)
+ [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) ![GitHub License](https://img.shields.io/github/license/wntic/segmentation-robustness-framework)
 
 **Segmentation Robustness Framework** (SRF) is a tool for testing the robustness of semantic segmentation models to digital adversarial attacks.
 
@@ -16,20 +17,21 @@
 ```bash
 git clone https://github.com/wntic/segmentation-robustness-framework.git
 cd segmentation-robustness-framework
-
-python3 -m venv venv # Create venv
-source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ## Models
 
-Supported models and encoders:
+SRF supports loading models from three sources. Segmentation models from `torchvision` and `segmentation_model.pytorch`[[GitHub]](https://github.com/qubvel-org/segmentation_models.pytorch/) libraries are integrated into the framework. To determine the source of model loading, the `origin` field (`torchvision` or `smp` respectively) must be specified in the configuration file. You can also test your own models with custom architectures. For this purpose, the `origin` field is omitted (or you can specify `origin: None`), and the model will be loaded from the `segmentation_robustness_framework.models` module.
+
+Two models with corresponding encoders are integrated from torchvision:
 
 - **Fully Convolutional Network (FCN)** [[paper]](https://arxiv.org/abs/1605.06211v1)
 	- Supported encoders: resnet50, resnet101.
 - **DeepLabV3** [[paper]](https://arxiv.org/abs/1706.05587v3)
 	- Supported encoders: resnet50, resnet101, mobilenet_v3_large.
+
+The `segmentation_model.pytorch` supports 10 different segmentation model architectures and over 500 encoders. You can select any architecture and encoder, train the model and test it with SRF by specifying the path to the model weights in the configuration file.
 
 ## Attack Methods
 
@@ -42,13 +44,13 @@ Supported attack methods for generating adversarial perturbations:
 
 ## Usage
 
-Easy to use in 3 lines of code. Just prepare the configuration file and start the process!
+Easy to use in 3 lines of code. Just prepare the configuration file and start the attack evaluation process!
 
 ```python
-from segmentation-robustness-framework import RobustnessEvaluation
+from segmentation_robustness_framework.engine import RobustEngine
 
-tester = RobustnessEvaluation(config_path="configs/sample_config.yaml")
-tester.run(save=True, show=True, metrics=["mean_iou", "recall_macro"])
+engine = RobustnessEvaluation**(config_path="configs/sample_config.yaml")
+engine.run(save=True, show=True, metrics=["mean_iou", "recall_macro"])
 ```
 
 ## Configuring SRF
@@ -57,17 +59,18 @@ This section provides details on how to configure the tool for performing advers
 
 ```yaml
 model:
-  name: "DeepLabV3"
-  encoder: "resnet101"
-  weights: "coco_with_voc_labels"
+  origin: torchvision
+  name: DeepLabV3
+  encoder: resnet101
+  weights: default
   num_classes: 21
-  device: "cuda"
+  device: cuda
 
 attacks:
-  - name: "FGSM"
+  - name: FGSM
     epsilon: [0.05, 0.125, 0.25, 0.5, 0.66]
 
-  - name: "PGD"
+  - name: PGD
     epsilon: [0.05, 0.37, 0.5]
     alpha: [0.003, 0.007]
     steps: 40
@@ -75,26 +78,23 @@ attacks:
     target_label: 15
 
 dataset:
-  name: "VOC"
-  root: "path/to/VOCdevkit/VOC2012/"
-  split: "val"
+  name: VOC
+  root: path/to/VOCdevkit/VOC2012/
+  split: val
   image_shape: [512, 376]
   max_images: 100
 ```
 
 ### Model Configuration
 
-This section specifies the segmentation model to use, including the model name, encoder, weights, number of classes, and the device (e.g., CPU or GPU) for processing.
+This section specifies the segmentation model to use, including the model origin, name, encoder, weights, number of classes, and the device (e.g., cpu or cuda) for processing.
 
-1. **name**: The name of the segmentation model.
-	- Available Models: `FCN`, `DeepLabV3`
-2. **encoder**: The encoder backbone to be used within the model.
-	- Available Encoders for FCN: `resnet50`, `resnet101`
-	- Available Encoders for DeepLabV3: `resnet50`, `resnet101`, `mobilenet_v3_large`
-3. **weights**: Pre-trained weights to be loaded into the model.
-	- *Note:* For FCN and DeepLabV3 only `coco_with_voc_labels` weights are supported.
-4. **num_classes**: The number of classes, including the background.
-5. **device**: The device on which the model will run (`cpu` or `cuda`).
+1. **origin**: Source of model download (`torchvision`, `smp` or `None`).
+2. **name**: The name of the segmentation model.
+3. **encoder**: The encoder backbone to be used within the model.
+4. **weights**: Pre-trained weights to be loaded into the model.
+5. **num_classes**: The number of classes, including the background.
+6. **device**: The device on which the model will run (`cpu` or `cuda`).
 
 
 ### Attacks Configuration
@@ -119,7 +119,7 @@ This section specifies the dataset to be used for the segmentation task, includi
 
 There are four datasets available for selection, each with specific configurations.
 
-Available datasets: "ADE20K", "StanfordBackground", "VOC", "Cityscapes".
+Available datasets: ADE20K, StanfordBackground, VOC, Cityscapes.
 
 When configuring a dataset, you can specify the size of the images to which they will be resized: `image_shape: [512, 256]`.
 
