@@ -1,3 +1,10 @@
+# This file contains code borrowed from the following repository:
+# Original repository URL: https://github.com/Harry24k/adversarial-attacks-pytorch
+# Original code author: Harry Kim
+# Original code license: MIT
+
+# The original code may have been modified to fit current requirements.
+
 import torch
 
 from ..models import SegmentationModel
