@@ -4,6 +4,14 @@
 ![Python Version](https://img.shields.io/badge/python-3.12%2B-blue) ![PyTorch Version](https://img.shields.io/badge/PyTorch-2.4.0+-ee4c2c?logo=pytorch)
  [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) ![GitHub License](https://img.shields.io/github/license/wntic/segmentation-robustness-framework)
 
+---
+
+A global improvement of the framework's functionality is planned in the near future. Stay tuned!
+
+В ближайшее время планируется глобальное совершенствование функциональности фреймворка. Оставайтесь с нами!
+
+---
+
 **Segmentation Robustness Framework** (SRF) is a tool for testing the robustness of semantic segmentation models to digital adversarial attacks.
 
 ## Installation
