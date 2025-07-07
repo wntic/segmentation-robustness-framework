@@ -8,8 +8,7 @@ class TorchvisionConfig(BaseModel):
     type: Literal["torchvision"]
     name: str
     num_classes: Optional[int] = 21
-    pretrained: Optional[bool] = True
-    weights_path: Optional[Union[str, Path]] = None
+    weights: Optional[Any] = None
     device: Optional[str] = "cpu"
 
 
