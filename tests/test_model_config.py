@@ -10,9 +10,16 @@ from segmentation_robustness_framework.config.model_config import (
 def test_torchvision_config_validation():
     cfg = TorchvisionConfig(type="torchvision", name="deeplabv3_resnet50")
     assert cfg.num_classes == 21
-    assert cfg.pretrained
     assert cfg.device == "cpu"
-    assert cfg.weights_path is None
+    assert cfg.weights is None
+
+    # Test with weights as string
+    cfg2 = TorchvisionConfig(type="torchvision", name="deeplabv3_resnet50", weights="DEFAULT")
+    assert cfg2.weights == "DEFAULT"
+
+    # Test with weights as None
+    cfg3 = TorchvisionConfig(type="torchvision", name="deeplabv3_resnet50", weights=None)
+    assert cfg3.weights is None
 
 
 def test_smp_config_validation():
