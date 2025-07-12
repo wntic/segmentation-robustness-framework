@@ -1,6 +1,5 @@
 from .__version__ import __version__
 from .attacks import fgsm, pgd, rfgsm, tpgd
-from .config import validator
 from .datasets import ade20k, cityscapes, stanford_background, voc
 from .engine import RobustEngine
 from .loaders import attack_loader, dataset_loader
@@ -13,7 +12,6 @@ __all__ = [
     "pgd",
     "rfgsm",
     "tpgd",
-    "validator",
     "ade20k",
     "cityscapes",
     "stanford_background",
