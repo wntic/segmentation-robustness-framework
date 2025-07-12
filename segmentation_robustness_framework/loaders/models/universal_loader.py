@@ -30,21 +30,57 @@ HUGGINGFACE_INSTALLED = _is_module_installed("transformers")
 
 
 class UniversalModelLoader:
-    """
-    Universal model loader that handles different model types.
+    """Universal model loader that handles different model types.
 
-    Supports:
-        - Torchvision
-        - segmentation_models_pytorch (SMP)
-        - HuggingFace Transformers
-        - Custom user models
+    Supported model types:
+        - `torchvision`
+        - `smp`
+        - `huggingface`
+        - `custom`
 
-    Example usage:
+    Example:
+        ```python
         loader = UniversalModelLoader()
         model = loader.load_model(
             model_type="torchvision",
-            model_config={"name": "deeplabv3_resnet50", "num_classes": 21}
+            model_config={"name": "deeplabv3_resnet50", "num_classes": 21},
         )
+        ```
+
+    Example:
+        ```python
+        loader = UniversalModelLoader()
+        model = loader.load_model(
+            model_type="smp",
+            model_config={
+                "architecture": "unet",
+                "encoder_name": "resnet34",
+                "classes": 2,
+            },
+        )
+        ```
+
+    Example:
+        ```python
+        loader = UniversalModelLoader()
+        model = loader.load_model(
+            model_type="huggingface",
+            model_config={"model_name": "facebook/maskformer-swin-tiny-coco"},
+        )
+        ```
+
+    Example:
+        ```python
+        loader = UniversalModelLoader()
+        model = loader.load_model(
+            model_type="custom",
+            model_config={
+                "model_class": "SomeModel",
+                "model_args": [],
+                "model_kwargs": {},
+            },
+        )
+        ```
     """
 
     def __init__(self):
@@ -62,17 +98,16 @@ class UniversalModelLoader:
         weights_path: Optional[str] = None,
         weight_type: str = "full",
     ) -> nn.Module:
-        """
-        Load model using appropriate loader
+        """Load model using appropriate loader.
 
         Args:
-            model_type: Type of model ('torchvision', 'smp', 'huggingface', 'custom')
-            model_config: Configuration for model loading
-            weights_path: Path to weights file (optional)
-            weight_type: Type of weights to load ('full' or 'encoder')
+            model_type (str): Type of model ('torchvision', 'smp', 'huggingface', 'custom')
+            model_config (dict[str, Any]): Configuration for model loading
+            weights_path (Optional[str]): Path to weights file (optional)
+            weight_type (str): Type of weights to load ('full' or 'encoder').
 
         Returns:
-            Loaded model
+            `nn.Module`: Loaded model.
         """
         if model_type not in self.loaders:
             raise ValueError(f"Unsupported model type: {model_type}")

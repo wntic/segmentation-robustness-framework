@@ -12,15 +12,53 @@ logging.basicConfig(level=logging.INFO)
 
 
 class SMPModelLoader(BaseModelLoader):
-    """
-    Loader for segmentation_models_pytorch (SMP) models.
+    """Loader for segmentation_models_pytorch (SMP) models.
 
     Supports loading models and weights, including encoder-only weights.
 
-    Example usage:
+    Supported model_config keys:
+        - `architecture` (str): Architecture of the model (default: `'unet'`).
+        - `encoder_name` (str): Name of the encoder (default: `'resnet34'`).
+        - `encoder_weights` (str): Weights of the encoder (default: `'imagenet'`).
+        - `classes` (int): Number of classes (default: `1`).
+        - `activation` (str): Activation function (default: `None`).
+        - `checkpoint` (str | Path): Path to the checkpoint (default: `None`).
+
+    Example:
+        ```python
+        # Basic usage
         loader = SMPModelLoader()
-        model = loader.load_model({"architecture": "unet", "encoder_name": "resnet34", "classes": 2})
-        model = loader.load_weights(model, "weights.pth", weight_type="full")
+        model_config = {
+            "architecture": "unet",
+            "encoder_name": "resnet34",
+            "classes": 2,
+        }
+        model = loader.load_model(model_config)
+        model = loader.load_weights(
+            model, "weights.pth", weight_type="full"
+        )  # load full model weights if needed
+        ```
+
+    Example:
+        ```python
+        # With checkpoint
+        loader = SMPModelLoader()
+        model_config = {"checkpoint": "smp-hub/upernet-convnext-tiny"}
+        model = loader.load_model(model_config)
+        ```
+
+    Example:
+        ```python
+        # With encoder-only weights
+        loader = SMPModelLoader()
+        model_config = {
+            "architecture": "unet",
+            "encoder_name": "resnet34",
+            "classes": 2,
+        }
+        model = loader.load_model(model_config)
+        model = loader.load_weights(model, "weights.pth", weight_type="encoder")
+        ```
     """
 
     _smp = None  # class-level cache
@@ -37,16 +75,22 @@ class SMPModelLoader(BaseModelLoader):
         return cls._smp
 
     def load_model(self, model_config: dict[str, Any]) -> nn.Module:
-        """
-        Load an SMP model from config or checkpoint.
+        """Load an SMP model from config or checkpoint.
 
         Args:
-            model_config: dict with keys like 'architecture', 'encoder_name', 'encoder_weights', 'classes', 'activation', or 'checkpoint'.
+            model_config (dict[str, Any]):
+                - `architecture` (str): Architecture of the model.
+                - `encoder_name` (str): Name of the encoder (optional).
+                - `encoder_weights` (str): Weights of the encoder (optional).
+                - `classes` (int): Number of classes (optional).
+                - `activation` (str): Activation function (optional).
+                - `checkpoint` (str): Path to the checkpoint (optional).
+
+        Raises:
+            RuntimeError: If the checkpoint cannot be loaded.
+
         Returns:
-            nn.Module: Instantiated SMP model.
-        Example:
-            loader = SMPModelLoader()
-            model = loader.load_model({"architecture": "unet", "encoder_name": "resnet34", "classes": 2})
+            `nn.Module`: Instantiated SMP model.
         """
         smp = self._import_smp()
         checkpoint = model_config.get("checkpoint")
@@ -79,18 +123,19 @@ class SMPModelLoader(BaseModelLoader):
         return model
 
     def load_weights(self, model: nn.Module, weights_path: str, weight_type: str = "full") -> nn.Module:
-        """Load weights into SMP model
+        """Load weights into SMP model.
 
         Args:
-            model: Model instance
-            weights_path: Path to weights file
-            weight_type: 'full' for entire model, 'encoder' for encoder only
+            model (nn.Module): Model instance.
+            weights_path (str | Path): Path to weights file.
+            weight_type (str): `'full'` for entire model, `'encoder'` for encoder only.
+
+        Supported weight_type values:
+            - `'full'`: Load entire model weights.
+            - `'encoder'`: Load encoder weights only.
+
         Returns:
-            nn.Module: Model with loaded weights
-        Example:
-            loader = SMPModelLoader()
-            model = loader.load_model({"architecture": "unet", "encoder_name": "resnet34", "classes": 2})
-            model = loader.load_weights(model, "weights.pth", weight_type="encoder")
+            `nn.Module`: Model with loaded weights.
         """
         checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
 

@@ -13,16 +13,23 @@ logging.basicConfig(level=logging.INFO)
 
 
 class TorchvisionModelLoader(BaseModelLoader):
-    """
-    Loader for torchvision segmentation models.
+    """Loader for torchvision segmentation models.
 
     Supports loading models and weights, including encoder-only weights.
     Uses the 'weights' argument as recommended by torchvision >=0.13.
 
-    Example usage:
+    Supported model_config keys:
+        - `name` (str): Model name.
+        - `num_classes` (int): Number of classes (optional).
+        - `weights` (str | TorchvisionWeightsEnum): Torchvision weights enum, string, or None (optional).
+
+    Example:
+        ```python
         loader = TorchvisionModelLoader()
-        model = loader.load_model({"name": "deeplabv3_resnet50", "num_classes": 21})
-        model = loader.load_weights(model, "weights.pth", weight_type="full")
+        model_config = {"name": "deeplabv3_resnet50", "num_classes": 21}
+        model = loader.load_model(model_config)
+        model = loader.load_weights(model, "weights.pth", weight_type="encoder")
+        ```
     """
 
     SUPPORTED_MODELS = {
@@ -44,21 +51,19 @@ class TorchvisionModelLoader(BaseModelLoader):
     }
 
     def load_model(self, model_config: dict[str, Any]) -> nn.Module:
-        """
-        Load a torchvision segmentation model using the 'weights' argument.
+        """Load a torchvision segmentation model using the 'weights' argument.
 
         Args:
-            model_config: dict containing:
-                - name: Model name (e.g., 'deeplabv3_resnet50')
-                - num_classes: Number of classes (default: 21)
-                - weights: Torchvision weights enum, string, or None (default: None)
-        Returns:
-            nn.Module: Instantiated torchvision model.
+            model_config (dict):
+                - `name` (str): Model name.
+                - `num_classes` (int): Number of classes (optional).
+                - `weights` (str | TorchvisionWeightsEnum): Torchvision weights enum, string, or None (optional).
+
         Raises:
             ValueError: If the model name is not supported.
-        Example:
-            loader = TorchvisionModelLoader()
-            model = loader.load_model({"name": "deeplabv3_resnet50", "num_classes": 21})
+
+        Returns:
+            `nn.Module`: Instantiated torchvision model.
         """
         name = model_config.get("name")
         num_classes = model_config.get("num_classes", 21)
@@ -108,19 +113,19 @@ class TorchvisionModelLoader(BaseModelLoader):
         return model
 
     def load_weights(self, model: nn.Module, weights_path: str | Path, weight_type: str = "full") -> nn.Module:
-        """
-        Load weights into a torchvision model.
+        """Load weights into a torchvision model.
 
         Args:
-            model: Model instance
-            weights_path: Path to weights file
-            weight_type: 'full' for entire model, 'encoder' for backbone only
+            model (nn.Module): Model instance.
+            weights_path (str | Path): Path to weights file.
+            weight_type (str): `'full'` for entire model, `'encoder'` for backbone only.
+
+        Supported weight_type values:
+            - `'full'`: Load entire model weights.
+            - `'encoder'`: Load encoder weights only.
+
         Returns:
-            nn.Module: Model with loaded weights
-        Example:
-            loader = TorchvisionModelLoader()
-            model = loader.load_model({"name": "deeplabv3_resnet50"})
-            model = loader.load_weights(model, "weights.pth", weight_type="full")
+            `nn.Module`: Model with loaded weights.
         """
         logger.info(f"Loading weights from {weights_path} (type: {weight_type})")
         checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)

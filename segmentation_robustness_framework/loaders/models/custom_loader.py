@@ -11,33 +11,40 @@ logging.basicConfig(level=logging.INFO)
 
 
 class CustomModelLoader(BaseModelLoader):
-    """
-    Loader for custom user models.
+    """Loader for custom user models.
 
-    model_config keys:
-        - model_class: Model class or factory function (required)
-        - model_args: List of positional arguments for model initialization (optional)
-        - model_kwargs: Dict of keyword arguments for model initialization (optional)
+    Supported model_config keys:
+        - `model_class` (str | Callable[..., Any]): Model class or factory function (required).
+        - `model_args` (list[Any]): List of positional arguments for model initialization (optional).
+        - `model_kwargs` (dict[str, Any]): Dict of keyword arguments for model initialization (optional).
 
-    Example usage:
+    Example:
+        ```python
         loader = CustomModelLoader()
-        model = loader.load_model({
+        model_config = {
             "model_class": MyCustomSegmentationModel,
             "model_args": [3, 21],
-            "model_kwargs": {}
-        })
+            "model_kwargs": {},
+        }
+        model = loader.load_model(model_config)
         model = loader.load_weights(model, "weights.pth", weight_type="full")
+        ```
     """
 
     def load_model(self, model_config: dict[str, Any]) -> nn.Module:
-        """
-        Load custom model
+        """Load custom model.
 
         Args:
-            model_config: dict containing:
-                - model_class: Model class or factory function
-                - model_args: Arguments for model initialization
-                - model_kwargs: Keyword arguments for model initialization
+            model_config (dict[str, Any]):
+                - `model_class` (str | Callable[..., Any]): Model class or factory function.
+                - `model_args` (list[Any]): List of positional arguments for model initialization.
+                - `model_kwargs` (dict[str, Any]): Dict of keyword arguments for model initialization.
+
+        Raises:
+            ValueError: If `model_class` is not callable.
+
+        Returns:
+            `nn.Module`: Instantiated model.
         """
         model_class = model_config["model_class"]
         model_args = model_config.get("model_args", [])
@@ -55,10 +62,23 @@ class CustomModelLoader(BaseModelLoader):
         else:
             raise ValueError("model_class must be callable")
 
-        return model  # type: ignore
+        return model
 
     def load_weights(self, model: nn.Module, weights_path: str, weight_type: str = "full") -> nn.Module:
-        """Load weights into custom model"""
+        """Load weights into custom model.
+
+        Args:
+            model (nn.Module): Model instance.
+            weights_path (str | Path): Path to weights file.
+            weight_type (str): `'full'` for entire model, `'encoder'` for encoder only.
+
+        Supported weight_type values:
+            - `'full'`: Load entire model weights.
+            - `'encoder'`: Load encoder weights only.
+
+        Returns:
+            `nn.Module`: Model with loaded weights.
+        """
         checkpoint = torch.load(weights_path, map_location="cpu")
 
         if "state_dict" in checkpoint:
