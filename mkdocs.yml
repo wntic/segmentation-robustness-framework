@@ -2,6 +2,14 @@ site_name: Segmentation Robustness Framework
 theme:
   name: material
 
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -13,4 +21,6 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Model Loaders: model_loaders.md
+  - API Reference:
+    - Model Loaders: reference/model_loaders.md
+    - Models: model_loaders.md
