@@ -18,3 +18,5 @@ Each loader implements a consistent interface with the following main methods:
 Refer to the API documentation below for detailed class and method signatures, configuration options, and usage examples for each loader.
 
 ::: segmentation_robustness_framework.loaders.models
+    options:
+        show_signature_annotations: true
