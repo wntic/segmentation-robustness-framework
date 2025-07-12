@@ -1,10 +1,10 @@
+import logging
 from importlib.util import find_spec
 from typing import Any, Optional
 
 import torch.nn as nn
 
 from segmentation_robustness_framework.loaders.models.custom_loader import CustomModelLoader
-from segmentation_robustness_framework.loaders.models.hf_bundle import HFSegmentationBundle
 from segmentation_robustness_framework.loaders.models.huggingface_loader import HuggingFaceModelLoader
 from segmentation_robustness_framework.loaders.models.smp_loader import SMPModelLoader
 from segmentation_robustness_framework.loaders.models.torchvision_loader import TorchvisionModelLoader
@@ -27,6 +27,9 @@ def _is_module_installed(module_name: str) -> bool:
 SMP_INSTALLED = _is_module_installed("segmentation_models_pytorch")
 TORCHVISION_INSTALLED = _is_module_installed("torchvision")
 HUGGINGFACE_INSTALLED = _is_module_installed("transformers")
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class UniversalModelLoader:
@@ -110,19 +113,30 @@ class UniversalModelLoader:
             `nn.Module`: Loaded model.
         """
         if model_type not in self.loaders:
+            logger.error(f"Unsupported model type: {model_type}")
             raise ValueError(f"Unsupported model type: {model_type}")
 
         loader = self.loaders[model_type]
         if loader is None:
+            logger.error(f"Required dependencies for {model_type} not available")
             raise ImportError(f"Required dependencies for {model_type} not available")
 
-        model = loader.load_model(model_config)  # may return bundle
+        try:
+            model = loader.load_model(model_config)  # may return bundle
+        except Exception as e:
+            logger.exception(f"Failed to load model for type {model_type}: {e}")
+            raise
 
-        if isinstance(model, HFSegmentationBundle):
+        if hasattr(model, "model"):
             bundle = model
             model = bundle.model
 
         if weights_path is not None:
-            model = loader.load_weights(model, weights_path, weight_type)
+            try:
+                model = loader.load_weights(model, weights_path, weight_type)
+                logger.info(f"Loaded weights for {model_type} model from {weights_path} (type: {weight_type})")
+            except Exception as e:
+                logger.exception(f"Failed to load weights for {model_type} model: {e}")
+                raise
 
         return model

@@ -46,23 +46,27 @@ class CustomModelLoader(BaseModelLoader):
         Returns:
             `nn.Module`: Instantiated model.
         """
-        model_class = model_config["model_class"]
-        model_args = model_config.get("model_args", [])
-        model_kwargs = model_config.get("model_kwargs", {})
+        try:
+            model_class = model_config["model_class"]
+            model_args = model_config.get("model_args", [])
+            model_kwargs = model_config.get("model_kwargs", {})
 
-        if isinstance(model_class, str):
-            from segmentation_robustness_framework.utils.model_loader import resolve_model_class
+            if isinstance(model_class, str):
+                from segmentation_robustness_framework.utils.model_loader import resolve_model_class
 
-            model_class = resolve_model_class(model_class)
-            model = model_class(*model_args, **model_kwargs)
-            logger.info(f"Loaded custom model: {model_class.__name__}")
-        elif callable(model_class):
-            model = model_class(*model_args, **model_kwargs)
-            logger.info(f"Loaded custom model: {model_class.__name__}")
-        else:
-            raise ValueError("model_class must be callable")
-
-        return model
+                model_class = resolve_model_class(model_class)
+                model = model_class(*model_args, **model_kwargs)
+                logger.info(f"Loaded custom model: {model_class.__name__}")
+            elif callable(model_class):
+                model = model_class(*model_args, **model_kwargs)
+                logger.info(f"Loaded custom model: {model_class.__name__}")
+            else:
+                logger.error("model_class must be callable")
+                raise ValueError("model_class must be callable")
+            return model
+        except Exception as e:
+            logger.exception(f"Failed to load custom model: {e}")
+            raise
 
     def load_weights(self, model: nn.Module, weights_path: str, weight_type: str = "full") -> nn.Module:
         """Load weights into custom model.
@@ -79,24 +83,30 @@ class CustomModelLoader(BaseModelLoader):
         Returns:
             `nn.Module`: Model with loaded weights.
         """
-        checkpoint = torch.load(weights_path, map_location="cpu")
+        try:
+            checkpoint = torch.load(weights_path, map_location="cpu")
 
-        if "state_dict" in checkpoint:
-            state_dict = checkpoint["state_dict"]
-        else:
-            state_dict = checkpoint
-
-        if weight_type == "full":
-            model.load_state_dict(state_dict, strict=False)
-        elif weight_type == "encoder":
-            # Attempt to load encoder weights (assumes encoder attribute exists)
-            if hasattr(model, "encoder"):
-                encoder_state_dict = {
-                    k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
-                }
-                model.encoder.load_state_dict(encoder_state_dict, strict=False)
+            if "state_dict" in checkpoint:
+                state_dict = checkpoint["state_dict"]
             else:
-                logger.warning("Model has no 'encoder' attribute, loading full weights")
-                model.load_state_dict(state_dict, strict=False)
+                state_dict = checkpoint
 
-        return model
+            if weight_type == "full":
+                model.load_state_dict(state_dict, strict=False)
+                logger.info(f"Loaded full weights into custom model from {weights_path}")
+            elif weight_type == "encoder":
+                if hasattr(model, "encoder"):
+                    encoder_state_dict = {
+                        k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
+                    }
+                    model.encoder.load_state_dict(encoder_state_dict, strict=False)
+                    logger.info(f"Loaded encoder weights into custom model from {weights_path}")
+                else:
+                    logger.warning("Model has no 'encoder' attribute, loading full weights")
+                    model.load_state_dict(state_dict, strict=False)
+            else:
+                logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
+            return model
+        except Exception as e:
+            logger.exception(f"Failed to load weights into custom model: {e}")
+            raise

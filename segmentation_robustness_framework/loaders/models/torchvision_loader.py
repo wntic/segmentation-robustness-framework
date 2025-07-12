@@ -65,52 +65,59 @@ class TorchvisionModelLoader(BaseModelLoader):
         Returns:
             `nn.Module`: Instantiated torchvision model.
         """
-        name = model_config.get("name")
-        num_classes = model_config.get("num_classes", 21)
-        weights = model_config.get("weights", "__not_provided__")  # Sentinel value
+        try:
+            name = model_config.get("name")
+            num_classes = model_config.get("num_classes", 21)
+            weights = model_config.get("weights", "__not_provided__")  # Sentinel value
 
-        if name not in self.SUPPORTED_MODELS:
-            logger.error(f"Unsupported model: {name}")
-            raise ValueError(f"Unsupported model: {name}")
+            if name not in self.SUPPORTED_MODELS:
+                logger.error(f"Unsupported model: {name}")
+                raise ValueError(f"Unsupported model: {name}")
 
-        model_fn = self.SUPPORTED_MODELS[name]
+            model_fn = self.SUPPORTED_MODELS[name]
 
-        weights_enum_cls = self.TORCHVISION_WEIGHTS_ENUMS.get(name)
+            weights_enum_cls = self.TORCHVISION_WEIGHTS_ENUMS.get(name)
 
-        if weights == "__not_provided__":
-            if weights_enum_cls is not None and hasattr(weights_enum_cls, "DEFAULT"):
-                weights = weights_enum_cls.DEFAULT
-                logger.info(f"No weights specified, using default weights for {name}.")
-        elif isinstance(weights, str):
-            if weights_enum_cls is not None and hasattr(weights_enum_cls, weights):
-                weights = getattr(weights_enum_cls, weights)
-            elif weights == "DEFAULT" and weights_enum_cls is not None and hasattr(weights_enum_cls, "DEFAULT"):
-                weights = weights_enum_cls.DEFAULT
+            if weights == "__not_provided__":
+                if weights_enum_cls is not None and hasattr(weights_enum_cls, "DEFAULT"):
+                    weights = weights_enum_cls.DEFAULT
+                    logger.info(f"No weights specified, using default weights for {name}.")
+            elif isinstance(weights, str):
+                if weights_enum_cls is not None and hasattr(weights_enum_cls, weights):
+                    weights = getattr(weights_enum_cls, weights)
+                elif weights == "DEFAULT" and weights_enum_cls is not None and hasattr(weights_enum_cls, "DEFAULT"):
+                    weights = weights_enum_cls.DEFAULT
 
-        model = model_fn(weights=weights, num_classes=num_classes)
-        logger.info(f"Loaded torchvision model: {name} with weights={weights}")
+            model = model_fn(weights=weights, num_classes=num_classes)
+            logger.info(f"Loaded torchvision model: {name} with weights={weights}")
 
-        default_num_classes = 21
-        if name.startswith("lraspp"):
             default_num_classes = 21
-        if num_classes != default_num_classes:
-            if hasattr(model, "classifier"):
-                cls = model.classifier
-                if isinstance(cls, nn.Sequential):
-                    cls[-1] = nn.Conv2d(cls[-1].in_channels, num_classes, kernel_size=1)
-                elif hasattr(cls, "low_classifier") and hasattr(cls, "high_classifier"):
-                    cls.low_classifier = nn.Conv2d(cls.low_classifier.in_channels, num_classes, kernel_size=1)
-                    cls.high_classifier = nn.Conv2d(cls.high_classifier.in_channels, num_classes, kernel_size=1)
-                else:
-                    logger.warning(
-                        "Unknown classifier type for model %s; num_classes may not be updated correctly.",
-                        name,
+            if name.startswith("lraspp"):
+                default_num_classes = 21
+            if num_classes != default_num_classes:
+                if hasattr(model, "classifier"):
+                    cls = model.classifier
+                    if isinstance(cls, nn.Sequential):
+                        cls[-1] = nn.Conv2d(cls[-1].in_channels, num_classes, kernel_size=1)
+                    elif hasattr(cls, "low_classifier") and hasattr(cls, "high_classifier"):
+                        cls.low_classifier = nn.Conv2d(cls.low_classifier.in_channels, num_classes, kernel_size=1)
+                        cls.high_classifier = nn.Conv2d(cls.high_classifier.in_channels, num_classes, kernel_size=1)
+                    else:
+                        logger.warning(
+                            "Unknown classifier type for model %s; num_classes may not be updated correctly.",
+                            name,
+                        )
+                elif hasattr(model, "aux_classifier"):
+                    model.aux_classifier[-1] = nn.Conv2d(
+                        model.aux_classifier[-1].in_channels, num_classes, kernel_size=1
                     )
-            elif hasattr(model, "aux_classifier"):
-                model.aux_classifier[-1] = nn.Conv2d(model.aux_classifier[-1].in_channels, num_classes, kernel_size=1)
-            logger.info(f"Modified classifier for {name} to output {num_classes} classes.")
+                logger.info(f"Modified classifier for {name} to output {num_classes} classes.")
 
-        return model
+            return model
+
+        except Exception as e:
+            logger.exception(f"Failed to load torchvision model: {e}")
+            raise
 
     def load_weights(self, model: nn.Module, weights_path: str | Path, weight_type: str = "full") -> nn.Module:
         """Load weights into a torchvision model.
@@ -127,34 +134,37 @@ class TorchvisionModelLoader(BaseModelLoader):
         Returns:
             `nn.Module`: Model with loaded weights.
         """
-        logger.info(f"Loading weights from {weights_path} (type: {weight_type})")
-        checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
+        try:
+            logger.info(f"Loading weights from {weights_path} (type: {weight_type})")
+            checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
 
-        if "state_dict" in checkpoint:
-            state_dict = checkpoint["state_dict"]
-        elif "model" in checkpoint:
-            state_dict = checkpoint["model"]
-        else:
-            state_dict = checkpoint
+            if "state_dict" in checkpoint:
+                state_dict = checkpoint["state_dict"]
+            elif "model" in checkpoint:
+                state_dict = checkpoint["model"]
+            else:
+                state_dict = checkpoint
 
-        if weight_type == "full":
-            missing, unexpected = model.load_state_dict(state_dict, strict=False)
-            if missing:
-                logger.warning(f"Missing keys when loading weights: {missing}")
-            if unexpected:
-                logger.warning(f"Unexpected keys when loading weights: {unexpected}")
-            logger.info("Loaded full model weights.")
-        elif weight_type == "encoder":
-            backbone_state_dict = {
-                k.replace("backbone.", ""): v for k, v in state_dict.items() if k.startswith("backbone.")
-            }
-            missing, unexpected = model.backbone.load_state_dict(backbone_state_dict, strict=False)
-            if missing:
-                logger.warning(f"Missing keys when loading encoder weights: {missing}")
-            if unexpected:
-                logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-            logger.info("Loaded encoder (backbone) weights only.")
-        else:
-            logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
-
-        return model
+            if weight_type == "full":
+                missing, unexpected = model.load_state_dict(state_dict, strict=False)
+                if missing:
+                    logger.warning(f"Missing keys when loading weights: {missing}")
+                if unexpected:
+                    logger.warning(f"Unexpected keys when loading weights: {unexpected}")
+                logger.info("Loaded full model weights.")
+            elif weight_type == "encoder":
+                backbone_state_dict = {
+                    k.replace("backbone.", ""): v for k, v in state_dict.items() if k.startswith("backbone.")
+                }
+                missing, unexpected = model.backbone.load_state_dict(backbone_state_dict, strict=False)
+                if missing:
+                    logger.warning(f"Missing keys when loading encoder weights: {missing}")
+                if unexpected:
+                    logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
+                logger.info("Loaded encoder (backbone) weights only.")
+            else:
+                logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
+            return model
+        except Exception as e:
+            logger.exception(f"Failed to load weights into torchvision model: {e}")
+            raise

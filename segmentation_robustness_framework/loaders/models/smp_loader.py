@@ -94,33 +94,39 @@ class SMPModelLoader(BaseModelLoader):
         """
         smp = self._import_smp()
         checkpoint = model_config.get("checkpoint")
+        try:
+            if checkpoint and checkpoint.startswith("smp-hub/"):
+                try:
+                    model = smp.from_pretrained(checkpoint)
+                    logger.info(f"Loaded SMP model from checkpoint: {checkpoint}")
+                except Exception as e:
+                    logger.exception(f"Could not load checkpoint {checkpoint}: {e}")
+                    raise RuntimeError(f"Could not load checkpoint {checkpoint}") from e
+            else:
+                architecture = model_config.get("architecture", "unet")
+                encoder_name = model_config.get("encoder_name", "resnet34")
+                encoder_weights = model_config.get("encoder_weights", "imagenet")
+                classes = model_config.get("classes", 1)
+                activation = model_config.get("activation", None)
 
-        if checkpoint and checkpoint.startswith("smp-hub/"):
-            try:
-                model = smp.from_pretrained(checkpoint)
-            except Exception as e:
-                raise RuntimeError(f"Could not load checkpoint {checkpoint}") from e
-        else:
-            architecture = model_config.get("architecture", "unet")
-            encoder_name = model_config.get("encoder_name", "resnet34")
-            encoder_weights = model_config.get("encoder_weights", "imagenet")
-            classes = model_config.get("classes", 1)
-            activation = model_config.get("activation", None)
+                model = smp.create_model(
+                    arch=architecture,
+                    encoder_name=encoder_name,
+                    encoder_weights=encoder_weights,
+                    classes=classes,
+                    activation=activation,
+                )
+                logger.info(f"Loaded SMP model: {architecture} with encoder {encoder_name}")
 
-            model = smp.create_model(
-                arch=architecture,
-                encoder_name=encoder_name,
-                encoder_weights=encoder_weights,
-                classes=classes,
-                activation=activation,
-            )
-
-        if "classes" in model_config and hasattr(model, "classifier"):
-            if model.classifier.out_channels != model_config["classes"]:
-                in_ch = model.classifier.in_channels
-                model.classifier = nn.Conv2d(in_ch, model_config["classes"], 1)
-
-        return model
+            if "classes" in model_config and hasattr(model, "classifier"):
+                if model.classifier.out_channels != model_config["classes"]:
+                    in_ch = model.classifier.in_channels
+                    model.classifier = nn.Conv2d(in_ch, model_config["classes"], 1)
+                    logger.info(f"Adjusted classifier out_channels to {model_config['classes']}")
+            return model
+        except Exception as e:
+            logger.exception(f"Failed to load SMP model: {e}")
+            raise
 
     def load_weights(self, model: nn.Module, weights_path: str, weight_type: str = "full") -> nn.Module:
         """Load weights into SMP model.
@@ -137,26 +143,34 @@ class SMPModelLoader(BaseModelLoader):
         Returns:
             `nn.Module`: Model with loaded weights.
         """
-        checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
+        try:
+            checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
 
-        if "state_dict" in checkpoint:
-            state_dict = checkpoint["state_dict"]
-        else:
-            state_dict = checkpoint
+            if "state_dict" in checkpoint:
+                state_dict = checkpoint["state_dict"]
+            else:
+                state_dict = checkpoint
 
-        if weight_type == "full":
-            missing, unexpected = model.load_state_dict(state_dict, strict=False)
-            if missing:
-                logger.warning(f"Missing keys when loading weights: {missing}")
-            if unexpected:
-                logger.warning(f"Unexpected keys when loading weights: {unexpected}")
-        elif weight_type == "encoder":
-            encoder_state_dict = {
-                k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
-            }
-            missing, unexpected = model.encoder.load_state_dict(encoder_state_dict, strict=False)
-            if missing:
-                logger.warning(f"Missing keys when loading encoder weights: {missing}")
-            if unexpected:
-                logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-        return model
+            if weight_type == "full":
+                missing, unexpected = model.load_state_dict(state_dict, strict=False)
+                if missing:
+                    logger.warning(f"Missing keys when loading weights: {missing}")
+                if unexpected:
+                    logger.warning(f"Unexpected keys when loading weights: {unexpected}")
+                logger.info("Loaded full model weights.")
+            elif weight_type == "encoder":
+                encoder_state_dict = {
+                    k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
+                }
+                missing, unexpected = model.encoder.load_state_dict(encoder_state_dict, strict=False)
+                if missing:
+                    logger.warning(f"Missing keys when loading encoder weights: {missing}")
+                if unexpected:
+                    logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
+                logger.info("Loaded encoder (backbone) weights only.")
+            else:
+                logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
+            return model
+        except Exception as e:
+            logger.exception(f"Failed to load weights into SMP model: {e}")
+            raise
