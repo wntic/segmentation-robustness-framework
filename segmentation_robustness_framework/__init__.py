@@ -3,7 +3,7 @@ from .attacks import fgsm, pgd, rfgsm, tpgd
 from .config import validator
 from .datasets import ade20k, cityscapes, stanford_background, voc
 from .engine import RobustEngine
-from .loaders import attack_loader, dataset_loader, model_loader
+from .loaders import attack_loader, dataset_loader
 from .models import torchvision_models
 from .utils import image_preprocessing, metrics, visualization
 
@@ -21,7 +21,6 @@ __all__ = [
     "RobustEngine",
     "attack_loader",
     "dataset_loader",
-    "model_loader",
     "torchvision_models",
     "image_preprocessing",
     "metrics",
