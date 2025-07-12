@@ -5,8 +5,8 @@ from typing import Any
 import torch
 import torch.nn as nn
 
-from segmentation_robustness_framework.loaders.hf_bundle import HFSegmentationBundle
 from segmentation_robustness_framework.loaders.models.base import BaseModelLoader
+from segmentation_robustness_framework.loaders.models.hf_bundle import HFSegmentationBundle
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
