@@ -20,6 +20,7 @@ class SMPConfig(BaseModel):
     classes: Optional[int] = 1
     activation: Optional[str] = None
     weights_path: Optional[Union[str, Path]] = None
+    checkpoint: Optional[str] = None
     device: Optional[str] = "cpu"
 
 
