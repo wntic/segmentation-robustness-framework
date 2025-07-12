@@ -6,9 +6,9 @@
 # The original code may have been modified to fit current requirements.
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
-from ..models import SegmentationModel
 from .attack import AdversarialAttack
 
 
@@ -25,7 +25,7 @@ class TPGD(AdversarialAttack):
 
     def __init__(
         self,
-        model: SegmentationModel,
+        model: nn.Module,
         eps: float = 8 / 255,
         alpha: float = 2 / 255,
         iters: int = 10,

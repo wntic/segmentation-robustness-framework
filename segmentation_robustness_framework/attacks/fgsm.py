@@ -6,8 +6,8 @@
 # The original code may have been modified to fit current requirements.
 
 import torch
+import torch.nn as nn
 
-from ..models import SegmentationModel
 from .attack import AdversarialAttack
 
 
@@ -23,7 +23,7 @@ class FGSM(AdversarialAttack):
 
     def __init__(
         self,
-        model: SegmentationModel,
+        model: nn.Module,
         eps: float = 2 / 255,
     ):
         """Initializes FGSM attack.

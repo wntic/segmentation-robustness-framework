@@ -1,18 +1,21 @@
 import os
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import torch
 import yaml
 
 import segmentation_robustness_framework.loaders as L
-from segmentation_robustness_framework import attacks, utils, validator
+from segmentation_robustness_framework import attacks, utils
 
 from . import engine_utils
+
+validator = dict[str, Any]
 
 
 class RobustEngine:
     """Robustness Evaluation Engine.
+
     Evaluates the robustness of segmentation models against adversarial attacks.
 
     This class is responsible for loading a segmentation model, dataset, and adversarial attacks,
@@ -26,11 +29,9 @@ class RobustEngine:
         attack_config (validator.AttackConfig): Configuration for the adversarial attacks to be applied.
         dataset_config (validator.DatasetConfig): Configuration for the dataset used for evaluation,
             including dataset type, image shape, and transformations.
-
         model_loader (ModelLoader): Loader to initialize the segmentation model.
         dataset_loader (DatasetLoader): Loader to initialize dataset.
         attack_loader (AttackLoader): Loader to initialize list of adversarial attacks to be used.
-
         output_dir (Path): Directory path where the evaluation results and images will be saved.
         save (bool): Flag indicating whether generated adversarial images and evaluation results should be saved.
         show (bool): Flag indicating whether generated adversarial images and evaluation results should be showed.
@@ -41,14 +42,14 @@ class RobustEngine:
         config_path: Union[Path, str],
         output_dir: Union[Path, str] = None,
     ) -> None:
-        """Initializes RobustEngine with the given configuration file.
+        """Initializes RobustEngine.
 
-        The method loads the YAML configuration file that specifies the model, dataset, and
+        Loads the YAML configuration file that specifies the model, dataset, and
         attack configurations, and prepares the necessary attributes for evaluation.
 
         Args:
             config_path (Union[Path, str]): Path to the YAML configuration file.
-            output_dir (Union[Path, str]): Path to the output directory. Defaults to None.
+            output_dir (Union[Path, str], optional): Path to the output directory. Defaults to None.
         """
         with open(config_path) as f:
             data = yaml.load(f, yaml.SafeLoader)
@@ -93,7 +94,7 @@ class RobustEngine:
     def run(self, show: bool = False, save: bool = False, metrics: list[str] = ["mean_iou"]) -> None:
         """Executes the robustness evaluation by applying adversarial attacks and calculating metrics.
 
-        This method loads the model, dataset, and adversarial attacks, evaluates the model on clean and
+        Loads the model, dataset, and adversarial attacks, evaluates the model on clean and
         adversarial images, and computes performance metrics for each attack. Optionally, visualizes the images.
 
         Args:
@@ -148,7 +149,7 @@ class RobustEngine:
     def _compute_metrics(self, targets: torch.Tensor, preds: torch.Tensor) -> dict[str, float]:
         """Computes performance metrics for segmentation.
 
-        This method calculates various metrics such as mean IoU, pixel accuracy, precision, recall and Dice score.
+        Calculates various metrics such as mean IoU, pixel accuracy, precision, recall and Dice score.
 
         Args:
             targets (torch.Tensor): The ground truth labels.

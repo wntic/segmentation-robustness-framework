@@ -1,6 +1,5 @@
 import torch
-
-from ..models import SegmentationModel
+import torch.nn as nn
 
 
 class AdversarialAttack:
@@ -10,11 +9,11 @@ class AdversarialAttack:
         model (SegmentationModel): Segmentation model to be attacked.
     """
 
-    def __init__(self, model: SegmentationModel):
+    def __init__(self, model: nn.Module):
         """Initializes adversarial attack.
 
         Args:
-            model (SegmentationModel): Segmentation model to be attacked.
+            model (torch.nn.Module): Segmentation model to be attacked.
         """
         self.model = model
 

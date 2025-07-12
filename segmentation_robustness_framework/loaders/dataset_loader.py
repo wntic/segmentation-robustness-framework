@@ -1,7 +1,8 @@
+from typing import Any
+
 from torch.utils.data import Dataset
 
 from segmentation_robustness_framework import datasets
-from segmentation_robustness_framework.config import DatasetConfig
 from segmentation_robustness_framework.utils import image_preprocessing
 
 
@@ -12,17 +13,17 @@ class DatasetLoader:
     applying preprocessing steps for input images and their corresponding segmentation masks.
 
     Attributes:
-        config (DatasetConfig): Configuration specifying the dataset and its parameters.
+        config (dict[str, Any]): Configuration specifying the dataset and its parameters.
         dataset_name (str): Name of the dataset to be loaded (e.g., VOC, ADE20K, etc.).
         root (str): Root directory where the dataset is located.
         images_shape (tuple[int, int]): Desired image shape for preprocessing (height, width).
     """
 
-    def __init__(self, dataset_config: DatasetConfig) -> None:
+    def __init__(self, dataset_config: dict[str, Any]) -> None:
         """Initializes the `DatasetLoader` with the provided dataset configuration.
 
         Args:
-            dataset_config (DatasetConfig): Configuration object specifying the dataset
+            dataset_config (dict[str, Any]): Configuration object specifying the dataset
                 name, root directory, split, image shape, and other parameters.
         """
 

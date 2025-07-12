@@ -1,7 +1,8 @@
+from typing import Any
+
 import torch.nn as nn
 
 from segmentation_robustness_framework import attacks
-from segmentation_robustness_framework.config import AttackConfig
 
 
 class AttackLoader:
@@ -12,15 +13,15 @@ class AttackLoader:
 
     Attributes:
         model (nn.Module): The segmentation model to be attacked.
-        config (list[AttackConfig]): List of configurations specifying the attack types and parameters.
+        config (list[dict[str, Any]]): List of configurations specifying the attack types and parameters.
     """
 
-    def __init__(self, model: nn.Module, attack_config: list[AttackConfig]) -> None:
+    def __init__(self, model: nn.Module, attack_config: list[dict[str, Any]]) -> None:
         """Initializes the `AttackLoader` with the given model and attack configuration.
 
         Args:
             model (nn.Module): The segmentation model to be attacked.
-            attack_config (list[AttackConfig]): List of configurations specifying the attack types and parameters.
+            attack_config (list[dict[str, Any]]): List of configurations specifying the attack types and parameters.
         """
 
         self.model = model
@@ -36,11 +37,11 @@ class AttackLoader:
         attacks = [self._create_attack_instances(attack_config) for attack_config in self.config]
         return attacks
 
-    def _create_attack_instances(self, attack_config: AttackConfig) -> list[attacks.AdversarialAttack]:
+    def _create_attack_instances(self, attack_config: dict[str, Any]) -> list[attacks.AdversarialAttack]:
         """Generates a list of adversarial attacks based on the configuration.
 
         Args:
-            attack_config (validator.AttackConfig): Configuration specifying the attack type and parameters.
+            attack_config (validator.dict[str, Any]): Configuration specifying the attack type and parameters.
 
         Returns:
             list[attacks.AdversarialAttack]: A list of adversarial attack instances.
