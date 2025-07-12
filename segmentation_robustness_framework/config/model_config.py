@@ -30,13 +30,17 @@ class HuggingFaceConfig(BaseModel):
     trust_remote_code: Optional[bool] = False
     weights_path: Optional[Union[str, Path]] = None
     device: Optional[str] = "cpu"
+    task: Optional[str] = "semantic_segmentation"
+    return_processor: Optional[bool] = True
+    config_overrides: Optional[dict[str, Any]] = Field(default_factory=dict)
+    processor_overrides: Optional[dict[str, Any]] = Field(default_factory=dict)
 
     model_config = {"protected_namespaces": ()}
 
 
 class CustomConfig(BaseModel):
     type: Literal["custom"]
-    model_class: Callable[..., Any]
+    model_class: Union[str, Callable[..., Any]]
     model_args: Optional[list[Any]] = Field(default_factory=list)
     model_kwargs: Optional[dict[str, Any]] = Field(default_factory=dict)
     weights_path: Optional[Union[str, Path]] = None
