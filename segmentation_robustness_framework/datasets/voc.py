@@ -10,7 +10,7 @@ from segmentation_robustness_framework.utils.dataset import download as download
 from segmentation_robustness_framework.utils.dataset import extract as extract_dataset
 
 
-@register_dataset("VOC")
+@register_dataset("voc")
 class VOCSegmentation(Dataset):
     """Load Pascal VOC 2012 dataset for semantic segmentation.
 
