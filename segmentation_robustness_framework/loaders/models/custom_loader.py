@@ -61,8 +61,7 @@ class CustomModelLoader(BaseModelLoader):
                 model = model_class(*model_args, **model_kwargs)
                 logger.info(f"Loaded custom model: {model_class.__name__}")
             else:
-                logger.error("model_class must be callable")
-                raise ValueError("model_class must be callable")
+                raise ValueError(f"model_class must be a string or callable, got {type(model_class)}")
             return model
         except Exception as e:
             logger.exception(f"Failed to load custom model: {e}")
@@ -105,7 +104,7 @@ class CustomModelLoader(BaseModelLoader):
                     logger.warning("Model has no 'encoder' attribute, loading full weights")
                     model.load_state_dict(state_dict, strict=False)
             else:
-                logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
+                raise ValueError(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model
         except Exception as e:
             logger.exception(f"Failed to load weights into custom model: {e}")
