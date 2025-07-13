@@ -11,10 +11,62 @@ from segmentation_robustness_framework.datasets.registry import register_dataset
 
 @register_dataset("cityscapes")
 class Cityscapes(Dataset):
-    """Cityscapes Dataset.
+    """Cityscapes Dataset for semantic segmentation.
+
+    Cityscapes is a large-scale dataset for semantic understanding of urban street scenes.
+    It contains high-quality pixel-level annotations of 5000 images in 50 cities.
+
+    **Setup Instructions:**
+
+    1. Register at https://www.cityscapes-dataset.com/
+    2. Download the dataset files:
+       - `leftImg8bit_trainvaltest.zip` (11GB) - training/validation/test images
+       - `gtFine_trainval.zip` (241MB) - fine annotations for train/val
+       - `gtCoarse.zip` (1.3GB) - coarse annotations for train/val/train_extra
+       - `leftImg8bit_trainextra.zip` (44GB) - extra training images (optional)
+    3. Extract all archives to the same root directory
+    4. Ensure the directory structure matches:
+       ```
+       root/
+       ├── leftImg8bit/
+       │   ├── train/
+       │   ├── val/
+       │   └── test/
+       ├── gtFine/
+       │   ├── train/
+       │   └── val/
+       ├── gtCoarse/
+       │   ├── train/
+       │   ├── val/
+       │   └── train_extra/
+       └── leftImg8bit_trainextra/
+           └── train_extra/
+       ```
+
+    **Supported Splits:**
+    - `train`: Training images with fine annotations
+    - `val`: Validation images with fine annotations
+    - `test`: Test images (no annotations available)
+    - `train_extra`: Extra training images with coarse annotations
+
+    **Supported Modes:**
+    - `fine`: High-quality pixel-level annotations
+    - `coarse`: Coarse polygon annotations
+
+    **Supported Target Types:**
+    - `semantic`: Semantic segmentation masks
+    - `instance`: Instance segmentation masks
+    - `color`: Color-coded visualization masks
+    - `polygon`: Polygon annotations (JSON format)
 
     Attributes:
-
+        root (str): Path to the Cityscapes dataset root directory
+        split (str): Dataset split ('train', 'val', 'test', 'train_extra')
+        mode (str): Annotation mode ('fine' or 'coarse')
+        target_type (str | list): Type of target annotations
+        transform (callable, optional): Image transformations
+        target_transform (callable, optional): Target transformations
+        num_classes (int): Number of semantic classes (35)
     """
 
     VALID_SPLITS = ["train", "val", "test", "train_extra"]
@@ -30,33 +82,31 @@ class Cityscapes(Dataset):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
     ) -> None:
-        """
-        Args:
-            root (str): Корневая директория датасета Cityscapes.
-            split (str): 'train', 'val', 'test' или 'train_extra'. Определяет, какое подмножество данных используется.
-            mode (str): 'fine' или 'coarse'. Определяет тип аннотаций (точные или грубые).
-            target_type (str or list): 'semantic', 'instance', 'polygon', 'color' или их комбинация.
-                                       Определяет тип целевых данных (например, семантические маски).
-            transform (callable, optional): Опциональные преобразования, применяемые к изображениям и маскам.
-        """
-
-        """_summary_
+        """Initialize Cityscapes dataset.
 
         Args:
-            root (Union[Path, str]): Path to root directory with Cityscapes.
-            split (str, optional): 'train', 'val', 'test' or 'train_extra'. Determines which subset of data is used.
-                Defaults to "train".
-            mode (str, optional): 'fine' or 'coarse'. Defaults to "fine".
-            target_type (str, optional): _description_. Defaults to "semantic".
-            transform (Optional[Callable], optional): _description_. Defaults to None.
-            target_transform (Optional[Callable], optional): _description_. Defaults to None.
+            root (str | Path): Path to the Cityscapes dataset root directory.
+                Must contain the extracted dataset files with proper directory structure.
+            split (str, optional): Dataset split. Must be one of 'train', 'val', 'test',
+                or 'train_extra'. Defaults to "train".
+            mode (str, optional): Annotation mode. Must be 'fine' or 'coarse'.
+                Defaults to "fine".
+            target_type (str | list, optional): Type of target annotations. Can be a
+                single type or list of types. Must be one or more of 'semantic',
+                'instance', 'color', 'polygon'. Defaults to "semantic".
+            transform (callable, optional): Transform to apply to images.
+                Defaults to None.
+            target_transform (callable, optional): Transform to apply to targets.
+                Defaults to None.
 
         Raises:
-            ValueError: _description_
-            ValueError: _description_
-            ValueError: _description_
-            ValueError: _description_
-            ValueError: _description_
+            ValueError: If root directory does not exist.
+            ValueError: If split is not valid.
+            ValueError: If mode is not valid.
+            ValueError: If target_type is not valid.
+            ValueError: If test split is used with coarse mode.
+            ValueError: If train_extra split is used with fine mode.
+            ValueError: If required dataset files are missing.
         """
         if not os.path.exists(root):
             raise ValueError(f"Root directory '{root}' does not exist.")
@@ -121,9 +171,19 @@ class Cityscapes(Dataset):
         self.num_classes = 35
 
     def __len__(self):
+        """Return the number of images in the dataset."""
         return len(self.images)
 
     def __getitem__(self, idx):
+        """Get a single sample from the dataset.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: (image, target) where image is a PIL Image and target is the
+                annotation(s) in the format specified by target_type.
+        """
         image = Image.open(self.images[idx]).convert("RGB")
 
         targets = []
@@ -147,7 +207,15 @@ class Cityscapes(Dataset):
 
         return image, target
 
-    def _get_target_postfix(self, target: str):
+    def _get_target_postfix(self, target: str) -> str:
+        """Get the file extension for a given target type.
+
+        Args:
+            target (str): Target type ('semantic', 'instance', 'color', 'polygon').
+
+        Returns:
+            str: File extension for the target type.
+        """
         if target == "semantic":
             return "labelIds.png"
         elif target == "instance":
@@ -157,7 +225,15 @@ class Cityscapes(Dataset):
         elif target == "polygon":
             return "polygons.json"
 
-    def _load_json(self, path):
+    def _load_json(self, path: str) -> dict:
+        """Load JSON file containing polygon annotations.
+
+        Args:
+            path (str): Path to the JSON file.
+
+        Returns:
+            dict: Loaded JSON data.
+        """
         with open(path) as f:
             data = json.load(f)
         return data
