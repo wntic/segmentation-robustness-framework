@@ -6,6 +6,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from segmentation_robustness_framework.datasets.registry import register_dataset
+from segmentation_robustness_framework.utils.dataset import download as download_dataset
+from segmentation_robustness_framework.utils.dataset import extract as extract_dataset
 
 
 @register_dataset("ade20k")
@@ -14,43 +16,66 @@ class ADE20K(Dataset):
     From: https://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip
 
     Attributes:
-        root (str): path/to/ADEChallengeData2016/
+        root (str | Path | None, optional): Directory **into which** the archive will
+            be downloaded and extracted, or a directory that already contains the
+            dataset files. If ``None`` (default), a cache directory is used.
         split (str): Set of images. Must be "train" or "val"
-        transform (callable): Images transofrm.
+        transform (callable): Images transform.
         target_transform (callable): Masks transform.
+        download (bool): If `True`, downloads the dataset from the internet and
+            puts it in `root` directory. If `False`, it assumes that `root`
+            already contains the dataset files.
     """
 
+    URL = "https://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip"
+    MD5 = "7328b3957e407ddae1d3cbf487f149ef"
     VALID_SPLITS = ["train", "val"]
 
     def __init__(
         self,
-        root: Union[Path, str],
         split: str,
+        root: Optional[Union[Path, str]] = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
+        download: bool = True,
     ) -> None:
-        """Initialize Pascal VOC 2012 dataset.
+        """Initialize ADE20K dataset.
 
         Args:
-            root (str): path/to/ADEChallengeData2016/
             split (str): Set of images. Must be "train" or "val"
-            transform (callable, optional): Images transofrm. Defaults to None.
+            root (str | Path | None, optional): Directory **into which** the archive will
+                be downloaded and extracted, or a directory that already contains the
+                dataset files. If ``None`` (default), a cache directory is used.
+            transform (callable, optional): Images transform. Defaults to None.
             target_transform (callable, optional): Masks transform. Defaults to None.
+            download (bool, optional): If `True`, downloads the dataset from the internet and
+                puts it in `root` directory. If `False`, it assumes that `root`
+                already contains the dataset files.
         """
-        if not os.path.exists(root):
-            raise ValueError(f"Root directory '{root}' does not exist.")
+        from segmentation_robustness_framework.utils.dataset import get_cache_dir
+
+        root_path = Path(root) / "ade20k" if root is not None else get_cache_dir("ade20k")
+        dataset_path = root_path / "ADEChallengeData2016"
+
+        if not dataset_path.exists():
+            if download:
+                downloaded_file = download_dataset(self.URL, root_path, self.MD5)
+                extract_dataset(downloaded_file, root_path)
+            if not dataset_path.exists():
+                raise FileNotFoundError(
+                    f"Could not find dataset at '{dataset_path}'. If you set `download=False`, "
+                    "make sure the dataset is present. Otherwise ensure write permissions and try again."
+                )
 
         if split not in self.VALID_SPLITS:
             raise ValueError(f"Invalid split '{split}'. Expected one of {self.VALID_SPLITS}.")
 
         self.split = split
         self.images_dir = (
-            os.path.join(root, "images/training") if self.split == "train" else os.path.join(root, "images/validation")
+            dataset_path / "images/training" if self.split == "train" else dataset_path / "images/validation"
         )
         self.masks_dir = (
-            os.path.join(root, "annotations/training")
-            if self.split == "train"
-            else os.path.join(root, "annotations/validation")
+            dataset_path / "annotations/training" if self.split == "train" else dataset_path / "annotations/validation"
         )
         self.transform = transform
         self.target_transform = target_transform
