@@ -52,7 +52,7 @@ class CustomModelLoader(BaseModelLoader):
             model_kwargs = model_config.get("model_kwargs", {})
 
             if isinstance(model_class, str):
-                from segmentation_robustness_framework.utils.model_loader import resolve_model_class
+                from segmentation_robustness_framework.utils.loader import resolve_model_class
 
                 model_class = resolve_model_class(model_class)
                 model = model_class(*model_args, **model_kwargs)
