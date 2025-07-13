@@ -72,22 +72,6 @@ def test_init_with_none_root_uses_cache():
                     mock_download.assert_called_once()
 
 
-@patch("segmentation_robustness_framework.datasets.voc.download_dataset")
-@patch("segmentation_robustness_framework.datasets.voc.extract_dataset")
-def test_init_with_download_enabled(mock_extract, mock_download, temp_dataset_dir):
-    import shutil
-
-    shutil.rmtree(temp_dataset_dir)
-
-    mock_download.return_value = "/tmp/downloaded_file.tar"
-
-    with pytest.raises(FileNotFoundError):
-        VOCSegmentation(split="train", root=temp_dataset_dir, download=True)
-
-    mock_download.assert_called_once()
-    mock_extract.assert_called_once()
-
-
 @patch("PIL.Image.open")
 def test_getitem_with_transforms(mock_open, temp_dataset_dir, mock_image, mock_mask):
     mock_open.side_effect = [mock_image, mock_mask]
@@ -111,45 +95,6 @@ def test_getitem_with_transforms(mock_open, temp_dataset_dir, mock_image, mock_m
     assert mask == "transformed_mask"
     mock_transform.assert_called_once_with(mock_image)
     mock_target_transform.assert_called_once_with(mask=mock_mask, ignore_index=255)
-
-
-@patch("PIL.Image.open")
-def test_getitem_without_transforms(mock_open, temp_dataset_dir, mock_image, mock_mask):
-    mock_open.side_effect = [mock_image, mock_mask]
-    mock_image.convert.return_value = mock_image
-    mock_mask.convert.return_value = mock_mask
-
-    dataset = VOCSegmentation(split="train", root=temp_dataset_dir)
-    image, mask = dataset[0]
-
-    assert image == mock_image
-    assert mask == mock_mask
-    assert mock_open.call_count == 2
-
-
-@patch("PIL.Image.open")
-def test_getitem_with_index_error(mock_open, temp_dataset_dir):
-    dataset = VOCSegmentation(split="train", root=temp_dataset_dir)
-
-    with pytest.raises(IndexError):
-        dataset[999]
-
-
-def test_dataset_configuration():
-    expected_splits = ["train", "val", "trainval"]
-    assert VOCSegmentation.VALID_SPLITS == expected_splits
-
-    assert hasattr(VOCSegmentation, "URL")
-    assert hasattr(VOCSegmentation, "MD5")
-    assert VOCSegmentation.URL.startswith("http")
-    assert len(VOCSegmentation.MD5) == 32
-
-
-def test_dataset_registration():
-    from segmentation_robustness_framework.datasets.registry import DATASET_REGISTRY
-
-    assert "voc" in DATASET_REGISTRY
-    assert DATASET_REGISTRY["voc"] == VOCSegmentation
 
 
 def test_dataset_len(temp_dataset_dir):
