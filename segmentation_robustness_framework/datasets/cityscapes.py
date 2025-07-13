@@ -6,7 +6,10 @@ from typing import Callable, Optional, Union
 from PIL import Image
 from torch.utils.data import Dataset
 
+from segmentation_robustness_framework.datasets.registry import register_dataset
 
+
+@register_dataset("cityscapes")
 class Cityscapes(Dataset):
     """Cityscapes Dataset.
 

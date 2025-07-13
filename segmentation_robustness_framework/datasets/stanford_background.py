@@ -5,7 +5,10 @@ from typing import Callable, Optional, Union
 from PIL import Image
 from torch.utils.data import Dataset
 
+from segmentation_robustness_framework.datasets.registry import register_dataset
 
+
+@register_dataset("stanford_background")
 class StanfordBackground(Dataset):
     """Stanford Background Dataset.
     From: https://www.kaggle.com/datasets/balraj98/stanford-background-dataset

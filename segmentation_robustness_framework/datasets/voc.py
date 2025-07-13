@@ -5,7 +5,10 @@ from typing import Callable, Optional, Union
 from PIL import Image
 from torch.utils.data import Dataset
 
+from segmentation_robustness_framework.datasets.registry import register_dataset
 
+
+@register_dataset("voc")
 class VOCSegmentation(Dataset):
     """Pascal VOC 2012 Dataset.
     From: http://host.robots.ox.ac.uk/pascal/VOC/

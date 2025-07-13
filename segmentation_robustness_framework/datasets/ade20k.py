@@ -5,7 +5,10 @@ from typing import Callable, Optional, Union
 from PIL import Image
 from torch.utils.data import Dataset
 
+from segmentation_robustness_framework.datasets.registry import register_dataset
 
+
+@register_dataset("ade20k")
 class ADE20K(Dataset):
     """ADE20K Dataset.
     From: https://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip
