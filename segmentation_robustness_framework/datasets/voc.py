@@ -12,21 +12,29 @@ from segmentation_robustness_framework.utils.dataset import extract as extract_d
 
 @register_dataset("VOC")
 class VOCSegmentation(Dataset):
-    """Pascal VOC 2012 Dataset.
-    From: http://host.robots.ox.ac.uk/pascal/VOC/
+    """Load Pascal VOC 2012 dataset for semantic segmentation.
+
+    The Pascal VOC 2012 dataset contains 21 classes of objects in natural scenes.
+    Images are paired with pixel-level segmentation masks for training and evaluation.
+
+    **Setup Instructions:**
+
+    The dataset will be automatically downloaded and extracted if not present.
+    If `root` is provided, the dataset will be stored at `root/voc/VOCdevkit/VOC2012/`.
+    If `root` is `None`, the dataset will be cached in the default cache directory.
+
+    **Supported Splits:**
+    - `train`: Training images (1,464 samples)
+    - `val`: Validation images (1,449 samples)
+    - `trainval`: Combined train and validation (2,913 samples)
 
     Attributes:
-        root (str): Directory **into which** the archive will be downloaded and
-            extracted *or* a directory that already contains the
-            `VOCdevkit/VOC2012` hierarchy.  For example, if you pass
-            `data/`, the dataset will end up at
-            `data/VOCdevkit/VOC2012/...`.
-        split (str): Set of images. Must be `"train"`, `"val"` or `"trainval"`.
-        transform (callable): Images transform.
-        target_transform (callable): Masks transform.
-        download (bool): If `True`, downloads the dataset from the internet and
-            puts it in `root` directory. If `False`, it assumes that `root`
-            already contains the `VOCdevkit/VOC2012` hierarchy.
+        root (str | Path | None): Directory for dataset storage or cache location.
+        split (str): Dataset split ('train', 'val', 'trainval').
+        transform (callable, optional): Image transformations.
+        target_transform (callable, optional): Target transformations.
+        download (bool): Whether to download dataset if not present.
+        num_classes (int): Number of semantic classes (21).
     """
 
     URL = "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
@@ -44,16 +52,19 @@ class VOCSegmentation(Dataset):
         """Initialize Pascal VOC 2012 dataset.
 
         Args:
-            split (str): Set of images. Must be `"train"`, `"val"` or `"trainval"`.
-            root (str | Path | None, optional): Directory **into which** the archive will
-                be downloaded and extracted, or a directory that already contains the
-                ``VOCdevkit/VOC2012`` hierarchy.  If ``None`` (default), a cache
-                directory is used (see Notes).
-            transform (callable, optional): Images transform. Defaults to None.
-            target_transform (callable, optional): Masks transform. Defaults to None.
-            download (bool, optional): If `True`, downloads the dataset from the internet and
-                puts it in `root` directory. If `False`, it assumes that `root`
-                already contains the `VOCdevkit/VOC2012` hierarchy.
+            split (str): Dataset split. Must be one of 'train', 'val', or 'trainval'.
+            root (str | Path | None, optional): Directory for dataset storage.
+                If `None`, uses default cache directory. Defaults to None.
+            transform (callable, optional): Transform to apply to images.
+                Defaults to None.
+            target_transform (callable, optional): Transform to apply to masks.
+                Defaults to None.
+            download (bool, optional): Whether to download dataset if not present.
+                Defaults to True.
+
+        Raises:
+            FileNotFoundError: If dataset is not found and download fails.
+            ValueError: If split is not valid.
         """
         from segmentation_robustness_framework.utils.dataset import get_cache_dir
 
@@ -85,9 +96,23 @@ class VOCSegmentation(Dataset):
         self.num_classes = 21
 
     def __len__(self):
+        """Return the number of images in the dataset.
+
+        Returns:
+            int: Number of images in the selected split.
+        """
         return len(self.images)
 
     def __getitem__(self, idx):
+        """Get a single sample from the dataset.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: (image, mask) where image is a PIL Image and mask is the
+                segmentation mask.
+        """
         img_path = os.path.join(self.images_dir, f"{self.images[idx]}.jpg")
         mask_path = os.path.join(self.masks_dir, f"{self.images[idx]}.png")
 

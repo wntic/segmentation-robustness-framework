@@ -8,23 +8,28 @@ DATASET_REGISTRY: dict[str, Callable] = {}
 def register_dataset(name: str) -> Callable:
     """Register a dataset class with a given name.
 
+    This decorator validates that the class inherits from `torch.utils.data.Dataset`
+    and registers it in the global dataset registry for automatic discovery.
+
     Args:
-        name: The name of the dataset.
+        name (str): The name under which to register the dataset class.
 
     Returns:
-        A decorator that registers the dataset class with the given name.
+        Callable: Decorator function that registers the dataset class.
+
+    Raises:
+        TypeError: If the class does not inherit from `torch.utils.data.Dataset`.
+        ValueError: If the name is already registered to a different class.
 
     Example:
         ```python
         @register_dataset("my_dataset")
-        class MyDataset:
+        class MyDataset(torch.utils.data.Dataset):
             def __init__(self, *args, **kwargs): ...
 
             def __getitem__(self, index: int) -> Any: ...
 
             def __len__(self) -> int: ...
-
-            def __call__(self, *args, **kwargs) -> Any: ...
         ```
     """
 

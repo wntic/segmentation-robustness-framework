@@ -12,19 +12,28 @@ from segmentation_robustness_framework.utils.dataset import extract as extract_d
 
 @register_dataset("ade20k")
 class ADE20K(Dataset):
-    """ADE20K Dataset.
-    From: https://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip
+    """Load ADE20K dataset for semantic segmentation.
+
+    The ADE20K dataset contains 20,210 images with 150 semantic categories.
+    Images are paired with pixel-level segmentation masks for training and evaluation.
+
+    **Setup Instructions:**
+
+    The dataset will be automatically downloaded and extracted if not present.
+    If `root` is provided, the dataset will be stored at `root/ade20k/ADEChallengeData2016/`.
+    If `root` is `None`, the dataset will be cached in the default cache directory.
+
+    **Supported Splits:**
+    - `train`: Training images (~20,000 samples)
+    - `val`: Validation images (~2,000 samples)
 
     Attributes:
-        root (str | Path | None, optional): Directory **into which** the archive will
-            be downloaded and extracted, or a directory that already contains the
-            dataset files. If ``None`` (default), a cache directory is used.
-        split (str): Set of images. Must be "train" or "val"
-        transform (callable): Images transform.
-        target_transform (callable): Masks transform.
-        download (bool): If `True`, downloads the dataset from the internet and
-            puts it in `root` directory. If `False`, it assumes that `root`
-            already contains the dataset files.
+        root (str | Path | None): Directory for dataset storage or cache location.
+        split (str): Dataset split ('train', 'val').
+        transform (callable, optional): Image transformations.
+        target_transform (callable, optional): Target transformations.
+        download (bool): Whether to download dataset if not present.
+        num_classes (int): Number of semantic classes (150).
     """
 
     URL = "https://data.csail.mit.edu/places/ADEchallenge/ADEChallengeData2016.zip"
@@ -42,15 +51,19 @@ class ADE20K(Dataset):
         """Initialize ADE20K dataset.
 
         Args:
-            split (str): Set of images. Must be "train" or "val"
-            root (str | Path | None, optional): Directory **into which** the archive will
-                be downloaded and extracted, or a directory that already contains the
-                dataset files. If ``None`` (default), a cache directory is used.
-            transform (callable, optional): Images transform. Defaults to None.
-            target_transform (callable, optional): Masks transform. Defaults to None.
-            download (bool, optional): If `True`, downloads the dataset from the internet and
-                puts it in `root` directory. If `False`, it assumes that `root`
-                already contains the dataset files.
+            split (str): Dataset split. Must be one of 'train' or 'val'.
+            root (str | Path | None, optional): Directory for dataset storage.
+                If `None`, uses default cache directory. Defaults to None.
+            transform (callable, optional): Transform to apply to images.
+                Defaults to None.
+            target_transform (callable, optional): Transform to apply to masks.
+                Defaults to None.
+            download (bool, optional): Whether to download dataset if not present.
+                Defaults to True.
+
+        Raises:
+            FileNotFoundError: If dataset is not found and download fails.
+            ValueError: If split is not valid.
         """
         from segmentation_robustness_framework.utils.dataset import get_cache_dir
 
@@ -84,9 +97,23 @@ class ADE20K(Dataset):
         self.num_classes = 150
 
     def __len__(self):
+        """Return the number of images in the dataset.
+
+        Returns:
+            int: Number of images in the selected split.
+        """
         return len(self.images)
 
     def __getitem__(self, idx):
+        """Get a single sample from the dataset.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: (image, mask) where image is a PIL Image and mask is the
+                segmentation mask.
+        """
         img_path = os.path.join(self.images_dir, self.images[idx])
         mask_path = os.path.join(self.masks_dir, self.images[idx].replace("jpg", "png"))
 

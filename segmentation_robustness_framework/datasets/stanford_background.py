@@ -12,13 +12,27 @@ from segmentation_robustness_framework.utils.dataset import extract as extract_d
 
 @register_dataset("stanford_background")
 class StanfordBackground(Dataset):
-    """Stanford Background Dataset.
-    From: https://www.kaggle.com/datasets/balraj98/stanford-background-dataset
+    """Load Stanford Background dataset for semantic segmentation.
+
+    The Stanford Background dataset contains 715 images with 9 semantic categories.
+    Images are paired with pixel-level segmentation masks for training and evaluation.
+
+    **Setup Instructions:**
+
+    The dataset will be automatically downloaded and extracted if not present.
+    If `root` is provided, the dataset will be stored at `root/stanford_background/stanford_background/`.
+    If `root` is `None`, the dataset will be cached in the default cache directory.
+
+    **Dataset Structure:**
+    - `images/`: Input RGB images
+    - `labels_colored/`: Segmentation masks (grayscale)
 
     Attributes:
-        root (str): Path to dataset.
-        transform (callable): Images transofrm.
-        target_transform (callable): Masks transform.
+        root (str | Path | None): Directory for dataset storage or cache location.
+        transform (callable, optional): Image transformations.
+        target_transform (callable, optional): Target transformations.
+        download (bool): Whether to download dataset if not present.
+        num_classes (int): Number of semantic classes (9).
     """
 
     URL = "https://www.kaggle.com/api/v1/datasets/download/balraj98/stanford-background-dataset"
@@ -34,14 +48,17 @@ class StanfordBackground(Dataset):
         """Initialize Stanford Background dataset.
 
         Args:
-            root (str | Path | None, optional): Directory **into which** the archive will
-                be downloaded and extracted, or a directory that already contains the
-                dataset files. If ``None`` (default), a cache directory is used.
-            transform (callable, optional): Images transform.
-            target_transform (callable, optional): Masks transform.
-            download (bool, optional): If `True`, downloads the dataset from the internet and
-                puts it in `root` directory. If `False`, it assumes that `root`
-                already contains the dataset files.
+            root (str | Path | None, optional): Directory for dataset storage.
+                If `None`, uses default cache directory. Defaults to None.
+            transform (callable, optional): Transform to apply to images.
+                Defaults to None.
+            target_transform (callable, optional): Transform to apply to masks.
+                Defaults to None.
+            download (bool, optional): Whether to download dataset if not present.
+                Defaults to True.
+
+        Raises:
+            FileNotFoundError: If dataset is not found and download fails.
         """
         from segmentation_robustness_framework.utils.dataset import get_cache_dir
 
@@ -67,9 +84,23 @@ class StanfordBackground(Dataset):
         self.num_classes = 9
 
     def __len__(self):
+        """Return the number of images in the dataset.
+
+        Returns:
+            int: Number of images in the dataset.
+        """
         return len(self.images)
 
     def __getitem__(self, idx):
+        """Get a single sample from the dataset.
+
+        Args:
+            idx (int): Index of the sample to retrieve.
+
+        Returns:
+            tuple: (image, mask) where image is a PIL Image and mask is the
+                segmentation mask.
+        """
         img_path = os.path.join(self.images_dir, self.images[idx])
         mask_path = os.path.join(self.masks_dir, self.images[idx].replace("jpg", "png"))
 

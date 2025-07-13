@@ -11,7 +11,7 @@ from segmentation_robustness_framework.datasets.registry import register_dataset
 
 @register_dataset("cityscapes")
 class Cityscapes(Dataset):
-    """Cityscapes Dataset for semantic segmentation.
+    """Load Cityscapes dataset for semantic segmentation.
 
     Cityscapes is a large-scale dataset for semantic understanding of urban street scenes.
     It contains high-quality pixel-level annotations of 5000 images in 50 cities.
@@ -60,13 +60,13 @@ class Cityscapes(Dataset):
     - `polygon`: Polygon annotations (JSON format)
 
     Attributes:
-        root (str): Path to the Cityscapes dataset root directory
-        split (str): Dataset split ('train', 'val', 'test', 'train_extra')
-        mode (str): Annotation mode ('fine' or 'coarse')
-        target_type (str | list): Type of target annotations
-        transform (callable, optional): Image transformations
-        target_transform (callable, optional): Target transformations
-        num_classes (int): Number of semantic classes (35)
+        root (str | Path): Path to the Cityscapes dataset root directory.
+        split (str): Dataset split ('train', 'val', 'test', 'train_extra').
+        mode (str): Annotation mode ('fine' or 'coarse').
+        target_type (str | list): Type of target annotations.
+        transform (callable, optional): Image transformations.
+        target_transform (callable, optional): Target transformations.
+        num_classes (int): Number of semantic classes (35).
     """
 
     VALID_SPLITS = ["train", "val", "test", "train_extra"]
@@ -171,7 +171,11 @@ class Cityscapes(Dataset):
         self.num_classes = 35
 
     def __len__(self):
-        """Return the number of images in the dataset."""
+        """Return the number of images in the dataset.
+
+        Returns:
+            int: Number of images in the selected split.
+        """
         return len(self.images)
 
     def __getitem__(self, idx):
