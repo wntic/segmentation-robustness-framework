@@ -122,7 +122,7 @@ class HuggingFaceModelLoader(BaseModelLoader):
                 if "processor_overrides" in model_config:
                     for k, v in model_config["processor_overrides"].items():
                         setattr(processor, k, v)
-                from segmentation_robustness_framework.loaders.hf_bundle import HFSegmentationBundle
+                from segmentation_robustness_framework.loaders.models.hf_bundle import HFSegmentationBundle
 
                 logger.info(f"Loaded processor for HuggingFace model: {model_name}")
                 return HFSegmentationBundle(model=model, processor=processor)
