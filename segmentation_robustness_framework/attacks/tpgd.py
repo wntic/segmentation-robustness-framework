@@ -10,8 +10,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .attack import AdversarialAttack
+from .registry import register_attack
 
 
+@register_attack("tpgd")
 class TPGD(AdversarialAttack):
     """PGD based on KL-Divergence loss from the paper "Theoretically Principled Trade-off between Robustness and Accuracy".
     Paper: https://arxiv.org/abs/1901.08573

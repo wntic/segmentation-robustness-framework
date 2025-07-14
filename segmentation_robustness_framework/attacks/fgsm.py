@@ -9,8 +9,10 @@ import torch
 import torch.nn as nn
 
 from .attack import AdversarialAttack
+from .registry import register_attack
 
 
+@register_attack("fgsm")
 class FGSM(AdversarialAttack):
     """Fast Gradient Sign Method (FGSM) method from "Explaining and harnessing adversarial examples".
     Paper: https://arxiv.org/abs/1412.6572

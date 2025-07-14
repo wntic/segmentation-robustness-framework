@@ -9,8 +9,10 @@ import torch
 import torch.nn as nn
 
 from .attack import AdversarialAttack
+from .registry import register_attack
 
 
+@register_attack("pgd")
 class PGD(AdversarialAttack):
     """Projected Gradient Descent (PGD) method from "Towards Deep Learning Models Resistant to Adversarial Attacks".
     Paper: https://arxiv.org/abs/1706.06083

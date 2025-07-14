@@ -9,8 +9,10 @@ import torch
 import torch.nn as nn
 
 from .attack import AdversarialAttack
+from .registry import register_attack
 
 
+@register_attack("rfgsm")
 class RFGSM(AdversarialAttack):
     """Random Fast Gradient Sign Method (R+FGSM) from the paper "Ensemble Adversarial Training : Attacks and Defences".
     Paper: https://arxiv.org/abs/1705.07204
