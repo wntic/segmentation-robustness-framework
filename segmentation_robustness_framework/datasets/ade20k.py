@@ -12,7 +12,7 @@ from segmentation_robustness_framework.utils.dataset import extract as extract_d
 
 @register_dataset("ade20k")
 class ADE20K(Dataset):
-    """Load ADE20K dataset for semantic segmentation.
+    """ADE20K dataset for semantic segmentation.
 
     The ADE20K dataset contains 20,210 images with 150 semantic categories.
     Images are paired with pixel-level segmentation masks for training and evaluation.

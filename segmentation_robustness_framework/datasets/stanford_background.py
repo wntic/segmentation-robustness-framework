@@ -12,7 +12,7 @@ from segmentation_robustness_framework.utils.dataset import extract as extract_d
 
 @register_dataset("stanford_background")
 class StanfordBackground(Dataset):
-    """Load Stanford Background dataset for semantic segmentation.
+    """Stanford Background dataset for semantic segmentation.
 
     The Stanford Background dataset contains 715 images with 9 semantic categories.
     Images are paired with pixel-level segmentation masks for training and evaluation.

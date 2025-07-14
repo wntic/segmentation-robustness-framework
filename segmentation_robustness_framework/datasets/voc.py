@@ -12,7 +12,7 @@ from segmentation_robustness_framework.utils.dataset import extract as extract_d
 
 @register_dataset("voc")
 class VOCSegmentation(Dataset):
-    """Load Pascal VOC 2012 dataset for semantic segmentation.
+    """Pascal VOC 2012 dataset for semantic segmentation.
 
     The Pascal VOC 2012 dataset contains 21 classes of objects in natural scenes.
     Images are paired with pixel-level segmentation masks for training and evaluation.

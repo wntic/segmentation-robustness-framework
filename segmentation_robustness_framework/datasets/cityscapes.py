@@ -11,7 +11,7 @@ from segmentation_robustness_framework.datasets.registry import register_dataset
 
 @register_dataset("cityscapes")
 class Cityscapes(Dataset):
-    """Load Cityscapes dataset for semantic segmentation.
+    """Cityscapes dataset for semantic segmentation.
 
     Cityscapes is a large-scale dataset for semantic understanding of urban street scenes.
     It contains high-quality pixel-level annotations of 5000 images in 50 cities.
