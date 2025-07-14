@@ -1,6 +1,5 @@
 import pytest
 from segmentation_robustness_framework.loaders.models import CustomModelLoader
-
 from tests.utils.dummy_model import DummyModel, DummyModelWithoutEncoder
 
 
