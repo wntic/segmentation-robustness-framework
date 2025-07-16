@@ -1,8 +1,9 @@
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 import torch
 
 
+@runtime_checkable
 class SegmentationModelProtocol(Protocol):
     """Protocol for segmentation model adapters.
 
