@@ -4,6 +4,8 @@ from typing import Any, Optional
 
 import torch.nn as nn
 
+from segmentation_robustness_framework.adapters.base_protocol import SegmentationModelProtocol
+from segmentation_robustness_framework.adapters.registry import get_adapter
 from segmentation_robustness_framework.loaders.models.custom_loader import CustomModelLoader
 from segmentation_robustness_framework.loaders.models.huggingface_loader import HuggingFaceModelLoader
 from segmentation_robustness_framework.loaders.models.smp_loader import SMPModelLoader
@@ -33,57 +35,13 @@ logging.basicConfig(level=logging.INFO)
 
 
 class UniversalModelLoader:
-    """Universal model loader that handles different model types.
+    """Universal model loader that handles different model types and wraps them with adapters.
 
     Supported model types:
-        - `torchvision`
-        - `smp`
-        - `huggingface`
-        - `custom`
-
-    Example:
-        ```python
-        loader = UniversalModelLoader()
-        model = loader.load_model(
-            model_type="torchvision",
-            model_config={"name": "deeplabv3_resnet50", "num_classes": 21},
-        )
-        ```
-
-    Example:
-        ```python
-        loader = UniversalModelLoader()
-        model = loader.load_model(
-            model_type="smp",
-            model_config={
-                "architecture": "unet",
-                "encoder_name": "resnet34",
-                "classes": 2,
-            },
-        )
-        ```
-
-    Example:
-        ```python
-        loader = UniversalModelLoader()
-        model = loader.load_model(
-            model_type="huggingface",
-            model_config={"model_name": "facebook/maskformer-swin-tiny-coco"},
-        )
-        ```
-
-    Example:
-        ```python
-        loader = UniversalModelLoader()
-        model = loader.load_model(
-            model_type="custom",
-            model_config={
-                "model_class": "SomeModel",
-                "model_args": [],
-                "model_kwargs": {},
-            },
-        )
-        ```
+        - 'torchvision'
+        - 'smp'
+        - 'huggingface'
+        - 'custom'
     """
 
     def __init__(self):
@@ -101,7 +59,7 @@ class UniversalModelLoader:
         weights_path: Optional[str] = None,
         weight_type: str = "full",
     ) -> nn.Module:
-        """Load model using appropriate loader.
+        """Load model using appropriate loader and wrap with the correct adapter.
 
         Args:
             model_type (str): Type of model ('torchvision', 'smp', 'huggingface', 'custom')
@@ -110,7 +68,7 @@ class UniversalModelLoader:
             weight_type (str): Type of weights to load ('full' or 'encoder').
 
         Returns:
-            `nn.Module`: Loaded model.
+            nn.Module: Loaded and adapted model.
         """
         if model_type not in self.loaders:
             logger.error(f"Unsupported model type: {model_type}")
@@ -138,5 +96,13 @@ class UniversalModelLoader:
             except Exception as e:
                 logger.exception(f"Failed to load weights for {model_type} model: {e}")
                 raise
+
+        # Wrap with adapter if not already adapted
+        if not isinstance(model, SegmentationModelProtocol):
+            AdapterCls = get_adapter(model_type)
+            model = AdapterCls(model)
+            logger.info(f"Wrapped model with {AdapterCls.__name__} adapter for type '{model_type}'")
+        else:
+            logger.info("Model already implements SegmentationModelProtocol; no adapter wrapping needed.")
 
         return model
