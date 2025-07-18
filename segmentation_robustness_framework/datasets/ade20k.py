@@ -6,8 +6,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from segmentation_robustness_framework.datasets.registry import register_dataset
-from segmentation_robustness_framework.utils.dataset import download as download_dataset
-from segmentation_robustness_framework.utils.dataset import extract as extract_dataset
+from segmentation_robustness_framework.utils.dataset_utils import download as download_dataset
+from segmentation_robustness_framework.utils.dataset_utils import extract as extract_dataset
 
 
 @register_dataset("ade20k")
@@ -65,7 +65,7 @@ class ADE20K(Dataset):
             FileNotFoundError: If dataset is not found and download fails.
             ValueError: If split is not valid.
         """
-        from segmentation_robustness_framework.utils.dataset import get_cache_dir
+        from segmentation_robustness_framework.utils.dataset_utils import get_cache_dir
 
         root_path = Path(root) / "ade20k" if root is not None else get_cache_dir("ade20k")
         dataset_path = root_path / "ADEChallengeData2016"

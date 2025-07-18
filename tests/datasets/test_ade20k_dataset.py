@@ -62,7 +62,7 @@ def test_init_with_invalid_split(temp_dataset_dir):
 
 
 def test_init_with_none_root_uses_cache():
-    with patch("segmentation_robustness_framework.utils.dataset.get_cache_dir") as mock_cache:
+    with patch("segmentation_robustness_framework.utils.dataset_utils.get_cache_dir") as mock_cache:
         mock_cache.return_value = Path("/tmp/cache/ade20k")
 
         with patch("pathlib.Path.exists") as mock_exists:
