@@ -58,12 +58,12 @@ class TPGD(AdversarialAttack):
         Returns:
             torch.Tensor: Batch of adversarial images [B, C, H, W].
         """
-        return self.attack(images, labels)
+        return self.apply(images, labels)
 
     def get_params(self) -> dict[str, float]:
         return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters}
 
-    def attack(self, images: torch.Tensor, labels: torch.Tensor = None) -> torch.Tensor:
+    def apply(self, images: torch.Tensor, labels: torch.Tensor = None) -> torch.Tensor:
         """Apply TPGD attack to a batch of images.
 
         Args:

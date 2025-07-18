@@ -49,7 +49,7 @@ class FGSM(AdversarialAttack):
         Returns:
             torch.Tensor: Adversarial image tensor [B, C, H, W].
         """
-        return self.attack(image, labels)
+        return self.apply(image, labels)
 
     def get_params(self) -> dict[str, float]:
         """Get attack parameters.
@@ -59,7 +59,7 @@ class FGSM(AdversarialAttack):
         """
         return {"epsilon": self.eps}
 
-    def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    def apply(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Apply FGSM attack to input images.
 
         Args:

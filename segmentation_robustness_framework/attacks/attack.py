@@ -39,7 +39,7 @@ class AdversarialAttack(ABC):
         self.device = torch.device(device) if isinstance(device, str) else device
 
     @abstractmethod
-    def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    def apply(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Performs an attack on the segmentation model.
 
         This method should be implemented by subclasses to define the attack logic.

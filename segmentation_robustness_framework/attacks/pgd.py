@@ -63,7 +63,7 @@ class PGD(AdversarialAttack):
         Returns:
             torch.Tensor: Batch of adversarial images [B, C, H, W].
         """
-        return self.attack(images, labels)
+        return self.apply(images, labels)
 
     def get_params(self) -> dict[str, float]:
         """Get attack parameters.
@@ -73,7 +73,7 @@ class PGD(AdversarialAttack):
         """
         return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters, "targeted": self.targeted}
 
-    def attack(self, images: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    def apply(self, images: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Apply PGD attack to a batch of images.
 
         Args:
