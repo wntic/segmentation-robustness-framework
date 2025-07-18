@@ -39,6 +39,36 @@ except ImportError as e:
     logger.warning(f"Failed to import color mappings from _colors.py: {e}")
 
 
+def prepare_inputs(sample, maybe_bundle, device="cuda"):
+    """Prepare model input dictionary from a sample and model or bundle.
+
+    If the model or bundle has a `processor` attribute (e.g., HuggingFace), use it to
+    process the input sample and move all resulting tensors to the specified device.
+    Otherwise, assume the sample is a tensor and wrap it in a dictionary under the
+    `pixel_values` key.
+
+    Args:
+        sample (PIL.Image | np.ndarray | torch.Tensor): Input image sample.
+        maybe_bundle (HFSegmentationBundle | nn.Module): Model or bundle, possibly with a processor.
+        device (str): Device to move tensors to (default: "cuda").
+
+    Returns:
+        dict[str, torch.Tensor]: Dictionary of model input tensors.
+
+    Example:
+        ```python
+        # For a HuggingFace bundle
+        inputs = prepare_inputs(image, hf_bundle, device="cuda")
+        # For a plain torch model
+        inputs = prepare_inputs(image_tensor, model, device="cpu")
+        ```
+    """
+    if hasattr(maybe_bundle, "processor"):
+        proc_inputs = maybe_bundle.processor(sample, return_tensors="pt")
+        return {k: v.to(device) for k, v in proc_inputs.items()}
+    return {"pixel_values": sample.to(device)}
+
+
 def preprocess_image(image_path: str, image_shape: Optional[tuple[int, int]] = None) -> torch.Tensor:
     """Preprocess an image for input into a segmentation model.
 
