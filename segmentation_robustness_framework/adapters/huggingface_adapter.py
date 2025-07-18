@@ -34,7 +34,6 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
         Returns:
             torch.Tensor: Logits tensor of shape (B, num_classes, H, W).
         """
-        # HuggingFace models expect input as 'pixel_values'
         return self.model(pixel_values=x).logits
 
     def predictions(self, x: torch.Tensor) -> torch.Tensor:
@@ -48,3 +47,14 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
         """
         logits = self.logits(x)
         return torch.argmax(logits, dim=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+
+        Args:
+            x (torch.Tensor): Input image tensor of shape (B, C, H, W).
+
+        Returns:
+            torch.Tensor: Logits tensor of shape (B, num_classes, H, W).
+        """
+        return self.logits(x)

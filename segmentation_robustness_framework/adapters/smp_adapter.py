@@ -23,7 +23,7 @@ class SMPAdapter(torch.nn.Module, SegmentationModelProtocol):
         """
         super().__init__()
         self.model = model
-        # Try to infer num_classes from the classifier
+
         if hasattr(model, "classifier") and hasattr(model.classifier, "out_channels"):
             self.num_classes = model.classifier.out_channels
         else:
@@ -51,3 +51,14 @@ class SMPAdapter(torch.nn.Module, SegmentationModelProtocol):
         """
         logits = self.logits(x)
         return torch.argmax(logits, dim=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+
+        Args:
+            x (torch.Tensor): Input image tensor of shape (B, C, H, W).
+
+        Returns:
+            torch.Tensor: Logits tensor of shape (B, num_classes, H, W).
+        """
+        return self.logits(x)
