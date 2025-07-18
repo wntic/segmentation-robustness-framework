@@ -1,5 +1,5 @@
 # This file contains code borrowed from the following repository:
-# Original repository URL: https://github.com/Harry24k/adversarial-attacks-pytorch
+# delriginal repository URL: https://github.com/Harry24k/adversarial-attacks-pytorch
 # Original code author: Harry Kim
 # Original code license: MIT
 
@@ -18,7 +18,7 @@ class PGD(AdversarialAttack):
     Paper: https://arxiv.org/abs/1706.06083
 
     Attributes:
-        model (SegmentationModel): The model that the adversarial attack will be applied to.
+        model (nn.Module): The model that the adversarial attack will be applied to.
         eps (float): The magnitude of the perturbation.
         alpha (float): The step size for each iteration.
         iters (int): The number of iterations.
@@ -36,7 +36,7 @@ class PGD(AdversarialAttack):
         """Initializes PGD attack.
 
         Args:
-            model (SegmentationModel): The model that the adversarial attack will be applied to.
+            model (nn.Module): The model that the adversarial attack will be applied to.
             eps (float, optional): The magnitude of the perturbation. Defaults to 2/255.
             alpha (float, optional): The step size for each iteration. Defaults to 2/255.
             iters (int, optional): The number of iterations. Defaults to 10.
@@ -48,47 +48,86 @@ class PGD(AdversarialAttack):
         self.alpha = alpha
         self.iters = iters
         self.targeted = targeted
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def __repr__(self) -> str:
         return f"PGD attack: eps={self.eps}, alpha={self.alpha}, iters={self.iters}, targeted={self.targeted}"
 
-    def __call__(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """Allows the object to be called like a function to perform the attack."""
-        return self.attack(image, labels)
+    def __call__(self, images: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        """Apply PGD attack to a batch of images.
+
+        Args:
+            images (torch.Tensor): Batch of input images [B, C, H, W].
+            labels (torch.Tensor): Batch of target labels [B, H, W].
+
+        Returns:
+            torch.Tensor: Batch of adversarial images [B, C, H, W].
+        """
+        return self.attack(images, labels)
 
     def get_params(self) -> dict[str, float]:
+        """Get attack parameters.
+
+        Returns:
+            dict[str, float]: Dictionary containing attack parameters.
+        """
         return {"epsilon": self.eps, "alpha": self.alpha, "iters": self.iters, "targeted": self.targeted}
 
-    def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """
-        Overriden.
+    def attack(self, images: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        """Apply PGD attack to a batch of images.
+
+        Args:
+            images (torch.Tensor): Batch of input images [B, C, H, W].
+            labels (torch.Tensor): Batch of target labels [B, H, W].
+
+        Returns:
+            torch.Tensor: Batch of adversarial images [B, C, H, W].
         """
         self.model.eval()
 
-        image = image.to(self.device)
+        images = images.to(self.device)
         labels = labels.to(self.device)
 
-        loss = torch.nn.CrossEntropyLoss()
-        adv_image = image.clone().detach()
+        if labels.dim() == 4 and labels.shape[1] == 1:
+            labels = labels.squeeze(1)  # [B, H, W]
 
-        # Adv image random start point
-        adv_image = adv_image + torch.empty_like(adv_image).uniform_(-self.eps, self.eps)
-        adv_image = torch.clamp(adv_image, min=0, max=1).detach()
+        valid_mask = labels >= 0
+
+        if not torch.any(valid_mask):
+            return images.detach()
+
+        loss = torch.nn.CrossEntropyLoss()
+
+        adv_images = images.clone().detach()
+        adv_images = adv_images + torch.empty_like(adv_images).uniform_(-self.eps, self.eps)
+        adv_images = torch.clamp(adv_images, min=0, max=1).detach()
 
         for _ in range(self.iters):
-            adv_image.requires_grad = True
-            outputs = self.model(adv_image)
+            adv_images.requires_grad = True
 
-            # Calculate loss
+            outputs = self.model(adv_images)  # [B, num_classes, H, W]
+
+            # Reshape outputs and labels for loss computation
+            # outputs: [B, C, H, W] -> [B*H*W, C]
+            # labels: [B, H, W] -> [B*H*W]
+            B, C, H, W = outputs.shape
+            outputs_flat = outputs.permute(0, 2, 3, 1).reshape(-1, C)  # [B*H*W, C]
+            labels_flat = labels.reshape(-1)  # [B*H*W]
+
+            valid_indices = valid_mask.reshape(-1)  # [B*H*W]
+            valid_outputs = outputs_flat[valid_indices]  # [N_valid, C]
+            valid_labels = labels_flat[valid_indices]  # [N_valid]
+
             if self.targeted:
-                cost = -loss(outputs, labels)
+                cost = -loss(valid_outputs, valid_labels)
             else:
-                cost = loss(outputs, labels)
+                cost = loss(valid_outputs, valid_labels)
 
-            grad = torch.autograd.grad(cost, adv_image, retain_graph=False, create_graph=False)[0]
+            self.model.zero_grad()
+            grad = torch.autograd.grad(cost, adv_images, retain_graph=False, create_graph=False)[0]
 
-            adv_image = adv_image.detach() + self.alpha * grad.sign()
-            delta = torch.clamp(adv_image - image, min=-self.eps, max=self.eps)
-            adv_image = torch.clamp(image + delta, min=0, max=1).detach()
+            adv_images = adv_images.detach() + self.alpha * grad.sign()
+            delta = torch.clamp(adv_images - images, min=-self.eps, max=self.eps)
+            adv_images = torch.clamp(images + delta, min=0, max=1).detach()
 
-        return adv_image
+        return adv_images

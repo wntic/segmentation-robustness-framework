@@ -1,7 +1,11 @@
+import logging
 from abc import ABC, abstractmethod
 
 import torch
 import torch.nn as nn
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class AdversarialAttack(ABC):
@@ -24,7 +28,7 @@ class AdversarialAttack(ABC):
             self.device = next(model.parameters()).device
         except Exception:
             self.device = None
-            print("Failed to set device. Try set_device().")
+            logger.warning("Failed to set device. Try set_device().")
 
     def set_device(self, device: str | torch.device) -> None:
         """Set the device for the attack.
