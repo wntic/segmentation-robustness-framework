@@ -42,13 +42,13 @@ def get_class_colors(ds_name: str) -> tuple[list[str], list[tuple[int]]]:
         tuple[list[str], list[tuple[int]]]: tuple of classes and colors.
     """
     if ds_name == "VOC":
-        return classes.VOC_classes, colors.VOC_colors
+        return classes.VOC_classes, colors.VOC_COLORS
     if ds_name == "ADE20K":
-        return classes.ADE20K_classes, colors.ADE20K_colors
+        return classes.ADE20K_classes, colors.ADE20K_COLORS
     if ds_name == "StanfordBackground":
-        return classes.StanfordBackground_classes, colors.StanfordBackground_colors
+        return classes.StanfordBackground_classes, colors.STANFORD_BACKGROUND_COLORS
     if ds_name == "Cityscapes":
-        return classes.Cityscapes_classes, colors.Cityscapes_colors
+        return classes.Cityscapes_classes, colors.CITYSCAPES_COLORS
     raise ValueError(f"Invalide dataset {ds_name}")
 
 
