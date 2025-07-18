@@ -25,7 +25,7 @@ class StanfordBackground(Dataset):
 
     **Dataset Structure:**
     - `images/`: Input RGB images
-    - `labels_colored/`: Segmentation masks (grayscale)
+    - `labels_colored/`: Segmentation masks (color images)
 
     Attributes:
         root (str | Path | None): Directory for dataset storage or cache location.
@@ -98,19 +98,18 @@ class StanfordBackground(Dataset):
             idx (int): Index of the sample to retrieve.
 
         Returns:
-            tuple: (image, mask) where image is a PIL Image and mask is the
-                segmentation mask.
+            tuple: (image, mask) where image is a tensor [C, H, W] and mask is a tensor [H, W] with values in [0, 8].
         """
         img_path = os.path.join(self.images_dir, self.images[idx])
         mask_path = os.path.join(self.masks_dir, self.images[idx].replace("jpg", "png"))
 
         image = Image.open(img_path).convert("RGB")
-        mask = Image.open(mask_path).convert("L")
+        mask = Image.open(mask_path).convert("RGB")
 
         if self.transform is not None:
-            image = self.transform(image).unsqueeze(0)  # shape [1, C, H, W]
+            image = self.transform(image)  # shape [C, H, W]
 
         if self.target_transform is not None:
-            mask = self.target_transform(mask)  # shape [C, H, W]
+            mask = self.target_transform(mask)  # shape [H, W]
 
         return image, mask

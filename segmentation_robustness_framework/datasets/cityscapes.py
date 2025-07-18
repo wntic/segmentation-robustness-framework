@@ -201,7 +201,7 @@ class Cityscapes(Dataset):
         target = targets[0] if len(targets) == 1 else targets
 
         if self.transform:
-            image = self.transform(image).unsqueeze(0)
+            image = self.transform(image)
 
         if self.target_transform:
             if isinstance(target, list):
