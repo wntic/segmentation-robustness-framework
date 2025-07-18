@@ -59,7 +59,7 @@ class DatasetLoader:
         Raises:
             ValueError: If the specified dataset name is not recognized.
         """
-        preprocess, target_preprocess = image_preprocessing.get_preprocessing_fn(self.images_shape)
+        preprocess, target_preprocess = image_preprocessing.get_preprocessing_fn(self.images_shape, self.dataset_name)
 
         try:
             ds_cls = DATASET_REGISTRY[self.dataset_name]
