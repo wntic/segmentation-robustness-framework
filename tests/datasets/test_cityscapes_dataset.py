@@ -201,9 +201,7 @@ def test_getitem_with_mixed_target_types_and_transform(mock_open, temp_dataset_d
 
     mock_transform = Mock()
     mock_target_transform = Mock()
-    mock_tensor = Mock()
-    mock_tensor.unsqueeze.return_value = "transformed_image"
-    mock_transform.return_value = mock_tensor
+    mock_transform.return_value = "transformed_image"
     mock_target_transform.return_value = "transformed_mask"
 
     dataset = Cityscapes(
@@ -235,9 +233,7 @@ def test_getitem_with_single_target_and_transform(mock_open, temp_dataset_dir, m
 
     mock_transform = Mock()
     mock_target_transform = Mock()
-    mock_tensor = Mock()
-    mock_tensor.unsqueeze.return_value = "transformed_image"
-    mock_transform.return_value = mock_tensor
+    mock_transform.return_value = "transformed_image"
     mock_target_transform.return_value = "transformed_mask"
 
     dataset = Cityscapes(

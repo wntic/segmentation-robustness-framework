@@ -65,9 +65,7 @@ def test_getitem_with_transforms(mock_open, temp_dataset_dir, mock_image, mock_m
 
     mock_transform = Mock()
     mock_target_transform = Mock()
-    mock_tensor = Mock()
-    mock_tensor.unsqueeze.return_value = mock_image
-    mock_transform.return_value = mock_tensor
+    mock_transform.return_value = mock_image
     mock_target_transform.return_value = mock_mask
 
     dataset = StanfordBackground(
