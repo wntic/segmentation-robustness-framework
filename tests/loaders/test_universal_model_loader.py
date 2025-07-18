@@ -35,12 +35,23 @@ def test_universal_loader_delegates_load_model(monkeypatch):
     mock_model = _DummyModel()
     mock_loader.load_model.return_value = mock_model
 
+    mock_adapter_class = mock.MagicMock()
+    mock_adapter_class.__name__ = "MockAdapter"
+    mock_adapter_instance = mock.MagicMock()
+    mock_adapter_instance.model = mock_model
+    mock_adapter_class.return_value = mock_adapter_instance
+
     ul = _make_universal(monkeypatch, {"torchvision": mock_loader})
-    returned = ul.load_model("torchvision", {"some": "cfg"})
+
+    with mock.patch(
+        "segmentation_robustness_framework.loaders.models.universal_loader.get_adapter", return_value=mock_adapter_class
+    ):
+        returned = ul.load_model("torchvision", {"some": "cfg"})
 
     mock_loader.load_model.assert_called_once_with({"some": "cfg"})
     mock_loader.load_weights.assert_not_called()
-    assert returned is mock_model
+    assert hasattr(returned, "model")
+    assert returned.model is mock_model
 
 
 def test_universal_loader_loads_weights(monkeypatch):
@@ -50,12 +61,23 @@ def test_universal_loader_loads_weights(monkeypatch):
     mock_loader.load_model.return_value = mock_model_initial
     mock_loader.load_weights.return_value = mock_model_final
 
+    mock_adapter_class = mock.MagicMock()
+    mock_adapter_class.__name__ = "MockAdapter"
+    mock_adapter_instance = mock.MagicMock()
+    mock_adapter_instance.model = mock_model_final
+    mock_adapter_class.return_value = mock_adapter_instance
+
     ul = _make_universal(monkeypatch, {"torchvision": mock_loader})
-    returned = ul.load_model("torchvision", {"cfg": 1}, weights_path="weights.pth", weight_type="encoder")
+
+    with mock.patch(
+        "segmentation_robustness_framework.loaders.models.universal_loader.get_adapter", return_value=mock_adapter_class
+    ):
+        returned = ul.load_model("torchvision", {"cfg": 1}, weights_path="weights.pth", weight_type="encoder")
 
     mock_loader.load_model.assert_called_once_with({"cfg": 1})
     mock_loader.load_weights.assert_called_once_with(mock_model_initial, "weights.pth", "encoder")
-    assert returned is mock_model_final
+    assert hasattr(returned, "model")
+    assert returned.model is mock_model_final
 
 
 def test_universal_loader_handles_bundle(monkeypatch):
@@ -64,10 +86,21 @@ def test_universal_loader_handles_bundle(monkeypatch):
     bundle = SimpleNamespace(model=inner_model)
     mock_loader.load_model.return_value = bundle
 
-    ul = _make_universal(monkeypatch, {"custom": mock_loader})
-    returned = ul.load_model("custom", {"any": "cfg"})
+    mock_adapter_class = mock.MagicMock()
+    mock_adapter_class.__name__ = "MockAdapter"
+    mock_adapter_instance = mock.MagicMock()
+    mock_adapter_instance.model = inner_model
+    mock_adapter_class.return_value = mock_adapter_instance
 
-    assert returned is inner_model
+    ul = _make_universal(monkeypatch, {"custom": mock_loader})
+
+    with mock.patch(
+        "segmentation_robustness_framework.loaders.models.universal_loader.get_adapter", return_value=mock_adapter_class
+    ):
+        returned = ul.load_model("custom", {"any": "cfg"})
+
+    assert hasattr(returned, "model")
+    assert returned.model is inner_model
     mock_loader.load_weights.assert_not_called()
 
 
