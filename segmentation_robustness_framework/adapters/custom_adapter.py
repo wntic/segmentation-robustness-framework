@@ -64,10 +64,10 @@ class CustomAdapter(torch.nn.Module, SegmentationModelProtocol):
 
 # To use this adapter:
 # 1. Copy and modify as needed for your model's output.
-# 2. Register it with the registry:
+# 2. Register it with the registry if you want a different name:
 #    from segmentation_robustness_framework.adapters.registry import register_adapter
 #    @register_adapter("my_custom")
 #    class MyCustomAdapter(CustomAdapter):
 #        ...
 #
-# Do not forget to add foward method.
+# Do not forget to add forward method.
