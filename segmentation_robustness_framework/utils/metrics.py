@@ -26,12 +26,14 @@ class MetricsCollection:
         self.num_classes = num_classes
         self.ignore_index = ignore_index
 
-    def _preprocess_input_data(self, targets: torch.Tensor, preds: torch.Tensor) -> tuple[torch.Tensor]:
+    def _preprocess_input_data(
+        self, targets: torch.Tensor | np.ndarray, preds: torch.Tensor | np.ndarray
+    ) -> tuple[torch.Tensor]:
         """Processes input ground-truth and predicted masks.
 
         Args:
-            targets (torch.Tensor): Ground-truth segmentation masks.
-            preds (torch.Tensor): Predicted segmentation masks.
+            targets (torch.Tensor | np.ndarray): Ground-truth segmentation masks.
+            preds (torch.Tensor | np.ndarray): Predicted segmentation masks.
 
         Raises:
             TypeError: If `targets` is not a `torch.Tensor` or `numpy.ndarray`.
