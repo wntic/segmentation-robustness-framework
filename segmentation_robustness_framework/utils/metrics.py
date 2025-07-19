@@ -279,19 +279,27 @@ class MetricsCollection:
             include_pixel_accuracy (bool): Whether to include pixel_accuracy (no averaging)
 
         Returns:
-            list: List of metric functions with different averaging strategies
+            tuple: (metrics_list, metric_names_list) with proper naming
         """
         metrics = []
+        metric_names = []
 
+        # Metrics that support averaging
         averaging_metrics = ["mean_iou", "precision", "recall", "dice_score"]
 
+        # Add macro averaging metrics
         for metric_name in averaging_metrics:
             metrics.append(self.get_metric_with_averaging(metric_name, "macro"))
+            metric_names.append(f"{metric_name}_macro")
 
+        # Add pixel accuracy if requested
         if include_pixel_accuracy:
             metrics.append(self.pixel_accuracy)
+            metric_names.append("pixel_accuracy")
 
+        # Add micro averaging metrics
         for metric_name in averaging_metrics:
             metrics.append(self.get_metric_with_averaging(metric_name, "micro"))
+            metric_names.append(f"{metric_name}_micro")
 
-        return metrics
+        return metrics, metric_names
