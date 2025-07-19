@@ -4,6 +4,7 @@ import pytest
 import torch
 from segmentation_robustness_framework.adapters.base_protocol import SegmentationModelProtocol
 from segmentation_robustness_framework.adapters.custom_adapter import CustomAdapter
+from tests.adapters.base_adapter_common import *  # noqa: F403
 
 
 class MockModel(torch.nn.Module):
@@ -25,6 +26,11 @@ def mock_model():
 @pytest.fixture
 def custom_adapter(mock_model):
     return CustomAdapter(mock_model, num_classes=3)
+
+
+@pytest.fixture
+def adapter(custom_adapter):
+    return custom_adapter
 
 
 def test_custom_adapter_initialization(mock_model):
