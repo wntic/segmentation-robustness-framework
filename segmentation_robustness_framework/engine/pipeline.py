@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -19,7 +20,7 @@ from segmentation_robustness_framework.utils.model_utils import get_model_output
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-STOP_AFTER_N_BATCHES = 1
+STOP_AFTER_N_BATCHES = 5
 
 
 class SegmentationRobustnessPipeline:
@@ -49,6 +50,7 @@ class SegmentationRobustnessPipeline:
         device: str = "cuda",
         output_dir: Optional[str] = None,
         auto_resize_masks: bool = True,
+        metric_names: Optional[list[str]] = None,
     ):
         """Initialize the pipeline.
 
@@ -68,11 +70,17 @@ class SegmentationRobustnessPipeline:
         self.metrics = metrics
         self.batch_size = batch_size
         self.device = device
-        self.output_dir = output_dir or "./runs"
+        self.base_output_dir = output_dir or "./runs"
         self.auto_resize_masks = auto_resize_masks
 
+        self.metric_names = self._setup_metric_names(metric_names)
+
+        self.run_id = self._generate_run_id()
+        self.output_dir = Path(self.base_output_dir) / f"run_{self.run_id}"
         os.makedirs(self.output_dir, exist_ok=True)
-        logger.info(f"Pipeline initialized. Output dir: {self.output_dir}")
+
+        logger.info(f"Pipeline initialized. Run ID: {self.run_id}")
+        logger.info(f"Output directory: {self.output_dir}")
 
         if self.auto_resize_masks:
             self._setup_automatic_mask_resizing()
@@ -80,6 +88,47 @@ class SegmentationRobustnessPipeline:
         self.clean_counter = 0
         self.adv_counter = 0
         self.results = {}
+
+    def _generate_run_id(self) -> str:
+        """Generate a unique run ID for this evaluation.
+
+        Returns:
+            str: Unique run identifier combining timestamp and UUID.
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+        return f"{timestamp}_{unique_id}"
+
+    def _setup_metric_names(self, metric_names: Optional[list[str]] = None) -> list[str]:
+        """Setup metric names for proper identification.
+
+        Args:
+            metric_names (Optional[list[str]]): Custom metric names. If None, auto-generate.
+
+        Returns:
+            list[str]: List of metric names corresponding to self.metrics.
+        """
+        if metric_names is not None:
+            if len(metric_names) != len(self.metrics):
+                raise ValueError(
+                    f"Number of metric names ({len(metric_names)}) must match number of metrics ({len(self.metrics)})"
+                )
+            return metric_names
+
+        names = []
+        for i, metric in enumerate(self.metrics):
+            if hasattr(metric, "__name__") and metric.__name__ != "<lambda>":
+                names.append(metric.__name__)
+            elif hasattr(metric, "__class__") and hasattr(metric.__class__, "__name__"):
+                class_name = metric.__class__.__name__
+                if class_name != "function":
+                    names.append(class_name)
+                else:
+                    names.append(f"metric_{i}")
+            else:
+                names.append(f"metric_{i}")
+
+        return names
 
     def _setup_automatic_mask_resizing(self) -> None:
         """Automatically detect model output size and update dataset mask transforms."""
@@ -226,7 +275,6 @@ class SegmentationRobustnessPipeline:
             "attack_performance": {k: v for k, v in self.results.items() if k.startswith("attack_")},
         }
 
-        # Calculate robustness metrics if clean and attack results are available
         if "clean" in self.results:
             clean_metrics = self.results["clean"]
             attack_results = summary["attack_performance"]
@@ -284,6 +332,25 @@ class SegmentationRobustnessPipeline:
                         print(f"  {metric}: N/A")
 
         print("\n" + "=" * 60)
+
+    def get_run_info(self) -> dict[str, Any]:
+        """Get information about the current run.
+
+        Returns:
+            dict[str, Any]: Dictionary containing run information.
+        """
+        return {
+            "run_id": self.run_id,
+            "output_directory": str(self.output_dir),
+            "base_output_directory": str(self.base_output_dir),
+            "device": self.device,
+            "batch_size": self.batch_size,
+            "auto_resize_masks": self.auto_resize_masks,
+            "model_num_classes": self.model.num_classes,
+            "dataset_size": len(self.dataset),
+            "num_attacks": len(self.attacks),
+            "num_metrics": len(self.metrics),
+        }
 
     def evaluate_clean(self, loader: DataLoader) -> list[dict[str, Any]]:
         """Evaluate model on clean images.
@@ -358,8 +425,8 @@ class SegmentationRobustnessPipeline:
             dict[str, Any]: Dictionary of metric results.
         """
         results = {}
-        for metric in self.metrics:
-            metric_name = metric.__name__ if hasattr(metric, "__name__") else metric.__class__.__name__
+        for i, metric in enumerate(self.metrics):
+            metric_name = self.metric_names[i]
             try:
                 results[metric_name] = metric(targets, preds)
             except Exception as e:
@@ -398,15 +465,11 @@ class SegmentationRobustnessPipeline:
             metrics (list[dict[str, Any]]): List of metric results for each batch.
             name (str): Name for the result set (e.g., 'clean', 'attack_FGSM').
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Save detailed results as JSON
-        results_file = Path(self.output_dir) / f"{name}_detailed_{timestamp}.json"
+        results_file = Path(self.output_dir) / f"{name}_detailed.json"
         with open(results_file, "w") as f:
             json.dump(metrics, f, indent=2, default=str)
 
-        # Save as CSV for easy analysis
-        csv_file = Path(self.output_dir) / f"{name}_detailed_{timestamp}.csv"
+        csv_file = Path(self.output_dir) / f"{name}_detailed.csv"
         df = pd.DataFrame(metrics)
         df.to_csv(csv_file, index=False)
 
@@ -414,14 +477,10 @@ class SegmentationRobustnessPipeline:
 
     def _save_summary_results(self) -> None:
         """Save aggregated summary results."""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Save summary as JSON
-        summary_file = Path(self.output_dir) / f"summary_results_{timestamp}.json"
+        summary_file = Path(self.output_dir) / "summary_results.json"
         with open(summary_file, "w") as f:
             json.dump(self.results, f, indent=2, default=str)
 
-        # Create comparison table
         comparison_data = []
         for name, metrics in self.results.items():
             row = {"evaluation": name}
@@ -429,7 +488,7 @@ class SegmentationRobustnessPipeline:
             comparison_data.append(row)
 
         comparison_df = pd.DataFrame(comparison_data)
-        comparison_file = Path(self.output_dir) / f"comparison_table_{timestamp}.csv"
+        comparison_file = Path(self.output_dir) / "comparison_table.csv"
         comparison_df.to_csv(comparison_file, index=False)
 
         logger.info(f"Summary results saved to {summary_file}")
@@ -441,14 +500,10 @@ class SegmentationRobustnessPipeline:
             logger.warning("No results available for visualization")
             return
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Get common metrics across all evaluations
         all_metrics = set()
         for metrics in self.results.values():
             all_metrics.update(metrics.keys())
 
-        # Create comparison plots for each metric
         for metric in all_metrics:
             if metric == "evaluation":
                 continue
@@ -469,17 +524,15 @@ class SegmentationRobustnessPipeline:
                 plt.xticks(rotation=45, ha="right")
                 plt.tight_layout()
 
-                plot_file = Path(self.output_dir) / f"{metric}_comparison_{timestamp}.png"
+                plot_file = Path(self.output_dir) / f"{metric}_comparison.png"
                 plt.savefig(plot_file, dpi=300, bbox_inches="tight")
                 plt.close()
 
                 logger.info(f"Plot for {metric} saved to {plot_file}")
 
-        # Create overall performance summary
         if len(self.results) > 1:
             plt.figure(figsize=(12, 8))
 
-            # Prepare data for heatmap
             eval_names = list(self.results.keys())
             metric_names = list(all_metrics - {"evaluation"})
 
@@ -499,7 +552,7 @@ class SegmentationRobustnessPipeline:
                 plt.title("Performance Heatmap")
                 plt.tight_layout()
 
-                heatmap_file = Path(self.output_dir) / f"performance_heatmap_{timestamp}.png"
+                heatmap_file = Path(self.output_dir) / "performance_heatmap.png"
                 plt.savefig(heatmap_file, dpi=300, bbox_inches="tight")
                 plt.close()
 
