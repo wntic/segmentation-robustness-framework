@@ -4,26 +4,27 @@ import pytest
 import torch
 from segmentation_robustness_framework.attacks.attack import AdversarialAttack
 from segmentation_robustness_framework.attacks.fgsm import FGSM
+from tests.attacks.base_attack_common import model  # noqa: F401
 
 
 @pytest.fixture
-def attack(model):
+def attack(model):  # noqa: F811
     return FGSM(model, eps=0.1)
 
 
-def test_initialization(model):
+def test_initialization(model):  # noqa: F811
     attack = FGSM(model, eps=0.1)
     assert attack.model == model
     assert attack.eps == 0.1
     assert isinstance(attack, AdversarialAttack)
 
 
-def test_initialization_default_eps(model):
+def test_initialization_default_eps(model):  # noqa: F811
     attack = FGSM(model)
     assert attack.eps == 2 / 255
 
 
-def test_initialization_custom_eps(model):
+def test_initialization_custom_eps(model):  # noqa: F811
     custom_eps = 0.05
     attack = FGSM(model, eps=custom_eps)
     assert attack.eps == custom_eps
@@ -55,7 +56,7 @@ def test_call_method(attack):
         assert torch.allclose(result, image + 0.1)
 
 
-def test_apply_basic_functionality(attack, model):
+def test_apply_basic_functionality(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     labels = torch.randint(0, 10, (1, 32, 32), device=device)
@@ -68,7 +69,7 @@ def test_apply_basic_functionality(attack, model):
     assert not torch.allclose(result, image)
 
 
-def test_apply_with_valid_mask(attack, model):
+def test_apply_with_valid_mask(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     labels = torch.randint(0, 10, (1, 32, 32), device=device)
@@ -82,7 +83,7 @@ def test_apply_with_valid_mask(attack, model):
     assert not torch.allclose(result, image)
 
 
-def test_apply_with_all_invalid_labels(attack, model):
+def test_apply_with_all_invalid_labels(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     labels = torch.full((1, 32, 32), -1, dtype=torch.long, device=device)
@@ -93,7 +94,7 @@ def test_apply_with_all_invalid_labels(attack, model):
     assert torch.allclose(result, image)
 
 
-def test_apply_with_mixed_valid_invalid_labels(attack, model):
+def test_apply_with_mixed_valid_invalid_labels(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     labels = torch.randint(0, 10, (1, 32, 32), device=device)
@@ -106,7 +107,7 @@ def test_apply_with_mixed_valid_invalid_labels(attack, model):
     assert not torch.allclose(result, image)
 
 
-def test_apply_gradient_flow(attack, model):
+def test_apply_gradient_flow(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device, requires_grad=True)
     labels = torch.randint(0, 10, (1, 32, 32), device=device)
@@ -121,7 +122,7 @@ def test_apply_gradient_flow(attack, model):
     assert image.grad.shape == image.shape
 
 
-def test_apply_deterministic(attack, model):
+def test_apply_deterministic(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     labels = torch.randint(0, 10, (1, 32, 32), device=device)
@@ -133,7 +134,7 @@ def test_apply_deterministic(attack, model):
     assert torch.allclose(result1, result2)
 
 
-def test_apply_with_different_eps_values(model):
+def test_apply_with_different_eps_values(model):  # noqa: F811
     device = next(model.parameters()).device
     eps_values = [0.01, 0.05, 0.1, 0.2]
 

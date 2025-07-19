@@ -4,14 +4,15 @@ import pytest
 import torch
 from segmentation_robustness_framework.attacks.attack import AdversarialAttack
 from segmentation_robustness_framework.attacks.tpgd import TPGD
+from tests.attacks.base_attack_common import model  # noqa: F401
 
 
 @pytest.fixture
-def attack(model):
+def attack(model):  # noqa: F811
     return TPGD(model, eps=0.1, alpha=0.01, iters=5)
 
 
-def test_initialization(model):
+def test_initialization(model):  # noqa: F811
     attack = TPGD(model, eps=0.1, alpha=0.01, iters=5)
     assert attack.model == model
     assert attack.eps == 0.1
@@ -20,7 +21,7 @@ def test_initialization(model):
     assert isinstance(attack, AdversarialAttack)
 
 
-def test_initialization_defaults(model):
+def test_initialization_defaults(model):  # noqa: F811
     attack = TPGD(model)
     assert attack.eps == 8 / 255
     assert attack.alpha == 2 / 255
@@ -71,7 +72,7 @@ def test_call_method_with_labels(attack):
         assert torch.allclose(result, image + 0.1)
 
 
-def test_apply_basic_functionality(attack, model):
+def test_apply_basic_functionality(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
 
@@ -83,7 +84,7 @@ def test_apply_basic_functionality(attack, model):
     assert not torch.allclose(result, image)
 
 
-def test_apply_with_labels_ignored(attack, model):
+def test_apply_with_labels_ignored(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     labels = torch.randint(0, 10, (1, 32, 32), device=device)
@@ -98,7 +99,7 @@ def test_apply_with_labels_ignored(attack, model):
     assert not torch.allclose(result_without_labels, image)
 
 
-def test_apply_with_different_eps_values(model):
+def test_apply_with_different_eps_values(model):  # noqa: F811
     device = next(model.parameters()).device
     eps_values = [0.01, 0.05, 0.1, 0.2]
 
@@ -114,7 +115,7 @@ def test_apply_with_different_eps_values(model):
         assert not torch.allclose(result, image)
 
 
-def test_apply_with_different_alpha_values(model):
+def test_apply_with_different_alpha_values(model):  # noqa: F811
     device = next(model.parameters()).device
     alpha_values = [0.005, 0.01, 0.02, 0.05]
 
@@ -130,7 +131,7 @@ def test_apply_with_different_alpha_values(model):
         assert not torch.allclose(result, image)
 
 
-def test_apply_with_different_iterations(model):
+def test_apply_with_different_iterations(model):  # noqa: F811
     device = next(model.parameters()).device
     iterations = [1, 3, 5, 10]
 
@@ -146,7 +147,7 @@ def test_apply_with_different_iterations(model):
         assert not torch.allclose(result, image)
 
 
-def test_apply_with_edge_case_images(attack, model):
+def test_apply_with_edge_case_images(attack, model):  # noqa: F811
     device = next(model.parameters()).device
 
     image = torch.zeros(1, 3, 32, 32, device=device)
@@ -160,7 +161,7 @@ def test_apply_with_edge_case_images(attack, model):
     assert result.shape == image.shape
 
 
-def test_apply_with_negative_values(attack, model):
+def test_apply_with_negative_values(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     image[image < 0] = -1.0
@@ -173,7 +174,7 @@ def test_apply_with_negative_values(attack, model):
     assert torch.all(result <= 1)
 
 
-def test_apply_with_values_above_one(attack, model):
+def test_apply_with_values_above_one(attack, model):  # noqa: F811
     device = next(model.parameters()).device
     image = torch.randn(1, 3, 32, 32, device=device)
     image[image > 0] = 2.0
@@ -186,7 +187,7 @@ def test_apply_with_values_above_one(attack, model):
     assert torch.all(result <= 1)
 
 
-def test_apply_with_different_channels(model):
+def test_apply_with_different_channels(model):  # noqa: F811
     device = next(model.parameters()).device
     channels = [3, 3, 3]
 
