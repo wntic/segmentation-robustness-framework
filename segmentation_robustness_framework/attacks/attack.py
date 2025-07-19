@@ -27,8 +27,8 @@ class AdversarialAttack(ABC):
         try:
             self.device = next(model.parameters()).device
         except Exception:
-            self.device = None
-            logger.warning("Failed to set device. Try set_device().")
+            self.device = torch.device("cpu")
+            logger.warning("Failed to set device.  Using CPU. You can try set_device().")
 
     def set_device(self, device: str | torch.device) -> None:
         """Set the device for the attack.
