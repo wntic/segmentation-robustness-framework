@@ -242,3 +242,56 @@ class MetricsCollection:
                 if (total_pred_sum + total_true_sum) > 0
                 else 0.0
             )
+
+    def get_metric_with_averaging(self, metric_name: str, average: str = "macro"):
+        """Get a metric function with specified averaging strategy.
+
+        Args:
+            metric_name (str): Name of the metric ('mean_iou', 'precision', 'recall', 'dice_score')
+            average (str): Averaging strategy ('macro' or 'micro')
+
+        Returns:
+            callable: Metric function with the specified averaging
+
+        Raises:
+            ValueError: If metric_name is not supported or average is invalid
+        """
+        if average not in ["macro", "micro"]:
+            raise ValueError("average must be 'macro' or 'micro'")
+
+        if metric_name == "mean_iou":
+            return lambda targets, preds: self.mean_iou(targets, preds, average=average)
+        elif metric_name == "precision":
+            return lambda targets, preds: self.precision(targets, preds, average=average)
+        elif metric_name == "recall":
+            return lambda targets, preds: self.recall(targets, preds, average=average)
+        elif metric_name == "dice_score":
+            return lambda targets, preds: self.dice_score(targets, preds, average=average)
+        elif metric_name == "pixel_accuracy":
+            return self.pixel_accuracy
+        else:
+            raise ValueError(f"Unsupported metric: {metric_name}")
+
+    def get_all_metrics_with_averaging(self, include_pixel_accuracy: bool = True):
+        """Get all metrics with both macro and micro averaging.
+
+        Args:
+            include_pixel_accuracy (bool): Whether to include pixel_accuracy (no averaging)
+
+        Returns:
+            list: List of metric functions with different averaging strategies
+        """
+        metrics = []
+
+        averaging_metrics = ["mean_iou", "precision", "recall", "dice_score"]
+
+        for metric_name in averaging_metrics:
+            metrics.append(self.get_metric_with_averaging(metric_name, "macro"))
+
+        if include_pixel_accuracy:
+            metrics.append(self.pixel_accuracy)
+
+        for metric_name in averaging_metrics:
+            metrics.append(self.get_metric_with_averaging(metric_name, "micro"))
+
+        return metrics
