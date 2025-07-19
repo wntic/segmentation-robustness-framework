@@ -1,8 +1,13 @@
+import json
 import logging
 import os
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -74,6 +79,7 @@ class SegmentationRobustnessPipeline:
 
         self.clean_counter = 0
         self.adv_counter = 0
+        self.results = {}
 
     def _setup_automatic_mask_resizing(self) -> None:
         """Automatically detect model output size and update dataset mask transforms."""
@@ -170,24 +176,114 @@ class SegmentationRobustnessPipeline:
         )
         return None
 
-    def run(self, save: bool = False, show: bool = False) -> None:
+    def run(self, save: bool = False, show: bool = False) -> dict[str, Any]:
         """Run the evaluation pipeline: clean and adversarial evaluation.
 
         Args:
             save (bool): Whether to save results (images, metrics, etc.).
-            show (bool): Whether to show visualizations (not implemented here).
+            show (bool): Whether to show visualizations.
+
+        Returns:
+            dict[str, Any]: Dictionary containing all evaluation results.
         """
         loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False)
         self.model.eval()
 
         logger.info("Starting clean evaluation...")
         clean_metrics = self.evaluate_clean(loader)
-        self.save_results(clean_metrics, "clean")
+        self.results["clean"] = self._aggregate_metrics(clean_metrics)
+        if save:
+            self.save_results(clean_metrics, "clean")
 
         for attack in self.attacks:
             logger.info(f"Starting evaluation for attack: {attack}")
             adv_metrics = self.evaluate_attack(loader, attack)
-            self.save_results(adv_metrics, f"attack_{attack.__class__.__name__}")
+            attack_name = attack.__class__.__name__
+            self.results[f"attack_{attack_name}"] = self._aggregate_metrics(adv_metrics)
+            if save:
+                self.save_results(adv_metrics, f"attack_{attack_name}")
+
+        if save:
+            self._save_summary_results()
+            if show:
+                self._create_visualizations()
+
+        return self.results
+
+    def get_summary(self) -> dict[str, Any]:
+        """Get a summary of the evaluation results.
+
+        Returns:
+            dict[str, Any]: Summary containing key statistics and comparisons.
+        """
+        if not self.results:
+            return {"error": "No results available. Run the pipeline first."}
+
+        summary = {
+            "total_evaluations": len(self.results),
+            "evaluations": list(self.results.keys()),
+            "clean_performance": self.results.get("clean", {}),
+            "attack_performance": {k: v for k, v in self.results.items() if k.startswith("attack_")},
+        }
+
+        # Calculate robustness metrics if clean and attack results are available
+        if "clean" in self.results:
+            clean_metrics = self.results["clean"]
+            attack_results = summary["attack_performance"]
+
+            robustness_analysis = {}
+            for attack_name, attack_metrics in attack_results.items():
+                robustness = {}
+                for metric in clean_metrics.keys():
+                    if metric in attack_metrics and attack_metrics[metric] is not None:
+                        clean_val = clean_metrics[metric]
+                        attack_val = attack_metrics[metric]
+                        if clean_val is not None and clean_val != 0:
+                            robustness[f"{metric}_degradation"] = (clean_val - attack_val) / clean_val * 100
+                        else:
+                            robustness[f"{metric}_degradation"] = None
+                robustness_analysis[attack_name] = robustness
+
+            summary["robustness_analysis"] = robustness_analysis
+
+        return summary
+
+    def print_summary(self) -> None:
+        """Print a formatted summary of the evaluation results."""
+        summary = self.get_summary()
+
+        print("\n" + "=" * 60)
+        print("SEGMENTATION ROBUSTNESS EVALUATION SUMMARY")
+        print("=" * 60)
+
+        if "error" in summary:
+            print(f"Error: {summary['error']}")
+            return
+
+        print(f"Total evaluations: {summary['total_evaluations']}")
+        print(f"Evaluations: {', '.join(summary['evaluations'])}")
+
+        if "clean" in self.results:
+            print("\n" + "-" * 40)
+            print("CLEAN PERFORMANCE")
+            print("-" * 40)
+            for metric, value in self.results["clean"].items():
+                if value is not None:
+                    print(f"{metric}: {value:.4f}")
+
+        if "robustness_analysis" in summary:
+            print("\n" + "-" * 40)
+            print("ROBUSTNESS ANALYSIS")
+            print("-" * 40)
+            for attack_name, robustness in summary["robustness_analysis"].items():
+                print(f"\n{attack_name}:")
+                for metric, degradation in robustness.items():
+                    if degradation is not None:
+                        print(f"  {metric}: {degradation:.2f}%")
+                    else:
+                        print(f"  {metric}: N/A")
+
+        print("\n" + "=" * 60)
 
     def evaluate_clean(self, loader: DataLoader) -> list[dict[str, Any]]:
         """Evaluate model on clean images.
@@ -271,16 +367,140 @@ class SegmentationRobustnessPipeline:
                 results[metric_name] = None
         return results
 
-    def save_results(self, metrics: list[dict[str, Any]], name: str) -> None:
-        """Save metrics or results to disk.
+    def _aggregate_metrics(self, metrics: list[dict[str, Any]]) -> dict[str, float]:
+        """Aggregate batch metrics into summary statistics.
 
-        This is a hook method that can be overridden to implement custom saving logic.
-        Currently logs the results but does not save to disk.
+        Args:
+            metrics (list[dict[str, Any]]): List of batch metric results.
+
+        Returns:
+            dict[str, float]: Aggregated metrics with mean values.
+        """
+        if not metrics:
+            return {}
+
+        aggregated = {}
+        metric_names = metrics[0].keys()
+
+        for metric_name in metric_names:
+            values = [batch[metric_name] for batch in metrics if batch[metric_name] is not None]
+            if values:
+                aggregated[metric_name] = float(np.mean(values))
+            else:
+                aggregated[metric_name] = None
+
+        return aggregated
+
+    def save_results(self, metrics: list[dict[str, Any]], name: str) -> None:
+        """Save detailed batch metrics to disk.
 
         Args:
             metrics (list[dict[str, Any]]): List of metric results for each batch.
             name (str): Name for the result set (e.g., 'clean', 'attack_FGSM').
         """
-        # Implement saving as JSON, CSV, etc. as needed.
-        logger.info(f"Results for {name} ready to be saved. (Saving not implemented in this hook.)")
-        pass
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Save detailed results as JSON
+        results_file = Path(self.output_dir) / f"{name}_detailed_{timestamp}.json"
+        with open(results_file, "w") as f:
+            json.dump(metrics, f, indent=2, default=str)
+
+        # Save as CSV for easy analysis
+        csv_file = Path(self.output_dir) / f"{name}_detailed_{timestamp}.csv"
+        df = pd.DataFrame(metrics)
+        df.to_csv(csv_file, index=False)
+
+        logger.info(f"Detailed results for {name} saved to {results_file} and {csv_file}")
+
+    def _save_summary_results(self) -> None:
+        """Save aggregated summary results."""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Save summary as JSON
+        summary_file = Path(self.output_dir) / f"summary_results_{timestamp}.json"
+        with open(summary_file, "w") as f:
+            json.dump(self.results, f, indent=2, default=str)
+
+        # Create comparison table
+        comparison_data = []
+        for name, metrics in self.results.items():
+            row = {"evaluation": name}
+            row.update(metrics)
+            comparison_data.append(row)
+
+        comparison_df = pd.DataFrame(comparison_data)
+        comparison_file = Path(self.output_dir) / f"comparison_table_{timestamp}.csv"
+        comparison_df.to_csv(comparison_file, index=False)
+
+        logger.info(f"Summary results saved to {summary_file}")
+        logger.info(f"Comparison table saved to {comparison_file}")
+
+    def _create_visualizations(self) -> None:
+        """Create and save visualization plots."""
+        if not self.results:
+            logger.warning("No results available for visualization")
+            return
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Get common metrics across all evaluations
+        all_metrics = set()
+        for metrics in self.results.values():
+            all_metrics.update(metrics.keys())
+
+        # Create comparison plots for each metric
+        for metric in all_metrics:
+            if metric == "evaluation":
+                continue
+
+            values = []
+            labels = []
+
+            for name, metrics_dict in self.results.items():
+                if metric in metrics_dict and metrics_dict[metric] is not None:
+                    values.append(metrics_dict[metric])
+                    labels.append(name)
+
+            if values:
+                plt.figure(figsize=(10, 6))
+                plt.bar(labels, values)
+                plt.title(f"{metric} Comparison")
+                plt.ylabel(metric)
+                plt.xticks(rotation=45, ha="right")
+                plt.tight_layout()
+
+                plot_file = Path(self.output_dir) / f"{metric}_comparison_{timestamp}.png"
+                plt.savefig(plot_file, dpi=300, bbox_inches="tight")
+                plt.close()
+
+                logger.info(f"Plot for {metric} saved to {plot_file}")
+
+        # Create overall performance summary
+        if len(self.results) > 1:
+            plt.figure(figsize=(12, 8))
+
+            # Prepare data for heatmap
+            eval_names = list(self.results.keys())
+            metric_names = list(all_metrics - {"evaluation"})
+
+            if metric_names:
+                data_matrix = []
+                for eval_name in eval_names:
+                    row = []
+                    for metric in metric_names:
+                        value = self.results[eval_name].get(metric, None)
+                        row.append(value if value is not None else 0)
+                    data_matrix.append(row)
+
+                plt.imshow(data_matrix, cmap="viridis", aspect="auto")
+                plt.colorbar(label="Metric Value")
+                plt.xticks(range(len(metric_names)), metric_names, rotation=45, ha="right")
+                plt.yticks(range(len(eval_names)), eval_names)
+                plt.title("Performance Heatmap")
+                plt.tight_layout()
+
+                heatmap_file = Path(self.output_dir) / f"performance_heatmap_{timestamp}.png"
+                plt.savefig(heatmap_file, dpi=300, bbox_inches="tight")
+                plt.close()
+
+                logger.info(f"Performance heatmap saved to {heatmap_file}")
