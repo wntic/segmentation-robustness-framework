@@ -51,6 +51,7 @@ class SegmentationRobustnessPipeline:
         output_dir: Optional[str] = None,
         auto_resize_masks: bool = True,
         metric_names: Optional[list[str]] = None,
+        output_formats: list[str] = ["json", "csv"],
     ):
         """Initialize the pipeline.
 
@@ -63,6 +64,9 @@ class SegmentationRobustnessPipeline:
             device (str): Device to use.
             output_dir (str, optional): Directory to save results.
             auto_resize_masks (bool): Whether to automatically resize masks to model output size.
+            metric_names (list[str], optional): Custom names for metrics. If None, auto-generate.
+            output_formats (list[str]): List of output formats to save. Options: ["json", "csv"].
+                Defaults to ["json", "csv"] (save both).
         """
         self.model = model.to(device)
         self.dataset = dataset
@@ -74,6 +78,8 @@ class SegmentationRobustnessPipeline:
         self.auto_resize_masks = auto_resize_masks
 
         self.metric_names = self._setup_metric_names(metric_names)
+
+        self.output_formats = self._setup_output_formats(output_formats)
 
         self.run_id = self._generate_run_id()
         self.output_dir = Path(self.base_output_dir) / f"run_{self.run_id}"
@@ -129,6 +135,33 @@ class SegmentationRobustnessPipeline:
                 names.append(f"metric_{i}")
 
         return names
+
+    def _setup_output_formats(self, output_formats: list[str]) -> list[str]:
+        """Setup and validate output formats.
+
+        Args:
+            output_formats (list[str]): List of requested output formats.
+
+        Returns:
+            list[str]: Validated list of output formats.
+
+        Raises:
+            ValueError: If invalid output format is specified.
+        """
+        valid_formats = ["json", "csv"]
+
+        for fmt in output_formats:
+            if fmt.lower() not in valid_formats:
+                raise ValueError(f"Invalid output format: {fmt}. Valid formats: {valid_formats}")
+
+        formats = list(set([fmt.lower() for fmt in output_formats]))
+
+        if not formats:
+            logger.warning("No valid output formats specified. Defaulting to JSON only.")
+            formats = ["json"]
+
+        logger.info(f"Output formats: {formats}")
+        return formats
 
     def _setup_automatic_mask_resizing(self) -> None:
         """Automatically detect model output size and update dataset mask transforms."""
@@ -350,6 +383,7 @@ class SegmentationRobustnessPipeline:
             "dataset_size": len(self.dataset),
             "num_attacks": len(self.attacks),
             "num_metrics": len(self.metrics),
+            "output_formats": self.output_formats,
         }
 
     def evaluate_clean(self, loader: DataLoader) -> list[dict[str, Any]]:
@@ -465,21 +499,25 @@ class SegmentationRobustnessPipeline:
             metrics (list[dict[str, Any]]): List of metric results for each batch.
             name (str): Name for the result set (e.g., 'clean', 'attack_FGSM').
         """
-        results_file = Path(self.output_dir) / f"{name}_detailed.json"
-        with open(results_file, "w") as f:
-            json.dump(metrics, f, indent=2, default=str)
+        saved_files = []
 
-        csv_file = Path(self.output_dir) / f"{name}_detailed.csv"
-        df = pd.DataFrame(metrics)
-        df.to_csv(csv_file, index=False)
+        if "json" in self.output_formats:
+            results_file = Path(self.output_dir) / f"{name}_detailed.json"
+            with open(results_file, "w") as f:
+                json.dump(metrics, f, indent=2, default=str)
+            saved_files.append(str(results_file))
 
-        logger.info(f"Detailed results for {name} saved to {results_file} and {csv_file}")
+        if "csv" in self.output_formats:
+            csv_file = Path(self.output_dir) / f"{name}_detailed.csv"
+            df = pd.DataFrame(metrics)
+            df.to_csv(csv_file, index=False)
+            saved_files.append(str(csv_file))
+
+        logger.info(f"Detailed results for {name} saved to: {', '.join(saved_files)}")
 
     def _save_summary_results(self) -> None:
         """Save aggregated summary results."""
-        summary_file = Path(self.output_dir) / "summary_results.json"
-        with open(summary_file, "w") as f:
-            json.dump(self.results, f, indent=2, default=str)
+        saved_files = []
 
         comparison_data = []
         for name, metrics in self.results.items():
@@ -488,11 +526,19 @@ class SegmentationRobustnessPipeline:
             comparison_data.append(row)
 
         comparison_df = pd.DataFrame(comparison_data)
-        comparison_file = Path(self.output_dir) / "comparison_table.csv"
-        comparison_df.to_csv(comparison_file, index=False)
 
-        logger.info(f"Summary results saved to {summary_file}")
-        logger.info(f"Comparison table saved to {comparison_file}")
+        if "json" in self.output_formats:
+            summary_file = Path(self.output_dir) / "summary_results.json"
+            with open(summary_file, "w") as f:
+                json.dump(self.results, f, indent=2, default=str)
+            saved_files.append(str(summary_file))
+
+        if "csv" in self.output_formats:
+            comparison_file = Path(self.output_dir) / "comparison_table.csv"
+            comparison_df.to_csv(comparison_file, index=False)
+            saved_files.append(str(comparison_file))
+
+        logger.info(f"Summary results saved to: {', '.join(saved_files)}")
 
     def _create_visualizations(self) -> None:
         """Create and save visualization plots."""
