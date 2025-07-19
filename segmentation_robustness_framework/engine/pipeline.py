@@ -105,6 +105,96 @@ class SegmentationRobustnessPipeline:
         unique_id = str(uuid.uuid4())[:8]
         return f"{timestamp}_{unique_id}"
 
+    def _generate_attack_name(self, attack: Callable) -> str:
+        """Generate a unique name for an attack including its parameters.
+
+        Args:
+            attack (Callable): Attack instance.
+
+        Returns:
+            str: Unique attack name with parameters.
+        """
+        base_name = attack.__class__.__name__
+
+        if hasattr(attack, "get_params") and callable(getattr(attack, "get_params")):
+            try:
+                params_dict = attack.get_params()
+                if params_dict:
+                    params = []
+                    for param_name, value in params_dict.items():
+                        if value is not None and param_name not in ["model", "self"]:
+                            if isinstance(value, float):
+                                param_str = f"{param_name}_{value:.3f}".replace(".", "p")
+                            elif isinstance(value, int):
+                                param_str = f"{param_name}_{value}"
+                            elif isinstance(value, str):
+                                param_str = f"{param_name}_{value}"
+                            elif isinstance(value, bool):
+                                param_str = f"{param_name}_{str(value).lower()}"
+                            else:
+                                param_str = f"{param_name}_{str(value)}"
+                            params.append(param_str)
+
+                    if params:
+                        return f"{base_name}_{'_'.join(params)}"
+            except Exception as e:
+                logger.debug(f"Failed to get params from {base_name}: {e}")
+
+        params = []
+
+        param_names = [
+            "eps",
+            "alpha",
+            "targeted",
+            "iters",
+            "norm",
+            "random_start",
+            "loss_fn",
+            "momentum",
+            "step_size",
+            "num_steps",
+        ]
+
+        for param_name in param_names:
+            if hasattr(attack, param_name):
+                value = getattr(attack, param_name)
+                if value is not None:
+                    if isinstance(value, float):
+                        param_str = f"{param_name}_{value:.3f}".replace(".", "p")
+                    elif isinstance(value, int):
+                        param_str = f"{param_name}_{value}"
+                    elif isinstance(value, str):
+                        param_str = f"{param_name}_{value}"
+                    elif isinstance(value, bool):
+                        param_str = f"{param_name}_{str(value).lower()}"
+                    else:
+                        param_str = f"{param_name}_{str(value)}"
+                    params.append(param_str)
+
+        if not params:
+            try:
+                attack_str = str(attack)
+                if attack_str != f"<{attack.__class__.__name__} object":
+                    import re
+
+                    param_matches = re.findall(r"(\w+)=([^,\s]+)", attack_str)
+                    for param_name, param_value in param_matches:
+                        if param_name not in ["self", "model"]:
+                            params.append(f"{param_name}_{param_value}")
+            except Exception as e:
+                logger.debug(f"Could not extract parameters from string representation for {base_name}: {e}")
+
+        if not params:
+            import hashlib
+
+            attack_hash = hashlib.md5(str(attack).encode()).hexdigest()[:8]
+            params.append(f"hash_{attack_hash}")
+
+        if params:
+            return f"{base_name}_{'_'.join(params)}"
+        else:
+            return base_name
+
     def _setup_metric_names(self, metric_names: Optional[list[str]] = None) -> list[str]:
         """Setup metric names for proper identification.
 
@@ -280,7 +370,7 @@ class SegmentationRobustnessPipeline:
         for attack in self.attacks:
             logger.info(f"Starting evaluation for attack: {attack}")
             adv_metrics = self.evaluate_attack(loader, attack)
-            attack_name = attack.__class__.__name__
+            attack_name = self._generate_attack_name(attack)
             self.results[f"attack_{attack_name}"] = self._aggregate_metrics(adv_metrics)
             if save:
                 self.save_results(adv_metrics, f"attack_{attack_name}")
