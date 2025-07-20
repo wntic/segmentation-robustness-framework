@@ -23,7 +23,13 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
         """
         super().__init__()
         self.model = model
-        self.num_classes = getattr(model.config, "num_labels", 1)
+
+        if hasattr(model, "config") and hasattr(model.config, "num_labels"):
+            self.num_classes = model.config.num_labels
+        elif hasattr(model, "config") and hasattr(model.config, "num_classes"):
+            self.num_classes = model.config.num_classes
+        else:
+            raise ValueError("Model config does not contain num_labels or num_classes")
 
     def logits(self, x: torch.Tensor) -> torch.Tensor:
         """Return raw logits for input images.
