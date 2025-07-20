@@ -1,6 +1,6 @@
 import pytest
 from segmentation_robustness_framework.loaders.models import CustomModelLoader
-from tests.utils.dummy_model import DummyModel, DummyModelWithoutEncoder
+from tests.loaders.dummy_model import DummyModel, DummyModelWithoutEncoder
 
 
 def test_custom_model_loader_load_model():
@@ -16,7 +16,7 @@ def test_custom_model_loader_load_model():
 def test_custom_model_loader_load_model_with_str():
     loader = CustomModelLoader()
     cfg = {
-        "model_class": "tests.utils.dummy_model.DummyModel",
+        "model_class": "tests.loaders.dummy_model.DummyModel",
         "model_args": [3, 8],
         "model_kwargs": {"num_classes": 21},
     }
