@@ -12,12 +12,12 @@ from .models import (
 
 __all__ = [
     "AttackLoader",
-    "DatasetLoader",
     "BaseModelLoader",
     "CustomModelLoader",
+    "DatasetLoader",
+    "HFSegmentationBundle",
     "HuggingFaceModelLoader",
     "SMPModelLoader",
     "TorchvisionModelLoader",
     "UniversalModelLoader",
-    "HFSegmentationBundle",
 ]

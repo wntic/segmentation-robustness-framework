@@ -7,7 +7,7 @@ from .tpgd import TPGD
 __all__ = [
     "AdversarialAttack",
     "FGSM",
-    "RFGSM",
     "PGD",
+    "RFGSM",
     "TPGD",
 ]

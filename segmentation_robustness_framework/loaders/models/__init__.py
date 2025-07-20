@@ -9,9 +9,9 @@ from .universal_loader import UniversalModelLoader
 __all__ = [
     "BaseModelLoader",
     "CustomModelLoader",
+    "HFSegmentationBundle",
     "HuggingFaceModelLoader",
     "SMPModelLoader",
     "TorchvisionModelLoader",
     "UniversalModelLoader",
-    "HFSegmentationBundle",
 ]

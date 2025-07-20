@@ -6,12 +6,12 @@ from .smp_adapter import SMPAdapter
 from .torchvision_adapter import TorchvisionAdapter
 
 __all__ = [
-    "SegmentationModelProtocol",
-    "register_adapter",
-    "get_adapter",
     "ADAPTER_REGISTRY",
-    "TorchvisionAdapter",
-    "SMPAdapter",
-    "HuggingFaceAdapter",
     "CustomAdapter",
+    "get_adapter",
+    "HuggingFaceAdapter",
+    "register_adapter",
+    "SegmentationModelProtocol",
+    "SMPAdapter",
+    "TorchvisionAdapter",
 ]
