@@ -70,7 +70,16 @@ def get_model_output_size(model, input_shape: tuple[int, int, int], device: str 
             else:
                 out = model(dummy)
 
+            # Handle HuggingFace output objects
+            if hasattr(out, "logits"):
+                out = out.logits
+            elif hasattr(out, "logits") and out.logits is not None:
+                out = out.logits
+
             # out shape: [1, num_classes, H_out, W_out]
+            if not hasattr(out, "dim"):
+                raise RuntimeError(f"Output does not have 'dim' attribute: {type(out)}")
+
             if out.dim() != 4:
                 raise RuntimeError(f"Expected 4D output tensor, got {out.dim()}D")
 
