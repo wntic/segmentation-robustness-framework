@@ -20,8 +20,6 @@ from segmentation_robustness_framework.utils.model_utils import get_model_output
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-STOP_AFTER_N_BATCHES = 5
-
 
 class SegmentationRobustnessPipeline:
     """Pipeline for evaluating segmentation models under adversarial attacks.
@@ -501,8 +499,6 @@ class SegmentationRobustnessPipeline:
             batch_metrics = self.compute_metrics(targets, preds)
             all_metrics.append(batch_metrics)
             self.clean_counter += 1
-            if self.clean_counter > STOP_AFTER_N_BATCHES:
-                break
         logger.info("Clean evaluation complete.")
         return all_metrics
 
@@ -533,8 +529,7 @@ class SegmentationRobustnessPipeline:
             batch_metrics = self.compute_metrics(targets, adv_preds)
             all_metrics.append(batch_metrics)
             self.adv_counter += 1
-            if self.adv_counter > STOP_AFTER_N_BATCHES:
-                break
+
         logger.info(f"Evaluation for attack {attack} complete.")
         return all_metrics
 
