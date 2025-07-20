@@ -42,7 +42,7 @@ class AttackLoader:
         """Generates a list of adversarial attacks based on the configuration.
 
         Args:
-            attack_config (validator.dict[str, Any]): Configuration specifying the attack type and parameters.
+            attack_config (dict[str, Any]): Configuration specifying the attack type and parameters.
 
         Returns:
             list[AdversarialAttack]: A list of adversarial attack instances.

@@ -123,6 +123,6 @@ class VOCSegmentation(Dataset):
             image = self.transform(image)  # shape [C, H, W]
 
         if self.target_transform is not None:
-            mask = self.target_transform(mask=mask, ignore_index=255)  # shape [C, H, W]
+            mask = self.target_transform(mask=mask, ignore_index=255)  # shape [H, W]
 
         return image, mask

@@ -1,5 +1,5 @@
 # This file contains code borrowed from the following repository:
-# delriginal repository URL: https://github.com/Harry24k/adversarial-attacks-pytorch
+# Original repository URL: https://github.com/Harry24k/adversarial-attacks-pytorch
 # Original code author: Harry Kim
 # Original code license: MIT
 

@@ -124,6 +124,6 @@ class ADE20K(Dataset):
             image = self.transform(image)  # shape [C, H, W]
 
         if self.target_transform is not None:
-            mask = self.target_transform(mask=mask, ignore_index=None)  # shape [C, H, W]
+            mask = self.target_transform(mask=mask, ignore_index=None)  # shape [H, W]
 
         return image, mask

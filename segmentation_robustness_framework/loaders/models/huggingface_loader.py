@@ -56,7 +56,7 @@ class HuggingFaceModelLoader(BaseModelLoader):
         # With task override
         loader = HuggingFaceModelLoader()
         model_config = {
-            "model_name": "facebook/maskformer-swin-tiny-coco,
+            "model_name": "facebook/maskformer-swin-tiny-coco",
             "task": "instance_segmentation",
         }
         bundle = loader.load_model(model_config)

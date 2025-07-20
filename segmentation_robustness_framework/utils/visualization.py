@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -182,7 +182,7 @@ def visualize_images(
 
 
 def visualize_metrics(
-    json_data: Union[Path, str, dict[str, any]],
+    json_data: Union[Path, str, dict[str, Any]],
     attack_name: str,
     attack_param: str,
     metric_names: Union[str, list[str]],
@@ -250,7 +250,7 @@ def visualize_metrics(
 
 
 def print_clean_metrics(
-    json_data: Union[Path, str, dict[str, any]],
+    json_data: Union[Path, str, dict[str, Any]],
     metric_names: Union[str, list[str]],
 ) -> None:
     """Prints clean metrics from the JSON data.

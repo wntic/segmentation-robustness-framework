@@ -36,8 +36,8 @@ class MetricsCollection:
             preds (torch.Tensor | np.ndarray): Predicted segmentation masks.
 
         Raises:
-            TypeError: If `targets` is not a `torch.Tensor` or `numpy.ndarray`.
-            TypeError: If `preds` is not a `torch.Tensor` or `numpy.ndarray`.
+            TypeError: If `targets` is not a `torch.Tensor` or `np.ndarray`.
+            TypeError: If `preds` is not a `torch.Tensor` or `np.ndarray`.
 
         Returns:
             tuple[torch.Tensor]: Ground-truth and prediction mask tensors.

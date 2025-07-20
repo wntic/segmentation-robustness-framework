@@ -59,6 +59,6 @@ class TorchvisionAdapter(torch.nn.Module, SegmentationModelProtocol):
             x (torch.Tensor): Input image tensor of shape (B, C, H, W).
 
         Returns:
-            torch.Tensor: Predicted label tensor of shape (B, H, W).
+            torch.Tensor: Logits tensor of shape (B, num_classes, H, W).
         """
         return self.logits(x)
