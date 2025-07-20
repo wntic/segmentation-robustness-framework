@@ -60,7 +60,7 @@ def extract(file_path: str, dest_dir: str) -> None:
             zf.extractall(dest_dir)
     elif file_path.endswith((".tar.gz", ".tgz", ".tar")):
         with tarfile.open(file_path) as tf:
-            tf.extractall(dest_dir)
+            tf.extractall(dest_dir, filter="data")
 
 
 def _file_md5(path: str, chunk: int = 2 << 20) -> str:
