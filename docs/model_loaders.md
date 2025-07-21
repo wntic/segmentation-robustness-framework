@@ -76,8 +76,6 @@ custom_config = {
 }
 ```
 
-If loading from YAML, you may need to resolve the class from a string (see [Advanced Scenarios](#advanced-scenarios)).
-
 ---
 
 ## Torchvision Loader
@@ -213,32 +211,6 @@ model = loader.load_weights(model, "path/to/weights.pth", weight_type="full")
 
 ## Advanced Scenarios
 
-### Loading Configs from YAML
-
-```yaml
-# model_config.yaml
-model_class: my_module.MyCustomSegmentationModel
-model_args:
-  - 3
-  - 21
-model_kwargs: {}
-```
-
-Python code:
-
-```python
-import yaml
-from segmentation_robustness_framework.loaders.models import CustomModelLoader
-from your_utils import resolve_class  # See earlier in this chat
-
-with open("model_config.yaml") as f:
-    config = yaml.safe_load(f)
-config["model_class"] = resolve_class(config["model_class"])
-
-loader = CustomModelLoader()
-model = loader.load_model(config)
-```
-
 ### Using Device Placement
 
 All loaders accept a `"device"` key in the config (default: `"cpu"`).  
@@ -280,9 +252,9 @@ See the source code for detailed docstrings and advanced options.
 
 ## See Also
 
-- [Dataset Loaders](datasets.md)
-- [Attack Loaders](attacks.md)
-- [Configuration Reference](config_reference.md)
+- [Custom Datasets Guide](custom_datasets_guide.md)
+- [Custom Components Guide](custom_components.md)
+- [Configuration Guide](configuration_guide.md)
 
 ---
 
