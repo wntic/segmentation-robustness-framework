@@ -80,7 +80,7 @@ pipeline.print_summary()
 ### **🔬 Comprehensive Evaluation**
 - **Multiple Attacks**: FGSM, PGD, RFGSM, TPGD, and custom attacks
 - **Rich Metrics**: IoU, pixel accuracy, precision, recall, dice score
-- **Flexible Output**: JSON, CSV, and visualization formats
+- **Flexible Output**: JSON, CSV
 - **Batch Processing**: Efficient evaluation of large datasets
 
 ### **🏗️ Universal Model Support**
