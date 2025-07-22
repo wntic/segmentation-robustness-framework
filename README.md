@@ -61,19 +61,19 @@ pipeline.print_summary()
 ## 📚 Documentation Structure
 
 ### 🎯 **Getting Started**
-- **[Installation Guide](installation.md)** - Setup and installation instructions
-- **[Quick Start Guide](quickstart.md)** - Your first evaluation in 5 minutes
-- **[Framework Concepts](concepts.md)** - Core framework concepts and architecture
+- **[Installation Guide](https://segmentation-robustness-framework.readthedocs.io/latest/installation/)** - Setup and installation instructions
+- **[Quick Start Guide](https://segmentation-robustness-framework.readthedocs.io/latest/quickstart/)** - Your first evaluation in 5 minutes
+- **[Framework Concepts](https://segmentation-robustness-framework.readthedocs.io/latest/concepts/)** - Core framework concepts and architecture
 
 ### 📖 **User Guides**
-- **[User Guide](user_guide.md)** - Complete guide for using the framework
-- **[Custom Components](custom_components.md)** - Adding your own datasets, models, and attacks
+- **[User Guide](https://segmentation-robustness-framework.readthedocs.io/latest/user_guide/)** - Complete guide for using the framework
+- **[Custom Components](https://segmentation-robustness-framework.readthedocs.io/latest/custom_components/)** - Adding your own datasets, models, and attacks
 
 ### 🎓 **Learning Path**
 
-1. **Start Here**: [Installation Guide](installation.md) → [Quick Start](quickstart.md)
-2. **Basic Usage**: [User Guide](user_guide.md)
-3. **Custom Components**: [Custom Components](custom_components.md)
+1. **Start Here**: [Installation Guide](https://segmentation-robustness-framework.readthedocs.io/latest/installation/) → [Quick Start](https://segmentation-robustness-framework.readthedocs.io/latest/quickstart/)
+2. **Basic Usage**: [User Guide](https://segmentation-robustness-framework.readthedocs.io/latest/user_guide/)
+3. **Custom Components**: [Custom Components](https://segmentation-robustness-framework.readthedocs.io/latest/custom_components/)
 
 ## 🎯 **Key Features**
 
@@ -190,13 +190,7 @@ pip install -e .
 
 The framework follows a modular architecture with clear separation of concerns:
 
-![Framework Architecture](img/architecture.png)
-
-## 🎓 **Learning Path**
-
-1. **Start Here**: [Installation Guide](installation.md) → [Quick Start](quickstart.md)
-2. **Basic Usage**: [User Guide](user_guide.md)
-3. **Custom Components**: [Custom Components](custom_components.md)
+![Framework Architecture](docs/img/architecture.png)
 
 ## 🤝 **Contributing**
 
@@ -220,4 +214,4 @@ This project is licensed under the MIT License - see the LICENSE file in the pro
 
 **Ready to evaluate your segmentation models?** 🚀
 
-Start with our [Quick Start Guide](quickstart.md) and have your first evaluation running in minutes!
+Start with our [Quick Start Guide](https://segmentation-robustness-framework.readthedocs.io/latest/quickstart/) and have your first evaluation running in minutes!
