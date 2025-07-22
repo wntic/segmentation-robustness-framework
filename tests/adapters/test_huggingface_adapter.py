@@ -69,12 +69,9 @@ def test_huggingface_adapter_initialization(mock_hf_model):
 
 
 def test_huggingface_adapter_initialization_without_config(mock_hf_model_without_config):
-    adapter = HuggingFaceAdapter(mock_hf_model_without_config)
-
-    assert adapter.model is mock_hf_model_without_config
-    assert adapter.num_classes == 1  # Default fallback
-    assert isinstance(adapter, torch.nn.Module)
-    assert isinstance(adapter, SegmentationModelProtocol)
+    """Test that adapter raises ValueError when model has no config with num_labels or num_classes."""
+    with pytest.raises(ValueError, match="Model config does not contain num_labels or num_classes"):
+        HuggingFaceAdapter(mock_hf_model_without_config)
 
 
 def test_huggingface_adapter_logits(hf_adapter, mock_hf_model):
@@ -337,19 +334,60 @@ def test_huggingface_adapter_config_num_labels_variations():
         (5, 5),
         (1, 1),
         (10, 10),
-        (None, 1),  # No num_labels attribute
     ]
 
     for num_labels, expected in test_cases:
         mock_model = Mock()
         mock_model.config = Mock()
-        if num_labels is not None:
-            mock_model.config.num_labels = num_labels
-        else:
-            delattr(mock_model.config, "num_labels")
+        mock_model.config.num_labels = num_labels
 
         adapter = HuggingFaceAdapter(mock_model)
         assert adapter.num_classes == expected
+
+
+def test_huggingface_adapter_config_num_classes_variations():
+    """Test adapter initialization with different config.num_classes values."""
+    test_cases = [
+        (5, 5),
+        (1, 1),
+        (10, 10),
+    ]
+
+    for num_classes, expected in test_cases:
+        mock_model = Mock()
+        mock_model.config = Mock()
+        # Explicitly remove num_labels to test num_classes fallback
+        if hasattr(mock_model.config, "num_labels"):
+            delattr(mock_model.config, "num_labels")
+        mock_model.config.num_classes = num_classes
+
+        adapter = HuggingFaceAdapter(mock_model)
+        assert adapter.num_classes == expected
+
+
+def test_huggingface_adapter_config_no_labels_or_classes():
+    """Test adapter initialization when config has neither num_labels nor num_classes."""
+    mock_model = Mock()
+    mock_model.config = Mock()
+    # Remove both attributes
+    if hasattr(mock_model.config, "num_labels"):
+        delattr(mock_model.config, "num_labels")
+    if hasattr(mock_model.config, "num_classes"):
+        delattr(mock_model.config, "num_classes")
+
+    with pytest.raises(ValueError, match="Model config does not contain num_labels or num_classes"):
+        HuggingFaceAdapter(mock_model)
+
+
+def test_huggingface_adapter_config_no_config():
+    """Test adapter initialization when model has no config attribute."""
+    mock_model = Mock()
+    # Remove config attribute entirely
+    if hasattr(mock_model, "config"):
+        delattr(mock_model, "config")
+
+    with pytest.raises(ValueError, match="Model config does not contain num_labels or num_classes"):
+        HuggingFaceAdapter(mock_model)
 
 
 def test_huggingface_adapter_with_realistic_hf_output_structure():
