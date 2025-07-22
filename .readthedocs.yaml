@@ -8,8 +8,6 @@ build:
 python:
   install:
     - method: poetry
-      with:
-        - docs
 
 mkdocs:
   configuration: mkdocs.yml
