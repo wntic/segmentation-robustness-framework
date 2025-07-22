@@ -1,3 +1,4 @@
+site_url: https://wntic.github.io/segmentation-robustness-framework/
 site_name: Segmentation Robustness Framework
 theme:
   name: material
