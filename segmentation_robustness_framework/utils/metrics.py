@@ -26,16 +26,18 @@ class MetricsCollection:
         self.num_classes = num_classes
         self.ignore_index = ignore_index
 
-    def _preprocess_input_data(self, targets: torch.Tensor, preds: torch.Tensor) -> tuple[torch.Tensor]:
+    def _preprocess_input_data(
+        self, targets: torch.Tensor | np.ndarray, preds: torch.Tensor | np.ndarray
+    ) -> tuple[torch.Tensor]:
         """Processes input ground-truth and predicted masks.
 
         Args:
-            targets (torch.Tensor): Ground-truth segmentation masks.
-            preds (torch.Tensor): Predicted segmentation masks.
+            targets (torch.Tensor | np.ndarray): Ground-truth segmentation masks.
+            preds (torch.Tensor | np.ndarray): Predicted segmentation masks.
 
         Raises:
-            TypeError: If `targets` is not a `torch.Tensor` or `numpy.ndarray`.
-            TypeError: If `preds` is not a `torch.Tensor` or `numpy.ndarray`.
+            TypeError: If `targets` is not a `torch.Tensor` or `np.ndarray`.
+            TypeError: If `preds` is not a `torch.Tensor` or `np.ndarray`.
 
         Returns:
             tuple[torch.Tensor]: Ground-truth and prediction mask tensors.
@@ -240,3 +242,64 @@ class MetricsCollection:
                 if (total_pred_sum + total_true_sum) > 0
                 else 0.0
             )
+
+    def get_metric_with_averaging(self, metric_name: str, average: str = "macro"):
+        """Get a metric function with specified averaging strategy.
+
+        Args:
+            metric_name (str): Name of the metric ('mean_iou', 'precision', 'recall', 'dice_score')
+            average (str): Averaging strategy ('macro' or 'micro')
+
+        Returns:
+            callable: Metric function with the specified averaging
+
+        Raises:
+            ValueError: If metric_name is not supported or average is invalid
+        """
+        if average not in ["macro", "micro"]:
+            raise ValueError("average must be 'macro' or 'micro'")
+
+        if metric_name == "mean_iou":
+            return lambda targets, preds: self.mean_iou(targets, preds, average=average)
+        elif metric_name == "precision":
+            return lambda targets, preds: self.precision(targets, preds, average=average)
+        elif metric_name == "recall":
+            return lambda targets, preds: self.recall(targets, preds, average=average)
+        elif metric_name == "dice_score":
+            return lambda targets, preds: self.dice_score(targets, preds, average=average)
+        elif metric_name == "pixel_accuracy":
+            return self.pixel_accuracy
+        else:
+            raise ValueError(f"Unsupported metric: {metric_name}")
+
+    def get_all_metrics_with_averaging(self, include_pixel_accuracy: bool = True):
+        """Get all metrics with both macro and micro averaging.
+
+        Args:
+            include_pixel_accuracy (bool): Whether to include pixel_accuracy (no averaging)
+
+        Returns:
+            tuple: (metrics_list, metric_names_list) with proper naming
+        """
+        metrics = []
+        metric_names = []
+
+        # Metrics that support averaging
+        averaging_metrics = ["mean_iou", "precision", "recall", "dice_score"]
+
+        # Add macro averaging metrics
+        for metric_name in averaging_metrics:
+            metrics.append(self.get_metric_with_averaging(metric_name, "macro"))
+            metric_names.append(f"{metric_name}_macro")
+
+        # Add pixel accuracy if requested
+        if include_pixel_accuracy:
+            metrics.append(self.pixel_accuracy)
+            metric_names.append("pixel_accuracy")
+
+        # Add micro averaging metrics
+        for metric_name in averaging_metrics:
+            metrics.append(self.get_metric_with_averaging(metric_name, "micro"))
+            metric_names.append(f"{metric_name}_micro")
+
+        return metrics, metric_names

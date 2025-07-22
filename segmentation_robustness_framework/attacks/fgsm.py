@@ -6,33 +6,32 @@
 # The original code may have been modified to fit current requirements.
 
 import torch
+import torch.nn as nn
 
-from ..models import SegmentationModel
 from .attack import AdversarialAttack
+from .registry import register_attack
 
 
+@register_attack("fgsm")
 class FGSM(AdversarialAttack):
     """Fast Gradient Sign Method (FGSM) method from "Explaining and harnessing adversarial examples".
     Paper: https://arxiv.org/abs/1412.6572
 
     Attributes:
-        model (SegmentationModel): The model that the adversarial attack will be applied to.
+        model (nn.Module): The model that the adversarial attack will be applied to.
         eps (float): The magnitude of the perturbation.
-        targeted (bool): Indicates whether the attack is targeted or not.
     """
 
     def __init__(
         self,
-        model: SegmentationModel,
+        model: nn.Module,
         eps: float = 2 / 255,
     ):
         """Initializes FGSM attack.
 
         Args:
-            model (SegmentationModel): The model that the adversarial attack will be applied to.
+            model (nn.Module): The model that the adversarial attack will be applied to.
             eps (float, optional): The magnitude of the perturbation. Defaults to 2/255.
-            targeted (bool, optional): If True, performs a targeted attack; otherwise, performs
-                an untargeted attack. Defaults to False.
         """
         super().__init__(model)
         self.eps = eps
@@ -41,15 +40,34 @@ class FGSM(AdversarialAttack):
         return f"FGSM attack: eps={self.eps}"
 
     def __call__(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """Allows the object to be called like a function to perform the attack."""
-        return self.attack(image, labels)
+        """Apply FGSM attack to input images.
+
+        Args:
+            image (torch.Tensor): Input image tensor [B, C, H, W].
+            labels (torch.Tensor): Target labels tensor [B, H, W].
+
+        Returns:
+            torch.Tensor: Adversarial image tensor [B, C, H, W].
+        """
+        return self.apply(image, labels)
 
     def get_params(self) -> dict[str, float]:
+        """Get attack parameters.
+
+        Returns:
+            dict[str, float]: Dictionary containing attack parameters.
+        """
         return {"epsilon": self.eps}
 
-    def attack(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """
-        Overriden.
+    def apply(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        """Apply FGSM attack to input images.
+
+        Args:
+            image (torch.Tensor): Input image tensor [B, C, H, W].
+            labels (torch.Tensor): Target labels tensor [B, H, W].
+
+        Returns:
+            torch.Tensor: Adversarial image tensor [B, C, H, W].
         """
         self.model.eval()
 
@@ -57,12 +75,29 @@ class FGSM(AdversarialAttack):
         image.requires_grad = True
         labels = labels.to(self.device)
 
-        loss = torch.nn.CrossEntropyLoss()
+        valid_mask = labels >= 0
+
+        if not torch.any(valid_mask):
+            return image.detach()
 
         outputs = self.model(image)
         self.model.zero_grad()
 
-        cost = loss(outputs, labels)
+        # Reshape outputs and labels for loss computation
+        # outputs: [B, C, H, W] -> [B*H*W, C]
+        # labels: [B, H, W] -> [B*H*W]
+        B, C, H, W = outputs.shape
+        outputs_flat = outputs.permute(0, 2, 3, 1).reshape(-1, C)  # [B*H*W, C]
+        labels_flat = labels.reshape(-1)  # [B*H*W]
+
+        # Only compute loss on valid pixels
+        valid_indices = valid_mask.reshape(-1)  # [B*H*W]
+        valid_outputs = outputs_flat[valid_indices]  # [N_valid, C]
+        valid_labels = labels_flat[valid_indices]  # [N_valid]
+
+        # Compute loss only on valid pixels
+        loss = torch.nn.CrossEntropyLoss()
+        cost = loss(valid_outputs, valid_labels)
         cost.backward()
 
         adv_image = image + self.eps * image.grad.sign()

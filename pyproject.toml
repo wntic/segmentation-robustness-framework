@@ -1,20 +1,29 @@
 [tool.poetry]
 name = "segmentation-robustness-framework"
 version = "0.1.0"
-description = ""
+description = "Segmentation Robustness Framework - a powerful toolkit for evaluating the robustness of semantic segmentation models against adversarial attacks."
 license = "MIT"
 authors = ["Egor Vorobyev <voro6yov.egor@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-numpy = "^1.23.0"
-matplotlib = "^3.9.2"
-torch = "^2.4.0"
-torchvision = "^0.19.0"
+numpy = "^2.3.0"
+matplotlib = "^3.10.0"
+torch = "2.6.0"
+torchvision = "0.21.0"
 pyyaml = "^6.0.2"
 types-pyyaml = "^6.0.12.20240917"
-pydantic = "^2.8.2"
+pydantic = "^2.11.0"
+tqdm = "^4.67.1"
+pandas = "^2.3.1"
+transformers = {version = "^4.53.1", optional = true}
+segmentation-models-pytorch = { version = "^0.5.0", optional = true }
+
+[tool.poetry.extras]
+transformers = ["transformers"]
+smp = ["segmentation-models-pytorch"]
+full = ["transformers", "segmentation-models-pytorch"]
 
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.5.7"
@@ -23,11 +32,17 @@ isort = "^5.13.2"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+pre-commit = "^4.2.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.3.2"
+pytest = "^8.4.1"
 pytest-cov = "^5.0.0"
 pytest-mock = "^3.14.0"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.15"
+mkdocstrings-python = "^1.16.12"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,4 +1,4 @@
-VOC_colors = [
+VOC_COLORS = [
     (0, 0, 0),  # Class 0: background
     (31, 119, 180),  # Class 1: aeroplane
     (255, 127, 14),  # Class 2: bicycle
@@ -22,7 +22,7 @@ VOC_colors = [
     (158, 218, 229),  # Class 20: tv/monitor
 ]
 
-ADE20K_colors = [
+ADE20K_COLORS = [
     (120, 120, 120),
     (180, 120, 120),
     (6, 230, 230),
@@ -175,19 +175,19 @@ ADE20K_colors = [
     (92, 0, 255),
 ]
 
-StanfordBackground_colors = [
-    (64, 1, 84),
-    (72, 40, 140),
-    (62, 74, 137),
-    (38, 130, 142),
-    (31, 158, 137),
-    (51, 183, 121),
-    (109, 205, 89),
-    (180, 222, 44),
-    (49, 104, 142),
+STANFORD_BACKGROUND_COLORS = [
+    (68, 1, 84),  # 0: sky
+    (72, 40, 140),  # 1: tree
+    (62, 74, 137),  # 2: road
+    (38, 130, 142),  # 3: grass
+    (31, 158, 137),  # 4: water
+    (53, 183, 121),  # 5: building
+    (109, 205, 89),  # 6: mountain
+    (180, 222, 44),  # 7: foreground
+    (49, 104, 142),  # 8: unknown
 ]
 
-Cityscapes_colors = [
+CITYSCAPES_COLORS = [
     (0, 0, 0),
     (0, 0, 0),
     (0, 0, 0),
