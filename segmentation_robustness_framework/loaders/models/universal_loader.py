@@ -59,6 +59,7 @@ class UniversalModelLoader:
         model_config: dict[str, Any],
         weights_path: Optional[str] = None,
         weight_type: str = "full",
+        adapter_cls: Optional[type] = None,
     ) -> nn.Module:
         """Load model using appropriate loader and wrap with the correct adapter.
 
@@ -71,6 +72,8 @@ class UniversalModelLoader:
             model_config (dict[str, Any]): Configuration for model loading
             weights_path (Optional[str]): Path to weights file (optional)
             weight_type (str): Type of weights to load ('full' or 'encoder').
+            adapter_cls (Optional[type]): Adapter class to wrap the model. If provided, this
+                adapter will be used instead of the default adapter for the model type.
 
         Returns:
             nn.Module: Loaded and adapted model.
@@ -106,7 +109,7 @@ class UniversalModelLoader:
 
         # Wrap with adapter if not already adapted
         if not isinstance(model, SegmentationModelProtocol):
-            AdapterCls = get_adapter(model_type)
+            AdapterCls = adapter_cls or get_adapter(model_type)
             model = AdapterCls(model)
             logger.info(f"Wrapped model with {AdapterCls.__name__} adapter for type '{model_type}'")
         else:
