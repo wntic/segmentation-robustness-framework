@@ -1,3 +1,4 @@
+site_url: https://segmentation-robustness-framework.readthedocs.io/latest/
 site_name: Segmentation Robustness Framework
 theme:
   name: material
