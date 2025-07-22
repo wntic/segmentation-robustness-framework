@@ -51,6 +51,7 @@ class UniversalModelLoader:
             "huggingface": HuggingFaceModelLoader() if HUGGINGFACE_INSTALLED else None,
             "custom": CustomModelLoader(),
         }
+        self.custom_loader = CustomModelLoader()
 
     def load_model(
         self,
@@ -62,7 +63,11 @@ class UniversalModelLoader:
         """Load model using appropriate loader and wrap with the correct adapter.
 
         Args:
-            model_type (str): Type of model ('torchvision', 'smp', 'huggingface', 'custom')
+            model_type (str): Model type identifier. Supported values:
+                - `'torchvision'`: Torchvision segmentation models.
+                - `'smp'`: segmentation-models-pytorch models.
+                - `'huggingface'`: HuggingFace Transformers models.
+                - Any string starting with `'custom_'`: Alias for custom user-defined models.
             model_config (dict[str, Any]): Configuration for model loading
             weights_path (Optional[str]): Path to weights file (optional)
             weight_type (str): Type of weights to load ('full' or 'encoder').
@@ -70,14 +75,16 @@ class UniversalModelLoader:
         Returns:
             nn.Module: Loaded and adapted model.
         """
-        if model_type not in self.loaders:
+        if model_type in self.loaders:
+            loader = self.loaders[model_type]
+            if loader is None:
+                logger.error(f"Required dependencies for {model_type} not available")
+                raise ImportError(f"Required dependencies for {model_type} not available")
+        elif model_type.startswith("custom_"):
+            loader = self.custom_loader
+        else:
             logger.error(f"Unsupported model type: {model_type}")
             raise ValueError(f"Unsupported model type: {model_type}")
-
-        loader = self.loaders[model_type]
-        if loader is None:
-            logger.error(f"Required dependencies for {model_type} not available")
-            raise ImportError(f"Required dependencies for {model_type} not available")
 
         try:
             model = loader.load_model(model_config)  # may return bundle
