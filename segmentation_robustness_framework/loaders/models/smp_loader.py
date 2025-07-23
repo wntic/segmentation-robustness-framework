@@ -152,12 +152,16 @@ class SMPModelLoader(BaseModelLoader):
                 state_dict = checkpoint
 
             if weight_type == "full":
-                missing, unexpected = model.load_state_dict(state_dict, strict=False)
-                if missing:
-                    logger.warning(f"Missing keys when loading weights: {missing}")
-                if unexpected:
-                    logger.warning(f"Unexpected keys when loading weights: {unexpected}")
-                logger.info("Loaded full model weights.")
+                result = model.load_state_dict(state_dict, strict=False)
+                if hasattr(result, "missing_keys") and hasattr(result, "unexpected_keys"):
+                    missing = result.missing_keys
+                    unexpected = result.unexpected_keys
+
+                    if missing:
+                        logger.warning(f"Missing keys when loading full model weights: {missing}")
+                    if unexpected:
+                        logger.warning(f"Unexpected keys when loading full model weights: {unexpected}")
+                logger.info(f"Loaded full model weights into SMP model from {weights_path}")
             elif weight_type == "encoder":
                 encoder_state_dict = {
                     k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
@@ -172,9 +176,11 @@ class SMPModelLoader(BaseModelLoader):
                         logger.warning(f"Missing keys when loading encoder weights: {missing}")
                     if unexpected:
                         logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-                    logger.info("Loaded encoder (backbone) weights only.")
+                    logger.info(f"Loaded encoder (backbone) weights into SMP model from {weights_path}")
                 else:
-                    logger.info("Loaded encoder weights (no missing/unexpected keys info available).")
+                    logger.info(
+                        f"Loaded encoder weights (no missing/unexpected keys info available) into SMP model from {weights_path}"
+                    )
             else:
                 logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model
