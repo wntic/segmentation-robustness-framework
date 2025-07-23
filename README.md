@@ -1,3 +1,10 @@
+[![Python](https://img.shields.io/badge/python-3.12-blue.svg?logo=python)](https://www.python.org/downloads/release/python-3120/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.6.0-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![PyPI version](https://img.shields.io/pypi/v/segmentation-robustness-framework.svg?logo=pypi)](https://pypi.org/project/segmentation-robustness-framework/)
+[![Docs](https://readthedocs.org/projects/segmentation-robustness-framework/badge/?version=latest)](https://segmentation-robustness-framework.readthedocs.io/en/latest/)
+[![Ruff](https://img.shields.io/badge/code%20style-ruff-005A9C?logo=ruff&logoColor=white)](https://docs.astral.sh/ruff/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 # Segmentation Robustness Framework Documentation
 
 Welcome to the comprehensive documentation for the **Segmentation Robustness Framework** - a powerful toolkit for evaluating the robustness of semantic segmentation models against adversarial attacks.
