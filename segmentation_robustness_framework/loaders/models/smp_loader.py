@@ -106,7 +106,7 @@ class SMPModelLoader(BaseModelLoader):
                 architecture = model_config.get("architecture", "unet")
                 encoder_name = model_config.get("encoder_name", "resnet34")
                 encoder_weights = model_config.get("encoder_weights", "imagenet")
-                classes = model_config.get("classes", 1)
+                classes = model_config.get("classes", 3)
                 activation = model_config.get("activation", None)
 
                 model = smp.create_model(
@@ -162,12 +162,19 @@ class SMPModelLoader(BaseModelLoader):
                 encoder_state_dict = {
                     k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
                 }
-                missing, unexpected = model.encoder.load_state_dict(encoder_state_dict, strict=False)
-                if missing:
-                    logger.warning(f"Missing keys when loading encoder weights: {missing}")
-                if unexpected:
-                    logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-                logger.info("Loaded encoder (backbone) weights only.")
+                result = model.encoder.load_state_dict(encoder_state_dict, strict=False)
+
+                if hasattr(result, "missing_keys") and hasattr(result, "unexpected_keys"):
+                    missing = result.missing_keys
+                    unexpected = result.unexpected_keys
+
+                    if missing:
+                        logger.warning(f"Missing keys when loading encoder weights: {missing}")
+                    if unexpected:
+                        logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
+                    logger.info("Loaded encoder (backbone) weights only.")
+                else:
+                    logger.info("Loaded encoder weights (no missing/unexpected keys info available).")
             else:
                 logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model
