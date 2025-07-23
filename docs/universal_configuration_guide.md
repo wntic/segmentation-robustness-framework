@@ -470,6 +470,26 @@ dataset_loader = UniversalDatasetLoader()
 dataset = dataset_loader.load_dataset(config.dataset.model_dump())
 ```
 
+## UniversalModelLoader: Custom Adapters and Direct Adapter Passing
+
+- Register multiple custom adapters with names like `custom_myadapter` and use them by specifying `model_type="custom_myadapter"`.
+- Pass an adapter class directly to `load_model` via the `adapter_cls` argument (takes precedence over registry):
+
+```python
+model = loader.load_model("custom", config, adapter_cls=MyCustomAdapter)
+```
+
+## Loader Weights: Torchvision, SMP, HuggingFace
+
+- **Torchvision**: Use `weights="default"` or `weights="DEFAULT"` (case-insensitive) to load default pretrained weights.
+- **SMP**: Use `weight_type="encoder"` in `load_weights` to load only encoder weights.
+- **HuggingFace**: Use `weight_type="encoder"` in `load_weights` to load only encoder weights.
+
+## HuggingFace Loader: Expanded Model/Task Support
+
+- Supported tasks: `semantic_segmentation`, `instance_segmentation`, `panoptic_segmentation`, `image_segmentation`.
+- Specify a custom model class in the config with `model_cls` (string or class).
+
 ## Best Practices
 
 ### 1. Module Organization
