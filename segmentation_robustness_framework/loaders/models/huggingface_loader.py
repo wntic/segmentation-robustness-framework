@@ -140,12 +140,13 @@ class HuggingFaceModelLoader(BaseModelLoader):
             logger.exception(f"Failed to load HuggingFace model: {e}")
             raise
 
-    def load_weights(self, model: nn.Module, weights_path: str) -> nn.Module:
+    def load_weights(self, model: nn.Module, weights_path: str, weight_type: str = "full") -> nn.Module:
         """Load weights into HuggingFace model.
 
         Args:
             model (nn.Module): Model instance.
             weights_path (str | Path): Path to weights file.
+            weight_type (str): 'full' for entire model, 'encoder' for encoder only.
 
         Returns:
             `nn.Module`: Model with loaded weights.
@@ -158,8 +159,33 @@ class HuggingFaceModelLoader(BaseModelLoader):
             else:
                 state_dict = checkpoint
 
-            model.load_state_dict(state_dict, strict=False)
-            logger.info(f"Loaded weights into HuggingFace model from {weights_path}")
+            if weight_type == "full":
+                result = model.load_state_dict(state_dict, strict=False)
+                if hasattr(result, "missing_keys") and hasattr(result, "unexpected_keys"):
+                    missing = result.missing_keys
+                    unexpected = result.unexpected_keys
+                    if missing:
+                        logger.warning(f"Missing keys when loading weights: {missing}")
+                    if unexpected:
+                        logger.warning(f"Unexpected keys when loading weights: {unexpected}")
+                logger.info(f"Loaded full model weights into HuggingFace model from {weights_path}")
+            elif weight_type == "encoder":
+                encoder_state_dict = {
+                    k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
+                }
+                result = model.encoder.load_state_dict(encoder_state_dict, strict=False)
+                if hasattr(result, "missing_keys") and hasattr(result, "unexpected_keys"):
+                    missing = result.missing_keys
+                    unexpected = result.unexpected_keys
+                    if missing:
+                        logger.warning(f"Misпsing keys when loading encoder weights: {missing}")
+                    if unexpected:
+                        logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
+                    logger.info("Loaded encoder (backbone) weights only.")
+                else:
+                    logger.info("Loaded encoder weights (no missing/unexpected keys info available).")
+            else:
+                logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model
         except Exception as e:
             logger.exception(f"Failed to load weights into HuggingFace model: {e}")
