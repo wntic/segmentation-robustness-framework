@@ -51,7 +51,6 @@ class UniversalModelLoader:
             "huggingface": HuggingFaceModelLoader() if HUGGINGFACE_INSTALLED else None,
             "custom": CustomModelLoader(),
         }
-        self.custom_loader = CustomModelLoader()
 
     def load_model(
         self,
@@ -84,7 +83,7 @@ class UniversalModelLoader:
                 logger.error(f"Required dependencies for {model_type} not available")
                 raise ImportError(f"Required dependencies for {model_type} not available")
         elif model_type.startswith("custom_"):
-            loader = self.custom_loader
+            loader = self.loaders["custom"]
         else:
             logger.error(f"Unsupported model type: {model_type}")
             raise ValueError(f"Unsupported model type: {model_type}")
