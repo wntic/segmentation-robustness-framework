@@ -85,8 +85,15 @@ class TorchvisionModelLoader(BaseModelLoader):
             elif isinstance(weights, str):
                 if weights_enum_cls is not None and hasattr(weights_enum_cls, weights):
                     weights = getattr(weights_enum_cls, weights)
-                elif weights == "DEFAULT" and weights_enum_cls is not None and hasattr(weights_enum_cls, "DEFAULT"):
+                elif (
+                    weights.lower() == "default"
+                    and weights_enum_cls is not None
+                    and hasattr(weights_enum_cls, "DEFAULT")
+                ):
                     weights = weights_enum_cls.DEFAULT
+                else:
+                    logger.error(f"Invalid weights: {weights}")
+                    raise ValueError(f"Invalid weights: {weights}")
 
             model = model_fn(weights=weights, num_classes=num_classes)
             logger.info(f"Loaded torchvision model: {name} with weights={weights}")
