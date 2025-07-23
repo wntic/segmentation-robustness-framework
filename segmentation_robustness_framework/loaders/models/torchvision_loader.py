@@ -158,7 +158,7 @@ class TorchvisionModelLoader(BaseModelLoader):
                     logger.warning(f"Missing keys when loading weights: {missing}")
                 if unexpected:
                     logger.warning(f"Unexpected keys when loading weights: {unexpected}")
-                logger.info("Loaded full model weights.")
+                logger.info(f"Loaded full model weights into torchvision model from {weights_path}")
             elif weight_type == "encoder":
                 backbone_state_dict = {
                     k.replace("backbone.", ""): v for k, v in state_dict.items() if k.startswith("backbone.")
@@ -168,7 +168,7 @@ class TorchvisionModelLoader(BaseModelLoader):
                     logger.warning(f"Missing keys when loading encoder weights: {missing}")
                 if unexpected:
                     logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-                logger.info("Loaded encoder (backbone) weights only.")
+                logger.info(f"Loaded encoder (backbone) weights into torchvision model from {weights_path}")
             else:
                 logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model
