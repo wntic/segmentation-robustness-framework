@@ -7,6 +7,12 @@ import torch
 from segmentation_robustness_framework.loaders.models.smp_loader import SMPModelLoader
 
 
+class FakeResult:
+    def __init__(self, missing_keys=None, unexpected_keys=None):
+        self.missing_keys = missing_keys or []
+        self.unexpected_keys = unexpected_keys or []
+
+
 def _patch_smp(monkeypatch, model=None):
     if model is None:
         model = mock.MagicMock(spec=torch.nn.Module)
@@ -190,26 +196,26 @@ def test_smp_model_loader_load_weights_full_logs_missing_keys(monkeypatch, caplo
     _patch_torch_load(monkeypatch, {"state_dict": {}})
 
     model = mock.MagicMock()
-    model.load_state_dict.return_value = (["missing.key"], [])
+    model.load_state_dict.return_value = FakeResult(missing_keys=["missing.key"], unexpected_keys=[])
 
     loader = SMPModelLoader()
     with caplog.at_level(logging.WARNING):
         loader.load_weights(model, "dummy.pth", weight_type="full")
 
-        assert any("Missing keys when loading weights" in r.getMessage() for r in caplog.records)
+        assert any("Missing keys when loading full model weights" in r.getMessage() for r in caplog.records)
 
 
 def test_smp_model_loader_load_weights_full_logs_unexpected_keys(monkeypatch, caplog):
     _patch_torch_load(monkeypatch, {"state_dict": {}})
 
     model = mock.MagicMock()
-    model.load_state_dict.return_value = ([], ["unexpected.key"])
+    model.load_state_dict.return_value = FakeResult(missing_keys=[], unexpected_keys=["unexpected.key"])
 
     loader = SMPModelLoader()
     with caplog.at_level(logging.WARNING):
         loader.load_weights(model, "dummy.pth", weight_type="full")
 
-        assert any("Unexpected keys when loading weights" in r.getMessage() for r in caplog.records)
+        assert any("Unexpected keys when loading full model weights" in r.getMessage() for r in caplog.records)
 
 
 def test_smp_model_loader_load_weights_encoder_logs_missing_keys(monkeypatch, caplog):
@@ -217,7 +223,7 @@ def test_smp_model_loader_load_weights_encoder_logs_missing_keys(monkeypatch, ca
     _patch_torch_load(monkeypatch, enc_state)
 
     encoder = mock.MagicMock()
-    encoder.load_state_dict.return_value = (["missing.key"], [])
+    encoder.load_state_dict.return_value = FakeResult(missing_keys=["missing.key"], unexpected_keys=[])
     model = SimpleNamespace(encoder=encoder)
 
     loader = SMPModelLoader()
@@ -232,7 +238,7 @@ def test_smp_model_loader_load_weights_encoder_logs_unexpected_keys(monkeypatch,
     _patch_torch_load(monkeypatch, enc_state)
 
     encoder = mock.MagicMock()
-    encoder.load_state_dict.return_value = ([], ["unexpected.key"])
+    encoder.load_state_dict.return_value = FakeResult(missing_keys=[], unexpected_keys=["unexpected.key"])
     model = SimpleNamespace(encoder=encoder)
 
     loader = SMPModelLoader()

@@ -85,8 +85,15 @@ class TorchvisionModelLoader(BaseModelLoader):
             elif isinstance(weights, str):
                 if weights_enum_cls is not None and hasattr(weights_enum_cls, weights):
                     weights = getattr(weights_enum_cls, weights)
-                elif weights == "DEFAULT" and weights_enum_cls is not None and hasattr(weights_enum_cls, "DEFAULT"):
+                elif (
+                    weights.lower() == "default"
+                    and weights_enum_cls is not None
+                    and hasattr(weights_enum_cls, "DEFAULT")
+                ):
                     weights = weights_enum_cls.DEFAULT
+                else:
+                    logger.error(f"Invalid weights: {weights}")
+                    raise ValueError(f"Invalid weights: {weights}")
 
             model = model_fn(weights=weights, num_classes=num_classes)
             logger.info(f"Loaded torchvision model: {name} with weights={weights}")
@@ -151,7 +158,7 @@ class TorchvisionModelLoader(BaseModelLoader):
                     logger.warning(f"Missing keys when loading weights: {missing}")
                 if unexpected:
                     logger.warning(f"Unexpected keys when loading weights: {unexpected}")
-                logger.info("Loaded full model weights.")
+                logger.info(f"Loaded full model weights into torchvision model from {weights_path}")
             elif weight_type == "encoder":
                 backbone_state_dict = {
                     k.replace("backbone.", ""): v for k, v in state_dict.items() if k.startswith("backbone.")
@@ -161,7 +168,7 @@ class TorchvisionModelLoader(BaseModelLoader):
                     logger.warning(f"Missing keys when loading encoder weights: {missing}")
                 if unexpected:
                     logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-                logger.info("Loaded encoder (backbone) weights only.")
+                logger.info(f"Loaded encoder (backbone) weights into torchvision model from {weights_path}")
             else:
                 logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model

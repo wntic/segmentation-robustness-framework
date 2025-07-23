@@ -58,26 +58,35 @@ class UniversalModelLoader:
         model_config: dict[str, Any],
         weights_path: Optional[str] = None,
         weight_type: str = "full",
+        adapter_cls: Optional[type] = None,
     ) -> nn.Module:
         """Load model using appropriate loader and wrap with the correct adapter.
 
         Args:
-            model_type (str): Type of model ('torchvision', 'smp', 'huggingface', 'custom')
+            model_type (str): Model type identifier. Supported values:
+                - `'torchvision'`: Torchvision segmentation models.
+                - `'smp'`: segmentation-models-pytorch models.
+                - `'huggingface'`: HuggingFace Transformers models.
+                - Any string starting with `'custom_'`: Alias for custom user-defined models.
             model_config (dict[str, Any]): Configuration for model loading
             weights_path (Optional[str]): Path to weights file (optional)
             weight_type (str): Type of weights to load ('full' or 'encoder').
+            adapter_cls (Optional[type]): Adapter class to wrap the model. If provided, this
+                adapter will be used instead of the default adapter for the model type.
 
         Returns:
             nn.Module: Loaded and adapted model.
         """
-        if model_type not in self.loaders:
+        if model_type in self.loaders:
+            loader = self.loaders[model_type]
+            if loader is None:
+                logger.error(f"Required dependencies for {model_type} not available")
+                raise ImportError(f"Required dependencies for {model_type} not available")
+        elif model_type.startswith("custom_"):
+            loader = self.loaders["custom"]
+        else:
             logger.error(f"Unsupported model type: {model_type}")
             raise ValueError(f"Unsupported model type: {model_type}")
-
-        loader = self.loaders[model_type]
-        if loader is None:
-            logger.error(f"Required dependencies for {model_type} not available")
-            raise ImportError(f"Required dependencies for {model_type} not available")
 
         try:
             model = loader.load_model(model_config)  # may return bundle
@@ -99,7 +108,7 @@ class UniversalModelLoader:
 
         # Wrap with adapter if not already adapted
         if not isinstance(model, SegmentationModelProtocol):
-            AdapterCls = get_adapter(model_type)
+            AdapterCls = adapter_cls or get_adapter(model_type)
             model = AdapterCls(model)
             logger.info(f"Wrapped model with {AdapterCls.__name__} adapter for type '{model_type}'")
         else:

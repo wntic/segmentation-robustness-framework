@@ -749,6 +749,60 @@ class CustomSegmentationAdapter(torch.nn.Module, SegmentationModelProtocol):
         return self.logits(x)
 ```
 
+## Custom Adapters: Multiple and Direct Passing
+
+### Registering Multiple Custom Adapters
+
+You can register multiple custom adapters with names like `custom_myadapter`:
+
+```python
+from segmentation_robustness_framework.adapters import CustomAdapter
+from segmentation_robustness_framework.adapters.registry import register_adapter
+
+@register_adapter("custom_myadapter")
+class MyCustomAdapter(CustomAdapter):
+    pass
+
+@register_adapter("custom_other")
+class OtherCustomAdapter(CustomAdapter):
+    pass
+```
+
+To use a specific adapter, set `model_type` to the registered name:
+
+```python
+loader = UniversalModelLoader()
+model = loader.load_model(
+    model_type="custom_myadapter",
+    model_config={...}
+)
+```
+
+### Passing Adapter Class Directly
+
+You can also pass an adapter class directly to `UniversalModelLoader.load_model`:
+
+```python
+model = loader.load_model(
+    model_type="custom",
+    model_config={...},
+    adapter_cls=MyCustomAdapter
+)
+```
+
+If both a registered adapter and an `adapter_cls` are provided, the `adapter_cls` takes precedence.
+
+## Loader Weights: Torchvision, SMP, HuggingFace
+
+- **Torchvision**: Use `weights="default"` or `weights="DEFAULT"` (case-insensitive) to load default pretrained weights.
+- **SMP**: Use `weight_type="encoder"` in `load_weights` to load only encoder weights.
+- **HuggingFace**: Use `weight_type="encoder"` in `load_weights` to load only encoder weights.
+
+## HuggingFace Loader: Expanded Model/Task Support
+
+- You can specify a custom model class in the config with `model_cls` (string or class).
+- Supported tasks: `semantic_segmentation`, `instance_segmentation`, `panoptic_segmentation`, `image_segmentation`.
+
 ## 🔗 Integration Examples
 
 ### Complete Custom Component Integration

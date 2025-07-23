@@ -106,7 +106,7 @@ class SMPModelLoader(BaseModelLoader):
                 architecture = model_config.get("architecture", "unet")
                 encoder_name = model_config.get("encoder_name", "resnet34")
                 encoder_weights = model_config.get("encoder_weights", "imagenet")
-                classes = model_config.get("classes", 1)
+                classes = model_config.get("classes", 3)
                 activation = model_config.get("activation", None)
 
                 model = smp.create_model(
@@ -152,22 +152,35 @@ class SMPModelLoader(BaseModelLoader):
                 state_dict = checkpoint
 
             if weight_type == "full":
-                missing, unexpected = model.load_state_dict(state_dict, strict=False)
-                if missing:
-                    logger.warning(f"Missing keys when loading weights: {missing}")
-                if unexpected:
-                    logger.warning(f"Unexpected keys when loading weights: {unexpected}")
-                logger.info("Loaded full model weights.")
+                result = model.load_state_dict(state_dict, strict=False)
+                if hasattr(result, "missing_keys") and hasattr(result, "unexpected_keys"):
+                    missing = result.missing_keys
+                    unexpected = result.unexpected_keys
+
+                    if missing:
+                        logger.warning(f"Missing keys when loading full model weights: {missing}")
+                    if unexpected:
+                        logger.warning(f"Unexpected keys when loading full model weights: {unexpected}")
+                logger.info(f"Loaded full model weights into SMP model from {weights_path}")
             elif weight_type == "encoder":
                 encoder_state_dict = {
                     k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
                 }
-                missing, unexpected = model.encoder.load_state_dict(encoder_state_dict, strict=False)
-                if missing:
-                    logger.warning(f"Missing keys when loading encoder weights: {missing}")
-                if unexpected:
-                    logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
-                logger.info("Loaded encoder (backbone) weights only.")
+                result = model.encoder.load_state_dict(encoder_state_dict, strict=False)
+
+                if hasattr(result, "missing_keys") and hasattr(result, "unexpected_keys"):
+                    missing = result.missing_keys
+                    unexpected = result.unexpected_keys
+
+                    if missing:
+                        logger.warning(f"Missing keys when loading encoder weights: {missing}")
+                    if unexpected:
+                        logger.warning(f"Unexpected keys when loading encoder weights: {unexpected}")
+                    logger.info(f"Loaded encoder (backbone) weights into SMP model from {weights_path}")
+                else:
+                    logger.info(
+                        f"Loaded encoder weights (no missing/unexpected keys info available) into SMP model from {weights_path}"
+                    )
             else:
                 logger.warning(f"Unknown weight_type: {weight_type}. No weights loaded.")
             return model

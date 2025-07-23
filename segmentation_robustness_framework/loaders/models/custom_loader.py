@@ -92,16 +92,16 @@ class CustomModelLoader(BaseModelLoader):
 
             if weight_type == "full":
                 model.load_state_dict(state_dict, strict=False)
-                logger.info(f"Loaded full weights into custom model from {weights_path}")
+                logger.info(f"Loaded full model weights into custom model from {weights_path}")
             elif weight_type == "encoder":
                 if hasattr(model, "encoder"):
                     encoder_state_dict = {
                         k.replace("encoder.", ""): v for k, v in state_dict.items() if k.startswith("encoder.")
                     }
                     model.encoder.load_state_dict(encoder_state_dict, strict=False)
-                    logger.info(f"Loaded encoder weights into custom model from {weights_path}")
+                    logger.info(f"Loaded encoder (backbone) weights into custom model from {weights_path}")
                 else:
-                    logger.warning("Model has no 'encoder' attribute, loading full weights")
+                    logger.warning("Model has no 'encoder' attribute, loading full model weights")
                     model.load_state_dict(state_dict, strict=False)
             else:
                 raise ValueError(f"Unknown weight_type: {weight_type}. No weights loaded.")

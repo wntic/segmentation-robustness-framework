@@ -209,10 +209,9 @@ def test_torchvision_loader_weights_default_fallback_branch(monkeypatch):
     monkeypatch.setitem(TorchvisionModelLoader.TORCHVISION_WEIGHTS_ENUMS, name, _NoDefault)
 
     loader = TorchvisionModelLoader()
-    cfg = {"name": name, "weights": "DEFAULT"}
-    loader.load_model(cfg)
-
-    assert fn.call_args.kwargs["weights"] == "DEFAULT"
+    cfg = {"name": name, "weights": "default"}
+    with pytest.raises(ValueError, match="Invalid weights: default"):
+        loader.load_model(cfg)
 
 
 class _DummyAuxModel(nn.Module):
