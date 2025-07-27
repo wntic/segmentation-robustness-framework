@@ -20,8 +20,12 @@ class ADE20K(Dataset):
     **Setup Instructions:**
 
     The dataset will be automatically downloaded and extracted if not present.
-    If `root` is provided, the dataset will be stored at `root/ade20k/ADEChallengeData2016/`.
-    If `root` is `None`, the dataset will be cached in the default cache directory.
+    When `download=True` (default):
+        - If `root` is provided, the dataset will be stored at `root/ade20k/ADEChallengeData2016/`.
+        - If `root` is `None`, the dataset will be cached in the default cache directory.
+    When `download=False`:
+        - The dataset must be present at the exact path specified by `root`.
+        - If `root` is `None`, the dataset will be looked for in the default cache directory.
 
     **Supported Splits:**
     - `train`: Training images (~20,000 samples)
@@ -67,8 +71,11 @@ class ADE20K(Dataset):
         """
         from segmentation_robustness_framework.utils.dataset_utils import get_cache_dir
 
-        root_path = Path(root) / "ade20k" if root is not None else get_cache_dir("ade20k")
-        dataset_path = root_path / "ADEChallengeData2016"
+        if download:
+            root_path = Path(root) / "ade20k" if root is not None else get_cache_dir("ade20k")
+            dataset_path = root_path / "ADEChallengeData2016"
+        else:
+            dataset_path = Path(root) if root is not None else get_cache_dir("ade20k")
 
         if not dataset_path.exists():
             if download:
