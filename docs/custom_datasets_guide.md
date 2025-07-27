@@ -17,6 +17,13 @@ Your custom dataset should:
    - `mask` is a tensor of shape `[H, W]` with class indices
 3. Set a `name` attribute for color mapping (if needed)
 
+### Path Handling
+
+Custom datasets should handle paths consistently with the framework's approach:
+- Use the exact `root` path provided by the user
+- Don't create nested directory structures unless specifically needed
+- Document the expected directory structure clearly
+
 ### Example: Medical Dataset
 
 ```python

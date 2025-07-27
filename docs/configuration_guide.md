@@ -124,6 +124,42 @@ tpgd_config = TPGDConfig(
 
 ## Dataset Configurations
 
+### Dataset Path Handling
+
+The framework handles dataset paths differently based on the `download` parameter:
+
+#### When `download=True` (Default)
+The framework creates organized nested directory structures:
+- **VOC**: `root/voc/VOCdevkit/VOC2012/`
+- **ADE20K**: `root/ade20k/ADEChallengeData2016/`
+- **Stanford Background**: `root/stanford_background/stanford_background/`
+
+This ensures datasets are organized and don't conflict with each other.
+
+#### When `download=False`
+The framework uses the exact path specified by `root`:
+- Useful for pre-downloaded datasets
+- Must point to the exact dataset directory
+- No nested structure is created
+
+#### Example Usage
+
+```python
+# Automatic download with nested structure
+voc_config = VOCConfig(
+    type="voc",
+    root="./data",  # Will create ./data/voc/VOCdevkit/VOC2012/
+    download=True
+)
+
+# Use existing dataset at exact path
+voc_config = VOCConfig(
+    type="voc",
+    root="/path/to/existing/VOCdevkit/VOC2012/",  # Exact VOC2012 directory
+    download=False
+)
+```
+
 ### Supported Dataset Types
 
 1. **VOC** (Pascal VOC 2012)
@@ -148,6 +184,8 @@ voc_config = VOCConfig(
 
 **Parameters:**
 - `root` (str | Path): Path to VOC2012 directory
+  - When `download=True`: Dataset will be downloaded to `root/voc/VOCdevkit/VOC2012/`
+  - When `download=False`: Must point to exact VOC2012 directory location
 - `split` (str): Dataset split ("train", "val", "trainval")
 - `image_shape` (list[int]): Desired image shape [height, width]
 - `max_images` (int | None): Maximum number of images to process
@@ -193,6 +231,8 @@ ade20k_config = ADE20KConfig(
 
 **Parameters:**
 - `root` (str | Path): Path to ADE20K directory
+  - When `download=True`: Dataset will be downloaded to `root/ade20k/ADEChallengeData2016/`
+  - When `download=False`: Must point to exact ADEChallengeData2016 directory location
 - `split` (str): Dataset split ("train" or "val")
 - `image_shape` (list[int]): Desired image shape [height, width]
 - `max_images` (int | None): Maximum number of images to process
@@ -213,6 +253,8 @@ stanford_config = StanfordBackgroundConfig(
 
 **Parameters:**
 - `root` (str | Path): Path to Stanford Background directory
+  - When `download=True`: Dataset will be downloaded to `root/stanford_background/stanford_background/`
+  - When `download=False`: Must point to exact stanford_background directory location
 - `split` (str): Dataset split (only "train" available)
 - `image_shape` (list[int]): Desired image shape [height, width]
 - `max_images` (int | None): Maximum number of images to process

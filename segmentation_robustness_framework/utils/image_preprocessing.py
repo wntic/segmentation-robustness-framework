@@ -69,18 +69,18 @@ def prepare_inputs(sample, maybe_bundle, device="cuda"):
     return {"pixel_values": sample.to(device)}
 
 
-def get_preprocessing_fn(image_shape: list[int], dataset_name: Optional[str] = None) -> Callable:
+def get_preprocessing_fn(image_shape: list[int] | tuple[int, int], dataset_name: Optional[str] = None) -> Callable:
     """Get preprocessing functions for images and masks.
 
     Args:
-        image_shape (list[int]): Desired image shape [height, width].
+        image_shape (list[int] | tuple[int, int]): Desired image shape [height, width].
         dataset_name (Optional[str]): Name of the dataset for dataset-specific mask processing.
 
     Returns:
         Callable: Tuple of (image_preprocess, target_preprocess) functions.
     """
-    if not isinstance(image_shape, list):
-        raise TypeError(f"Expected a list [height, width], but got {image_shape}")
+    if not isinstance(image_shape, (list, tuple)):
+        raise TypeError(f"Expected a list or tuple [height, width], but got {image_shape}")
 
     if len(image_shape) == 2:
         w, h = image_shape[0], image_shape[1]

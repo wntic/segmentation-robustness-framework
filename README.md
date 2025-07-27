@@ -39,7 +39,7 @@ preprocess, target_preprocess = image_preprocessing.get_preprocessing_fn(
 )
 dataset = VOCSegmentation(
     split="val", 
-    root="./data/voc",
+    root="path/to/existing/VOCdevkit/VOC2012/",
     transform=preprocess,
     target_transform=target_preprocess
 )
