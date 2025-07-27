@@ -71,7 +71,7 @@ dataset = VOCSegmentation(
     root="./data",  # Dataset will be downloaded here
     transform=preprocess,           # Image preprocessing
     target_transform=target_preprocess,  # Mask preprocessing
-    download=True
+    download=True  # Automatically download and extract to ./data/voc/
 )
 
 print(f"✅ Dataset loaded with {len(dataset)} samples")
@@ -267,7 +267,7 @@ dataset = ADE20K(
     root="./data",
     transform=preprocess,
     target_transform=target_preprocess,
-    download=True,
+    download=True,  # Automatically download and extract to ./data/ade20k/ADEChallengeData2016/
 )
 
 # Stanford Background dataset
@@ -279,9 +279,36 @@ preprocess, target_preprocess = image_preprocessing.get_preprocessing_fn(
 )
 
 dataset = StanfordBackground(
-    root="./data/stanford_background",
+    root="./data",
     transform=preprocess,
-    target_transform=target_preprocess
+    target_transform=target_preprocess,
+    download=True  # Automatically download and extract to ./data/stanford_background/stanford_background/
+)
+```
+
+### Dataset Path Logic
+
+The framework handles dataset paths differently based on the `download` parameter:
+
+**When `download=True` (default):**
+- Creates nested directory structure for organization
+- VOC: `root/voc/VOCdevkit/VOC2012/`
+- ADE20K: `root/ade20k/ADEChallengeData2016/`
+- Stanford Background: `root/stanford_background/stanford_background/`
+
+**When `download=False`:**
+- Uses the exact path specified by `root`
+- Useful when you have pre-downloaded datasets
+- Example: `root="/path/to/existing/voc/dataset"`
+
+```python
+# Using pre-downloaded dataset
+dataset = VOCSegmentation(
+    split="val",
+    root="/path/to/existing/voc/dataset",  # Exact path to dataset
+    transform=preprocess,
+    target_transform=target_preprocess,
+    download=False  # Use existing dataset at exact path
 )
 ```
 

@@ -197,7 +197,7 @@ def run_medical_robustness_evaluation():
     
     # 3. Load dataset
     dataset = MedicalLungsDataset(
-        root="data/medical_lungs",
+        root="data/medical_lungs",  # Exact path to dataset directory
         split="val",
         transform=preprocess,
         target_transform=target_preprocess
@@ -319,7 +319,7 @@ def validate_custom_implementation():
     """Validate that custom dataset and attack work correctly."""
     
     # Test dataset
-    dataset = MedicalLungsDataset(root="data/medical_lungs", split="val")
+    dataset = MedicalLungsDataset(root="data/medical_lungs", split="val")  # Exact path
     print(f"Dataset loaded: {len(dataset)} samples")
     
     # Test single sample
