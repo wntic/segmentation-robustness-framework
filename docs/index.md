@@ -79,8 +79,8 @@ results = pipeline.run()
 - **Built-in Datasets**: VOC, ADE20K, Cityscapes, Stanford Background
   - *Note: Cityscapes cannot be downloaded automatically due to required authorization. You must register and download it manually from https://www.cityscapes-dataset.com/.*
 - **Smart Path Handling**: 
-  - `download=True`: Creates organized nested directory structures
-  - `download=False`: Uses exact user-specified paths for pre-downloaded datasets
+   - `download=True`: Creates organized nested directory structures
+   - `download=False`: Uses exact user-specified paths for pre-downloaded datasets
 - **Custom Datasets**: Simple integration of your own datasets
 - **Automatic Download**: Built-in dataset downloading and preprocessing (except Cityscapes)
 
