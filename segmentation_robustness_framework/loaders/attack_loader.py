@@ -55,4 +55,6 @@ class AttackLoader:
         if attack_name not in ATTACK_REGISTRY:
             raise ValueError(f"Unknown attack type: {attack_name}")
 
-        return ATTACK_REGISTRY[attack_name](model=self.model, **attack_config)
+        attack_params = {k: v for k, v in attack_config.items() if k != "name"}
+        attack_instance = ATTACK_REGISTRY[attack_name](model=self.model, **attack_params)
+        return [attack_instance]
