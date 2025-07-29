@@ -48,7 +48,7 @@ class SegmentationRobustnessPipeline:
         attacks: list,
         metrics: list[Callable],
         batch_size: int = 8,
-        device: str = "cuda",
+        device: str = "cpu",
         output_dir: Optional[str] = None,
         auto_resize_masks: bool = True,
         metric_names: Optional[list[str]] = None,
