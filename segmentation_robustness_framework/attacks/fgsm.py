@@ -71,9 +71,9 @@ class FGSM(AdversarialAttack):
         """
         self.model.eval()
 
-        image = image.to(self.device)
+        image = image.to(self.device, non_blocking=True)
         image.requires_grad = True
-        labels = labels.to(self.device)
+        labels = labels.to(self.device, non_blocking=True)
 
         valid_mask = labels >= 0
 
@@ -102,4 +102,10 @@ class FGSM(AdversarialAttack):
 
         adv_image = image + self.eps * image.grad.sign()
         adv_image = torch.clamp(adv_image, 0, 1)
+
+        # Memory cleanup
+        del outputs, outputs_flat, labels_flat, valid_outputs, valid_labels, cost
+        if self.device == "cuda":
+            torch.cuda.empty_cache()
+
         return adv_image
