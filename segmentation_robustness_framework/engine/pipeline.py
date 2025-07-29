@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+STOP_AFTER_N_BATCHES = 1
+
+
 class SegmentationRobustnessPipeline:
     """Pipeline for evaluating segmentation models under adversarial attacks.
 
@@ -50,6 +53,10 @@ class SegmentationRobustnessPipeline:
         auto_resize_masks: bool = True,
         metric_names: Optional[list[str]] = None,
         output_formats: list[str] = ["json", "csv"],
+        metric_precision: int = 4,
+        num_workers: int = 0,
+        pin_memory: bool = False,
+        persistent_workers: bool = False,
     ):
         """Initialize the pipeline.
 
@@ -65,6 +72,10 @@ class SegmentationRobustnessPipeline:
             metric_names (list[str], optional): Custom names for metrics. If None, auto-generate.
             output_formats (list[str]): List of output formats to save. Options: ["json", "csv"].
                 Defaults to ["json", "csv"] (save both).
+            metric_precision (int): Number of decimal places for metric values. Defaults to 4.
+            num_workers (int): Number of workers for DataLoader. Defaults to 0 to prevent hanging.
+            pin_memory (bool): Whether to pin memory in DataLoader. Defaults to False.
+            persistent_workers (bool): Whether to use persistent workers. Defaults to False.
         """
         self.model = model.to(device)
         self.dataset = dataset
@@ -74,6 +85,10 @@ class SegmentationRobustnessPipeline:
         self.device = device
         self.base_output_dir = output_dir or "./runs"
         self.auto_resize_masks = auto_resize_masks
+        self.metric_precision = metric_precision
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
+        self.persistent_workers = persistent_workers
 
         self.metric_names = self._setup_metric_names(metric_names)
 
@@ -356,7 +371,15 @@ class SegmentationRobustnessPipeline:
         Returns:
             dict[str, Any]: Dictionary containing all evaluation results.
         """
-        loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False)
+        # Create DataLoader with explicit parameters to prevent hanging
+        loader = DataLoader(
+            self.dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            persistent_workers=self.persistent_workers,
+        )
         self.model.eval()
 
         logger.info("Starting clean evaluation...")
@@ -485,7 +508,8 @@ class SegmentationRobustnessPipeline:
         """
         all_metrics = []
         for images, targets in tqdm(loader, desc="Clean Evaluation"):
-            images, targets = images.to(self.device), targets.to(self.device)
+            images = images.to(self.device, non_blocking=True)
+            targets = targets.to(self.device, non_blocking=True)
 
             valid_mask = targets >= 0  # Exclude ignore_index (-1)
             if torch.any(valid_mask):
@@ -498,7 +522,15 @@ class SegmentationRobustnessPipeline:
                 preds = self.model.predictions(images)
             batch_metrics = self.compute_metrics(targets, preds)
             all_metrics.append(batch_metrics)
+
+            # Memory cleanup
+            del preds
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
+
             self.clean_counter += 1
+            if self.clean_counter >= STOP_AFTER_N_BATCHES:
+                break
         logger.info("Clean evaluation complete.")
         return all_metrics
 
@@ -514,7 +546,8 @@ class SegmentationRobustnessPipeline:
         """
         all_metrics = []
         for images, targets in tqdm(loader, desc=f"Attack: {attack}"):
-            images, targets = images.to(self.device), targets.to(self.device)
+            images = images.to(self.device, non_blocking=True)
+            targets = targets.to(self.device, non_blocking=True)
 
             valid_mask = targets >= 0  # Exclude ignore_index (-1)
             if torch.any(valid_mask):
@@ -524,11 +557,23 @@ class SegmentationRobustnessPipeline:
                     logger.debug("Clamped mask values to valid range")
 
             adv_images = attack(images, targets)
+            if adv_images.device != self.device:
+                adv_images = adv_images.to(self.device)
+
             with torch.no_grad():
                 adv_preds = self.model.predictions(adv_images)
+
             batch_metrics = self.compute_metrics(targets, adv_preds)
             all_metrics.append(batch_metrics)
+
+            # Memory cleanup
+            del adv_images, adv_preds
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
+
             self.adv_counter += 1
+            if self.adv_counter >= STOP_AFTER_N_BATCHES:
+                break
 
         logger.info(f"Evaluation for attack {attack} complete.")
         return all_metrics
@@ -547,7 +592,11 @@ class SegmentationRobustnessPipeline:
         for i, metric in enumerate(self.metrics):
             metric_name = self.metric_names[i]
             try:
-                results[metric_name] = metric(targets, preds)
+                metric_value = metric(targets, preds)
+                if metric_value is not None:
+                    results[metric_name] = round(float(metric_value), self.metric_precision)
+                else:
+                    results[metric_name] = None
             except Exception as e:
                 logger.error(f"Metric {metric_name} failed: {e}")
                 results[metric_name] = None
@@ -571,7 +620,8 @@ class SegmentationRobustnessPipeline:
         for metric_name in metric_names:
             values = [batch[metric_name] for batch in metrics if batch[metric_name] is not None]
             if values:
-                aggregated[metric_name] = float(np.mean(values))
+                mean_value = float(np.mean(values))
+                aggregated[metric_name] = round(mean_value, self.metric_precision)
             else:
                 aggregated[metric_name] = None
 
