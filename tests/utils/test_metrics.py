@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from segmentation_robustness_framework.utils.metrics import MetricsCollection
+from segmentation_robustness_framework.metrics import MetricsCollection
 
 
 def test_metrics_collection_initialization():
