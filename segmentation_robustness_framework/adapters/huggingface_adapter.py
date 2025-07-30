@@ -40,8 +40,11 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
         Returns:
             torch.Tensor: Logits tensor of shape (B, num_classes, H, W).
         """
-        # Ensure input is on the same device as model
-        device = next(self.model.parameters()).device
+        try:
+            device = next(self.model.parameters()).device
+        except StopIteration:
+            device = x.device
+
         if x.device != device:
             x = x.to(device, non_blocking=True)
 
@@ -60,6 +63,8 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
                 logits = logits.to(device, non_blocking=True)
 
             return logits
+        except AttributeError as e:
+            raise e
         except Exception as e:
             if device.type == "cuda":
                 torch.cuda.empty_cache()
@@ -78,8 +83,11 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
         predictions = torch.argmax(logits, dim=1)
 
         del logits
-        if next(self.model.parameters()).device.type == "cuda":
-            torch.cuda.empty_cache()
+        try:
+            if next(self.model.parameters()).device.type == "cuda":
+                torch.cuda.empty_cache()
+        except StopIteration:
+            pass
 
         return predictions
 
