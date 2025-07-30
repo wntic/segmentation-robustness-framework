@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 
 import torch.nn as nn
@@ -56,5 +57,17 @@ class AttackLoader:
             raise ValueError(f"Unknown attack type: {attack_name}")
 
         attack_params = {k: v for k, v in attack_config.items() if k != "name"}
-        attack_instance = ATTACK_REGISTRY[attack_name](model=self.model, **attack_params)
-        return [attack_instance]
+
+        attack_class_or_factory = ATTACK_REGISTRY[attack_name]
+        is_class = inspect.isclass(attack_class_or_factory)
+
+        if is_class:
+
+            def factory(model, **kwargs):
+                return [attack_class_or_factory(model, **kwargs)]
+
+            attack_instances = factory(model=self.model, **attack_params)
+        else:
+            attack_instances = attack_class_or_factory(model=self.model, **attack_params)
+
+        return attack_instances
