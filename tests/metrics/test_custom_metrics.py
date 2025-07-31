@@ -233,6 +233,7 @@ def test_custom_metric_with_exception():
 def test_register_custom_metric_preserves_function_metadata():
     @register_custom_metric("metadata_test")
     def metadata_test_metric(targets, preds):
+        """Test function with docstring."""
         return 0.5
 
     registered_func = get_custom_metric("metadata_test")
