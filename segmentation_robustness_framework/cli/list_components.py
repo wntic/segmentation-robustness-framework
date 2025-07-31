@@ -45,6 +45,7 @@ def list_models() -> None:
     print("  nvidia/mit-b1")
     print("  nvidia/mit-b2")
     print("  microsoft/beit-base-patch16-224-pt22k-ft22k")
+    print("  You can find more models at the link: https://huggingface.co/models/")
 
     print("\nSMP Models:")
     print("  Unet")
@@ -56,6 +57,10 @@ def list_models() -> None:
     print("  PAN")
     print("  DeepLabV3")
     print("  DeepLabV3Plus")
+    print("  UPerNet")
+    print("  SegFormer")
+    print("  DPT")
+    print("  Additional information can be found at the link: https://smp.readthedocs.io/en/latest/")
 
     print("\nExample Configuration:")
     print("  model:")
@@ -127,7 +132,7 @@ def list_datasets() -> None:
         ("voc", "Pascal VOC 2012", "21 classes"),
         ("ade20k", "ADE20K", "150 classes"),
         ("cityscapes", "Cityscapes", "19 classes"),
-        ("stanford_background", "Stanford Background", "8 classes"),
+        ("stanford_background", "Stanford Background", "9 classes"),
     ]
 
     for name, description, classes in datasets:
