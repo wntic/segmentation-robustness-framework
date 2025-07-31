@@ -214,7 +214,7 @@ def visualize_metrics(
                 print(f"File {file_path} does not exist.")
                 return
             except json.JSONDecodeError:
-                raise json.JSONDecodeError(f"Error decoding JSON from file {file_path}.")
+                raise ValueError(f"Error decoding JSON from file {file_path}.")
 
     if attack_name not in json_data:
         raise ValueError(f"Attack {attack_name} not found in the JSON data.")
