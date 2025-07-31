@@ -9,8 +9,6 @@ This CLI tool provides a convenient way to run tests with various options:
 
 Usage:
     python -m segmentation_robustness_framework.cli.run_tests
-    python -m segmentation_robustness_framework.cli.run_tests --unit
-    python -m segmentation_robustness_framework.cli.run_tests --integration
     python -m segmentation_robustness_framework.cli.run_tests --loaders
     python -m segmentation_robustness_framework.cli.run_tests --adapters
     python -m segmentation_robustness_framework.cli.run_tests --verbose
@@ -43,32 +41,6 @@ def run_pytest_command(args: list[str], verbose: bool = False) -> int:
 
     result = subprocess.run(cmd, capture_output=False)
     return result.returncode
-
-
-def run_unit_tests(verbose: bool = False) -> int:
-    """Run unit tests.
-
-    Args:
-        verbose: Whether to show verbose output
-
-    Returns:
-        Exit code
-    """
-    print("Running unit tests...")
-    return run_pytest_command(["tests/"], verbose=verbose)
-
-
-def run_integration_tests(verbose: bool = False) -> int:
-    """Run integration tests.
-
-    Args:
-        verbose: Whether to show verbose output
-
-    Returns:
-        Exit code
-    """
-    print("Running integration tests...")
-    return run_pytest_command(["tests/integration/"], verbose=verbose)
 
 
 def run_loader_tests(verbose: bool = False) -> int:
@@ -123,8 +95,8 @@ def run_metric_tests(verbose: bool = False) -> int:
     return run_pytest_command(["tests/utils/"], verbose=verbose)
 
 
-def run_engine_tests(verbose: bool = False) -> int:
-    """Run engine tests.
+def run_pipeline_tests(verbose: bool = False) -> int:
+    """Run pipeline tests.
 
     Args:
         verbose: Whether to show verbose output
@@ -132,21 +104,8 @@ def run_engine_tests(verbose: bool = False) -> int:
     Returns:
         Exit code
     """
-    print("Running engine tests...")
-    return run_pytest_command(["tests/engine/"], verbose=verbose)
-
-
-def run_cli_tests(verbose: bool = False) -> int:
-    """Run CLI tests.
-
-    Args:
-        verbose: Whether to show verbose output
-
-    Returns:
-        Exit code
-    """
-    print("Running CLI tests...")
-    return run_pytest_command(["tests/cli/"], verbose=verbose)
+    print("Running pipeline tests...")
+    return run_pytest_command(["tests/pipeline/"], verbose=verbose)
 
 
 def run_with_coverage(verbose: bool = False) -> int:
@@ -190,16 +149,12 @@ def main() -> None:
         epilog="""
 Examples:
   python -m segmentation_robustness_framework.cli.run_tests
-  python -m segmentation_robustness_framework.cli.run_tests --unit --verbose
+  python -m segmentation_robustness_framework.cli.run_tests --verbose
   python -m segmentation_robustness_framework.cli.run_tests --loaders --adapters
   python -m segmentation_robustness_framework.cli.run_tests --coverage
   python -m segmentation_robustness_framework.cli.run_tests tests/loaders/test_attack_loader.py
         """,
     )
-
-    parser.add_argument("--unit", action="store_true", help="Run unit tests")
-
-    parser.add_argument("--integration", action="store_true", help="Run integration tests")
 
     parser.add_argument("--loaders", action="store_true", help="Run loader tests")
 
@@ -209,9 +164,7 @@ Examples:
 
     parser.add_argument("--metrics", action="store_true", help="Run metric tests")
 
-    parser.add_argument("--engine", action="store_true", help="Run engine tests")
-
-    parser.add_argument("--cli", action="store_true", help="Run CLI tests")
+    parser.add_argument("--pipeline", action="store_true", help="Run pipeline tests")
 
     parser.add_argument("--coverage", action="store_true", help="Run tests with coverage report")
 
@@ -234,12 +187,6 @@ Examples:
         exit_codes.append(run_specific_test(args.test_path, args.verbose))
     else:
         # Run specific test categories if requested
-        if args.unit:
-            exit_codes.append(run_unit_tests(args.verbose))
-
-        if args.integration:
-            exit_codes.append(run_integration_tests(args.verbose))
-
         if args.loaders:
             exit_codes.append(run_loader_tests(args.verbose))
 
@@ -252,25 +199,19 @@ Examples:
         if args.metrics:
             exit_codes.append(run_metric_tests(args.verbose))
 
-        if args.engine:
-            exit_codes.append(run_engine_tests(args.verbose))
-
-        if args.cli:
-            exit_codes.append(run_cli_tests(args.verbose))
+        if args.pipeline:
+            exit_codes.append(run_pipeline_tests(args.verbose))
 
         if args.coverage:
             exit_codes.append(run_with_coverage(args.verbose))
 
         # If no specific category requested, run all tests
         if not any([
-            args.unit,
-            args.integration,
             args.loaders,
             args.adapters,
             args.attacks,
             args.metrics,
-            args.engine,
-            args.cli,
+            args.pipeline,
             args.coverage,
         ]):
             print("Running all tests...")
