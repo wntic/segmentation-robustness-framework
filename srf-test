@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Shortcut script for running segmentation robustness framework tests.
+
+Usage:
+    ./srf-test --unit
+    ./srf-test --integration
+    ./srf-test --loaders
+    ./srf-test --coverage
+"""
+
+from segmentation_robustness_framework.cli.run_tests import main
+
+if __name__ == "__main__":
+    main()

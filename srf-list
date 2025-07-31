@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""Shortcut script for listing segmentation robustness framework components.
+
+Usage:
+    ./srf-list --attacks
+    ./srf-list --models
+    ./srf-list --metrics
+    ./srf-list --datasets
+    ./srf-list --examples
+"""
+
+from segmentation_robustness_framework.cli.list_components import main
+
+if __name__ == "__main__":
+    main()

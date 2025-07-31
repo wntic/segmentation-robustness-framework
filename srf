@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+"""Shortcut script for segmentation robustness framework CLI.
+
+Usage:
+    ./srf run config.yaml
+    ./srf list --attacks
+    ./srf test --unit
+"""
+
+from segmentation_robustness_framework.cli.main import main
+
+if __name__ == "__main__":
+    main()

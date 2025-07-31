@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+"""Shortcut script for running segmentation robustness pipelines.
+
+Usage:
+    ./srf-run config.yaml
+    ./srf-run config.yaml --save --show
+"""
+
+from segmentation_robustness_framework.cli.run_config import main
+
+if __name__ == "__main__":
+    main()

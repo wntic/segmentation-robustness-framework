@@ -6,6 +6,12 @@ license = "MIT"
 authors = ["Egor Vorobyev <voro6yov.egor@gmail.com>"]
 readme = "README.md"
 
+[tool.poetry.scripts]
+srf = "segmentation_robustness_framework.cli.main:main"
+srf-run = "segmentation_robustness_framework.cli.run_config:main"
+srf-list = "segmentation_robustness_framework.cli.list_components:main"
+srf-test = "segmentation_robustness_framework.cli.run_tests:main"
+
 [tool.poetry.dependencies]
 python = "^3.12"
 numpy = "^2.3.0"
