@@ -11,7 +11,7 @@ from pathlib import Path
 
 def install_cli_shortcuts():
     """Install CLI shortcuts globally."""
-    # Get the current directory
+    # Get the current directory (scripts/)
     current_dir = Path(__file__).parent.absolute()
 
     # Define the shortcuts to create
@@ -25,7 +25,7 @@ def install_cli_shortcuts():
 
     if not os.access(local_bin, os.W_OK):
         print("❌ No write permission to /usr/local/bin. Try running with sudo.")
-        print("   sudo python setup-cli.py")
+        print("   sudo python scripts/setup-cli.py")
         return False
 
     print("🔧 Installing CLI shortcuts...")
