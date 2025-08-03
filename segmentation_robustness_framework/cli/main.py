@@ -20,7 +20,7 @@ from .run_tests import main as run_tests_main
 
 
 def main() -> None:
-    """Main CLI entry point."""
+    """Provide the main CLI entry point."""
     parser = argparse.ArgumentParser(
         description="Segmentation Robustness Framework CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,

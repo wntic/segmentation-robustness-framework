@@ -27,11 +27,11 @@ class FGSM(AdversarialAttack):
         model: nn.Module,
         eps: float = 2 / 255,
     ):
-        """Initializes FGSM attack.
+        """Initialize FGSM attack.
 
         Args:
             model (nn.Module): The model that the adversarial attack will be applied to.
-            eps (float, optional): The magnitude of the perturbation. Defaults to 2/255.
+            eps (float): The magnitude of the perturbation. Defaults to 2/255.
         """
         super().__init__(model)
         self.eps = eps

@@ -58,7 +58,7 @@ class SegmentationRobustnessPipeline:
         pin_memory: bool = False,
         persistent_workers: bool = False,
     ):
-        """Initialize the pipeline.
+        """Initialize the segmentation robustness pipeline.
 
         Args:
             model (SegmentationModelProtocol): Segmentation model (adapter-wrapped).

@@ -13,8 +13,7 @@ from segmentation_robustness_framework.loaders.models.torchvision_loader import 
 
 
 def _is_module_installed(module_name: str) -> bool:
-    """
-    Check if a Python module is installed.
+    """Check if a Python module is installed.
 
     Args:
         module_name (str): Name of the module to check.
@@ -68,8 +67,8 @@ class UniversalModelLoader:
                 - `'smp'`: segmentation-models-pytorch models.
                 - `'huggingface'`: HuggingFace Transformers models.
                 - Any string starting with `'custom_'`: Alias for custom user-defined models.
-            model_config (dict[str, Any]): Configuration for model loading
-            weights_path (Optional[str]): Path to weights file (optional)
+            model_config (dict[str, Any]): Configuration for model loading.
+            weights_path (Optional[str]): Path to weights file (optional).
             weight_type (str): Type of weights to load ('full' or 'encoder').
             adapter_cls (Optional[type]): Adapter class to wrap the model. If provided, this
                 adapter will be used instead of the default adapter for the model type.

@@ -12,7 +12,11 @@ class MetricsCollection:
     """
 
     def __init__(self, num_classes: int, ignore_index: int = 255) -> None:
-        """Segmentation metric initialization.
+        """Initialize segmentation metrics.
+
+        Args:
+            num_classes (int): Number of classes for segmentation.
+            ignore_index (int): Index to ignore in evaluation. Defaults to 255.
 
         Raises:
             TypeError: If `num_classes` is not an integer.
@@ -29,7 +33,7 @@ class MetricsCollection:
     def _preprocess_input_data(
         self, targets: torch.Tensor | np.ndarray, preds: torch.Tensor | np.ndarray
     ) -> tuple[torch.Tensor]:
-        """Processes input ground-truth and predicted masks.
+        """Process input ground-truth and predicted masks.
 
         Args:
             targets (torch.Tensor | np.ndarray): Ground-truth segmentation masks.
@@ -64,10 +68,10 @@ class MetricsCollection:
         Args:
             targets (torch.Tensor): Ground-truth segmentation masks.
             preds (torch.Tensor): Predicted segmentation masks.
-            average (str): Type of averaging to use: "macro" or "micro". Defaults to "macro"
+            average (str): Type of averaging to use: "macro" or "micro". Defaults to "macro".
 
         Returns:
-            float: mean IoU.
+            float: Mean IoU.
         """
         assert average in ["macro", "micro"]
 

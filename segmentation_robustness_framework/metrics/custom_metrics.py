@@ -11,7 +11,7 @@ CUSTOM_METRICS_REGISTRY: dict[str, Callable] = {}
 
 
 def register_custom_metric(name: str) -> Callable:
-    """Decorator to register a custom metric function.
+    """Register a custom metric function.
 
     Args:
         name (str): Name to register the metric under.
@@ -67,11 +67,11 @@ def custom_dice_score(targets: Union[torch.Tensor, np.ndarray], preds: Union[tor
     """Custom Dice score implementation.
 
     Args:
-        targets: Ground truth labels
-        preds: Predicted labels
+        targets (Union[torch.Tensor, np.ndarray]): Ground truth labels.
+        preds (Union[torch.Tensor, np.ndarray]): Predicted labels.
 
     Returns:
-        float: Dice score
+        float: Dice score.
     """
     # Convert to numpy if needed
     if isinstance(targets, torch.Tensor):

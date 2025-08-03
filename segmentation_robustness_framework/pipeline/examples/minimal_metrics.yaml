@@ -1,0 +1,32 @@
+# Minimal configuration with specific metric selection
+# This example shows how to select only the metrics you need
+
+model:
+  type: "torchvision"
+  config:
+    name: "deeplabv3_resnet50"
+    num_classes: 21
+    weights: "COCO_WITH_VOC_LABELS_V1"
+
+dataset:
+  name: "voc"
+  root: "data"
+  split: "val"
+  image_shape: [256, 256]
+  download: true
+
+attacks:
+  - name: "fgsm"
+    eps: 0.02
+
+pipeline:
+  batch_size: 4
+  device: "cuda"
+  output_dir: "./runs/minimal_metrics"
+
+metrics:
+  ignore_index: 255
+  # Only compute mean IoU and pixel accuracy - much faster!
+  selected_metrics:
+    - "pixel_accuracy"
+    - {name: "mean_iou", average: "macro"}

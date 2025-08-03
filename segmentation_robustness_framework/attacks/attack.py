@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class AdversarialAttack(ABC):
-    """Base class for adversarial attacks.
+    """Define the base class for adversarial attacks.
 
     Attributes:
         model (nn.Module): Segmentation model to be attacked.
@@ -17,7 +17,7 @@ class AdversarialAttack(ABC):
     """
 
     def __init__(self, model: nn.Module):
-        """Initializes adversarial attack.
+        """Initialize the adversarial attack.
 
         Args:
             model (nn.Module): Segmentation model to be attacked.
@@ -41,7 +41,7 @@ class AdversarialAttack(ABC):
 
     @abstractmethod
     def apply(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """Performs an attack on the segmentation model.
+        """Perform an attack on the segmentation model.
 
         This method should be implemented by subclasses to define the attack logic.
 

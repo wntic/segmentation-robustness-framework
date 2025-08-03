@@ -4,7 +4,7 @@ from segmentation_robustness_framework.adapters.base_protocol import Segmentatio
 
 
 class CustomAdapter(torch.nn.Module, SegmentationModelProtocol):
-    """Template adapter for custom user segmentation models.
+    """Provide a template adapter for custom user segmentation models.
 
     This class demonstrates how to implement an adapter for a user-defined segmentation model.
     Users should modify this template to fit their model's output structure and register it
@@ -16,7 +16,7 @@ class CustomAdapter(torch.nn.Module, SegmentationModelProtocol):
     """
 
     def __init__(self, model: torch.nn.Module, num_classes: int = 1):
-        """Initialize the adapter.
+        """Initialize the custom adapter.
 
         Args:
             model (torch.nn.Module): Custom segmentation model instance.
@@ -51,7 +51,7 @@ class CustomAdapter(torch.nn.Module, SegmentationModelProtocol):
         return torch.argmax(logits, dim=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
+        """Perform forward pass through the model.
 
         Args:
             x (torch.Tensor): Input image tensor of shape (B, C, H, W).
