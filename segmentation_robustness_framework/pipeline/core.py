@@ -21,9 +21,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-STOP_AFTER_N_BATCHES = 1
-
-
 class SegmentationRobustnessPipeline:
     """Pipeline for evaluating segmentation models under adversarial attacks.
 
@@ -104,8 +101,6 @@ class SegmentationRobustnessPipeline:
         if self.auto_resize_masks:
             self._setup_automatic_mask_resizing()
 
-        self.clean_counter = 0
-        self.adv_counter = 0
         self.results = {}
 
     def _generate_run_id(self) -> str:
@@ -528,9 +523,6 @@ class SegmentationRobustnessPipeline:
             if self.device == "cuda":
                 torch.cuda.empty_cache()
 
-            self.clean_counter += 1
-            if self.clean_counter >= STOP_AFTER_N_BATCHES:
-                break
         logger.info("Clean evaluation complete.")
         return all_metrics
 
@@ -570,10 +562,6 @@ class SegmentationRobustnessPipeline:
             del adv_images, adv_preds
             if self.device == "cuda":
                 torch.cuda.empty_cache()
-
-            self.adv_counter += 1
-            if self.adv_counter >= STOP_AFTER_N_BATCHES:
-                break
 
         logger.info(f"Evaluation for attack {attack} complete.")
         return all_metrics
