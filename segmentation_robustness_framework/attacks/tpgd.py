@@ -75,7 +75,7 @@ class TPGD(AdversarialAttack):
         """
         self.model.eval()
 
-        images = images.clone().detach().to(self.device)
+        images = images.clone().detach().to(self.device, non_blocking=True)
 
         with torch.no_grad():
             logit_ori = self.model(images).detach()
@@ -98,5 +98,10 @@ class TPGD(AdversarialAttack):
             adv_images = adv_images.detach() + self.alpha * grad.sign()
             delta = torch.clamp(adv_images - images, min=-self.eps, max=self.eps)
             adv_images = torch.clamp(images + delta, min=0, max=1).detach()
+
+            # Memory cleanup
+            del logit_adv, cost, grad
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
 
         return adv_images

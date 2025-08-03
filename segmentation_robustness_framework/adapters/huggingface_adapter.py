@@ -40,7 +40,35 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
         Returns:
             torch.Tensor: Logits tensor of shape (B, num_classes, H, W).
         """
-        return self.model(pixel_values=x).logits
+        try:
+            device = next(self.model.parameters()).device
+        except StopIteration:
+            device = x.device
+
+        if x.device != device:
+            x = x.to(device, non_blocking=True)
+
+        try:
+            if x.requires_grad:
+                self.model.train()
+                output = self.model(pixel_values=x)
+                logits = output.logits
+                self.model.eval()
+            else:
+                with torch.no_grad():
+                    output = self.model(pixel_values=x)
+                    logits = output.logits
+
+            if logits.device != device:
+                logits = logits.to(device, non_blocking=True)
+
+            return logits
+        except AttributeError as e:
+            raise e
+        except Exception as e:
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
+            raise RuntimeError(f"HuggingFace model forward pass failed: {e}") from e
 
     def predictions(self, x: torch.Tensor) -> torch.Tensor:
         """Return predicted class labels for input images.
@@ -52,7 +80,16 @@ class HuggingFaceAdapter(torch.nn.Module, SegmentationModelProtocol):
             torch.Tensor: Predicted label tensor of shape (B, H, W).
         """
         logits = self.logits(x)
-        return torch.argmax(logits, dim=1)
+        predictions = torch.argmax(logits, dim=1)
+
+        del logits
+        try:
+            if next(self.model.parameters()).device.type == "cuda":
+                torch.cuda.empty_cache()
+        except StopIteration:
+            pass
+
+        return predictions
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass.

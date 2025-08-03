@@ -5,7 +5,7 @@ import torch
 
 @runtime_checkable
 class SegmentationModelProtocol(Protocol):
-    """Protocol for segmentation model adapters.
+    """Define the interface for segmentation model adapters.
 
     All segmentation model adapters must implement this interface, providing methods for
     obtaining logits and predictions, and exposing the number of output classes.

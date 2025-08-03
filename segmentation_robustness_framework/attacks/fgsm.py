@@ -27,11 +27,11 @@ class FGSM(AdversarialAttack):
         model: nn.Module,
         eps: float = 2 / 255,
     ):
-        """Initializes FGSM attack.
+        """Initialize FGSM attack.
 
         Args:
             model (nn.Module): The model that the adversarial attack will be applied to.
-            eps (float, optional): The magnitude of the perturbation. Defaults to 2/255.
+            eps (float): The magnitude of the perturbation. Defaults to 2/255.
         """
         super().__init__(model)
         self.eps = eps
@@ -71,9 +71,9 @@ class FGSM(AdversarialAttack):
         """
         self.model.eval()
 
-        image = image.to(self.device)
+        image = image.to(self.device, non_blocking=True)
         image.requires_grad = True
-        labels = labels.to(self.device)
+        labels = labels.to(self.device, non_blocking=True)
 
         valid_mask = labels >= 0
 
@@ -102,4 +102,10 @@ class FGSM(AdversarialAttack):
 
         adv_image = image + self.eps * image.grad.sign()
         adv_image = torch.clamp(adv_image, 0, 1)
+
+        # Memory cleanup
+        del outputs, outputs_flat, labels_flat, valid_outputs, valid_labels, cost
+        if self.device == "cuda":
+            torch.cuda.empty_cache()
+
         return adv_image

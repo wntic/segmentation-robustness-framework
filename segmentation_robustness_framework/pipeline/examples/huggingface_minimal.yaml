@@ -1,0 +1,43 @@
+# Minimal HuggingFace configuration for testing
+# This configuration uses the most conservative settings to prevent hanging
+
+# Model configuration
+model:
+  type: "huggingface"
+  config:
+    model_name: "nvidia/segformer-b0-finetuned-ade-512-512"  # Smaller model
+    task: "semantic_segmentation"
+    num_labels: 150
+    trust_remote_code: false
+    return_processor: false  # Disable processor to prevent hanging
+
+# Dataset configuration
+dataset:
+  name: "ade20k"
+  root: "data"
+  split: "val"
+  image_shape: [256, 256]  # Smaller images for testing
+  download: true
+
+# Attack configurations - only one attack for testing
+attacks:
+  - name: "fgsm"
+    eps: 0.02
+
+# Pipeline configuration - most conservative settings
+pipeline:
+  batch_size: 1  # Smallest batch size
+  device: "cuda"  # Use CPU to avoid CUDA issues
+  output_dir: "./runs/huggingface_minimal"
+  auto_resize_masks: true
+  output_formats: ["json"]
+  num_workers: 0
+  pin_memory: false
+  persistent_workers: false
+
+# Metrics configuration
+metrics:
+  ignore_index: 255
+  selected_metrics:
+    - "mean_iou"
+    - "pixel_accuracy" 

@@ -98,3 +98,95 @@ def test_getitem_with_transforms(mock_open, temp_dataset_dir, mock_image, mock_m
 def test_dataset_len(temp_dataset_dir):
     dataset = VOCSegmentation(split="train", root=temp_dataset_dir)
     assert len(dataset) == 3
+
+
+def test_path_handling_with_download_true():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root_path = Path(temp_dir)
+
+        voc_dir = root_path / "voc" / "VOCdevkit" / "VOC2012"
+        voc_dir.mkdir(parents=True, exist_ok=True)
+
+        (voc_dir / "JPEGImages").mkdir()
+        (voc_dir / "SegmentationClass").mkdir()
+        (voc_dir / "ImageSets" / "Segmentation").mkdir(parents=True)
+
+        sample_images = ["2007_000032"]
+        for img_name in sample_images:
+            img_path = voc_dir / "JPEGImages" / f"{img_name}.jpg"
+            img_path.touch()
+
+            mask_path = voc_dir / "SegmentationClass" / f"{img_name}.png"
+            mask_path.touch()
+
+        split_file = voc_dir / "ImageSets" / "Segmentation" / "train.txt"
+        split_file.write_text("\n".join(sample_images))
+
+        with patch("segmentation_robustness_framework.datasets.voc.download_dataset") as mock_download:
+            with patch("segmentation_robustness_framework.datasets.voc.extract_dataset") as mock_extract:
+                mock_download.return_value = "/tmp/downloaded_file.tar"
+
+                dataset = VOCSegmentation(split="train", root=root_path, download=True)
+
+                assert dataset.images_dir == voc_dir / "JPEGImages"
+                assert dataset.masks_dir == voc_dir / "SegmentationClass"
+                assert len(dataset.images) == 1
+
+
+def test_path_handling_with_download_false():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        voc2012_dir = Path(temp_dir) / "VOCdevkit" / "VOC2012"
+        voc2012_dir.mkdir(parents=True, exist_ok=True)
+
+        (voc2012_dir / "JPEGImages").mkdir()
+        (voc2012_dir / "SegmentationClass").mkdir()
+        (voc2012_dir / "ImageSets" / "Segmentation").mkdir(parents=True)
+
+        sample_images = ["2007_000032"]
+        for img_name in sample_images:
+            img_path = voc2012_dir / "JPEGImages" / f"{img_name}.jpg"
+            img_path.touch()
+
+            mask_path = voc2012_dir / "SegmentationClass" / f"{img_name}.png"
+            mask_path.touch()
+
+        split_file = voc2012_dir / "ImageSets" / "Segmentation" / "train.txt"
+        split_file.write_text("\n".join(sample_images))
+
+        dataset = VOCSegmentation(split="train", root=voc2012_dir, download=False)
+
+        assert dataset.images_dir == voc2012_dir / "JPEGImages"
+        assert dataset.masks_dir == voc2012_dir / "SegmentationClass"
+        assert len(dataset.images) == 1
+
+
+def test_path_handling_with_download_false_and_none_root():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        cache_dir = Path(temp_dir) / "cache" / "voc"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        (cache_dir / "JPEGImages").mkdir()
+        (cache_dir / "SegmentationClass").mkdir()
+        (cache_dir / "ImageSets" / "Segmentation").mkdir(parents=True)
+
+        sample_images = ["2007_000032"]
+        for img_name in sample_images:
+            img_path = cache_dir / "JPEGImages" / f"{img_name}.jpg"
+            img_path.touch()
+
+            mask_path = cache_dir / "SegmentationClass" / f"{img_name}.png"
+            mask_path.touch()
+
+        split_file = cache_dir / "ImageSets" / "Segmentation" / "train.txt"
+        split_file.write_text("\n".join(sample_images))
+
+        with patch("segmentation_robustness_framework.utils.dataset_utils.get_cache_dir") as mock_cache:
+            mock_cache.return_value = cache_dir
+
+            dataset = VOCSegmentation(split="train", root=None, download=False)
+
+            assert dataset.images_dir == cache_dir / "JPEGImages"
+            assert dataset.masks_dir == cache_dir / "SegmentationClass"
+            assert len(dataset.images) == 1
+
+            mock_cache.assert_called_once_with("voc")

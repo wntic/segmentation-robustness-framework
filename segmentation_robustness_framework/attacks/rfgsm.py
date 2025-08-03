@@ -84,8 +84,8 @@ class RFGSM(AdversarialAttack):
         """
         self.model.eval()
 
-        images = images.to(self.device)
-        labels = labels.to(self.device)
+        images = images.to(self.device, non_blocking=True)
+        labels = labels.to(self.device, non_blocking=True)
 
         if labels.dim() == 4 and labels.shape[1] == 1:
             labels = labels.squeeze(1)  # [B, H, W]
@@ -127,5 +127,10 @@ class RFGSM(AdversarialAttack):
             adv_images = adv_images.detach() + self.alpha * grad.sign()
             delta = torch.clamp(adv_images - images, min=-self.eps, max=self.eps)
             adv_images = torch.clamp(images + delta, min=0, max=1).detach()
+
+            # Memory cleanup
+            del outputs, outputs_flat, labels_flat, valid_outputs, valid_labels, cost, grad
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
 
         return adv_images

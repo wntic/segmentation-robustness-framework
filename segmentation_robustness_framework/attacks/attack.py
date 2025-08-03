@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 class AdversarialAttack(ABC):
-    """Base class for adversarial attacks.
+    """Define the base class for adversarial attacks.
 
     Attributes:
         model (nn.Module): Segmentation model to be attacked.
@@ -17,7 +17,7 @@ class AdversarialAttack(ABC):
     """
 
     def __init__(self, model: nn.Module):
-        """Initializes adversarial attack.
+        """Initialize the adversarial attack.
 
         Args:
             model (nn.Module): Segmentation model to be attacked.
@@ -28,7 +28,7 @@ class AdversarialAttack(ABC):
             self.device = next(model.parameters()).device
         except Exception:
             self.device = torch.device("cpu")
-            logger.warning("Failed to set device.  Using CPU. You can try set_device().")
+            logger.warning("Failed to detect model device. Using CPU. You can try `set_device()`")
 
     def set_device(self, device: str | torch.device) -> None:
         """Set the device for the attack.
@@ -37,10 +37,11 @@ class AdversarialAttack(ABC):
             device (str | torch.device): The device to use for the attack.
         """
         self.device = torch.device(device) if isinstance(device, str) else device
+        logger.info(f"Attack device set to: {self.device}")
 
     @abstractmethod
     def apply(self, image: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """Performs an attack on the segmentation model.
+        """Perform an attack on the segmentation model.
 
         This method should be implemented by subclasses to define the attack logic.
 

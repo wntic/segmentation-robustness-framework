@@ -104,3 +104,83 @@ def test_getitem_with_transforms(mock_open, temp_dataset_dir, mock_image, mock_m
 def test_dataset_len(temp_dataset_dir):
     dataset = ADE20K(split="train", root=temp_dataset_dir)
     assert len(dataset) == 3
+
+
+def test_path_handling_with_download_true():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root_path = Path(temp_dir)
+
+        ade20k_dir = root_path / "ade20k" / "ADEChallengeData2016"
+        ade20k_dir.mkdir(parents=True, exist_ok=True)
+
+        (ade20k_dir / "images" / "training").mkdir(parents=True, exist_ok=True)
+        (ade20k_dir / "annotations" / "training").mkdir(parents=True, exist_ok=True)
+
+        sample_images = ["ADE_train_00000001"]
+        for img_name in sample_images:
+            img_path = ade20k_dir / "images" / "training" / f"{img_name}.jpg"
+            img_path.touch()
+
+            mask_path = ade20k_dir / "annotations" / "training" / f"{img_name}.png"
+            mask_path.touch()
+
+        with patch("segmentation_robustness_framework.datasets.ade20k.download_dataset") as mock_download:
+            with patch("segmentation_robustness_framework.datasets.ade20k.extract_dataset") as mock_extract:
+                mock_download.return_value = "/tmp/downloaded_file.zip"
+
+                dataset = ADE20K(split="train", root=root_path, download=True)
+
+                assert dataset.images_dir == ade20k_dir / "images" / "training"
+                assert dataset.masks_dir == ade20k_dir / "annotations" / "training"
+                assert len(dataset.images) == 1
+
+
+def test_path_handling_with_download_false():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        ade20k_dir = Path(temp_dir) / "ADEChallengeData2016"
+        ade20k_dir.mkdir(parents=True, exist_ok=True)
+
+        (ade20k_dir / "images" / "training").mkdir(parents=True, exist_ok=True)
+        (ade20k_dir / "annotations" / "training").mkdir(parents=True, exist_ok=True)
+
+        sample_images = ["ADE_train_00000001"]
+        for img_name in sample_images:
+            img_path = ade20k_dir / "images" / "training" / f"{img_name}.jpg"
+            img_path.touch()
+
+            mask_path = ade20k_dir / "annotations" / "training" / f"{img_name}.png"
+            mask_path.touch()
+
+        dataset = ADE20K(split="train", root=ade20k_dir, download=False)
+
+        assert dataset.images_dir == ade20k_dir / "images" / "training"
+        assert dataset.masks_dir == ade20k_dir / "annotations" / "training"
+        assert len(dataset.images) == 1
+
+
+def test_path_handling_with_download_false_and_none_root():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        cache_dir = Path(temp_dir) / "cache" / "ade20k"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        (cache_dir / "images" / "training").mkdir(parents=True, exist_ok=True)
+        (cache_dir / "annotations" / "training").mkdir(parents=True, exist_ok=True)
+
+        sample_images = ["ADE_train_00000001"]
+        for img_name in sample_images:
+            img_path = cache_dir / "images" / "training" / f"{img_name}.jpg"
+            img_path.touch()
+
+            mask_path = cache_dir / "annotations" / "training" / f"{img_name}.png"
+            mask_path.touch()
+
+        with patch("segmentation_robustness_framework.utils.dataset_utils.get_cache_dir") as mock_cache:
+            mock_cache.return_value = cache_dir
+
+            dataset = ADE20K(split="train", root=None, download=False)
+
+            assert dataset.images_dir == cache_dir / "images" / "training"
+            assert dataset.masks_dir == cache_dir / "annotations" / "training"
+            assert len(dataset.images) == 1
+
+            mock_cache.assert_called_once_with("ade20k")

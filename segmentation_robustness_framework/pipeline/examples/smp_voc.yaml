@@ -1,0 +1,50 @@
+# Example configuration for SMP model with Stanford Background dataset
+# This configuration demonstrates how to use a segmentation_models_pytorch model
+
+# Model configuration
+model:
+  type: "smp"
+  config:
+    architecture: "unet"
+    encoder_name: "resnet50"
+    encoder_weights: "imagenet"
+    classes: 21
+
+# Dataset configuration
+dataset:
+  name: "voc"
+  split: "val"
+  root: data  # Will use cache directory
+  image_shape: [256, 256]
+  download: true
+
+# Attack configurations
+attacks:
+  - name: "fgsm"
+    eps: 0.02
+  - name: "pgd"
+    eps: 0.02
+    alpha: 0.01
+    iters: 10
+    targeted: false
+
+# Pipeline configuration
+pipeline:
+  batch_size: 8
+  device: "cuda"
+  output_dir: "./runs/smp_voc"
+  auto_resize_masks: true
+  output_formats: ["json", "csv"]
+  num_workers: 2
+  pin_memory: true
+
+# Metrics configuration
+metrics:
+  ignore_index: 255
+  # Select specific metrics to compute
+  selected_metrics:
+    - "mean_iou"
+    - "pixel_accuracy" 
+    - "custom_dice_score"
+    - "weighted_iou"
+    - "f1_score"

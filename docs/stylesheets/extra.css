@@ -1,0 +1,32 @@
+/* Custom styles for Segmentation Robustness Framework documentation */
+
+/* Improve code block readability */
+.md-typeset code {
+    font-size: 0.85em;
+}
+
+/* Better table styling */
+.md-typeset table {
+    font-size: 0.8em;
+}
+
+/* Improve admonition styling */
+.md-typeset .admonition {
+    font-size: 0.9em;
+}
+
+/* Better spacing for lists */
+.md-typeset ul li,
+.md-typeset ol li {
+    margin-bottom: 0.25em;
+}
+
+/* Improve navigation readability */
+.md-nav__link {
+    font-size: 0.9em;
+}
+
+/* Better emoji spacing */
+.md-content emoji {
+    margin: 0 0.1em;
+} 

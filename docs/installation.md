@@ -1,123 +1,246 @@
-# Installation Guide
+# Installation
 
-This guide will help you install the Segmentation Robustness Framework and all its dependencies.
+This guide will help you install the Segmentation Robustness Framework and its dependencies. ⚙️
 
 ## 📋 Prerequisites
 
-### System Requirements
-- **Python**: 3.10 or higher
-- **CUDA**: 11.0 or higher (for GPU acceleration)
-- **Memory**: At least 8GB RAM (16GB+ recommended)
-- **Storage**: At least 5GB free space for datasets
+Before installing the framework, ensure you have:
 
-### Operating Systems
-- ✅ **Linux** (Ubuntu 20.04+, CentOS 7+)
-- ✅ **macOS** (10.15+)
-- ⚠️ **Windows** (WSL2 recommended)
+- **Python 3.12+** (3.12, 3.13)
+- **PyTorch 2.6.0** with CUDA support (for GPU acceleration)
 
-## 🚀 Quick Installation
+## 🚀 Installation Methods
 
-### Option 1: Install from PyPI (Recommended)
+### 📦 Method 1: Install from PyPI (Recommended)
 
 ```bash
-# Install the framework
 pip install segmentation-robustness-framework
-
-# Install optional dependencies for full functionality
-pip install segmentation-robustness-framework[full]
 ```
 
-### Option 2: Install from Source
+### 🔧 Method 2: Install from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/segmentation-robustness-framework
+git clone https://github.com/wntic/segmentation-robustness-framework.git
 cd segmentation-robustness-framework
+
+# Create and activate virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install in development mode
 pip install -e .
-
-# Install development dependencies
-pip install -e ".[dev]"
 ```
+
+### 📚 Method 3: Install with Extra Dependencies
+
+The framework provides several optional dependency groups for different use cases:
+
+#### 🎯 Install All Extras
+
+For full functionality including all optional dependencies:
+
+```bash
+pip install "segmentation-robustness-framework[full]"
+```
+
+#### 🔧 Install Specific Extras
+
+**🏗️ SMP Models Support** - For [Segmentation Models PyTorch](https://github.com/qubvel-org/segmentation_models.pytorch):
+
+```bash
+pip install "segmentation-robustness-framework[smp]"
+```
+
+**🤗 Transformers Support** - For HuggingFace models:
+
+```bash
+pip install "segmentation-robustness-framework[transformers]"
+```
+
+#### 📋 Available Extras
+
+- **`full`** - Includes all optional dependencies (SMP + Transformers)
+- **`smp`** - Segmentation Models PyTorch for additional model architectures
+- **`transformers`** - HuggingFace Transformers for transformer-based models
+
+#### 📚 What Each Extra Includes
+
+**SMP Extra (`[smp]`)**:
+- `segmentation-models-pytorch` - UNet, LinkNet, FPN, PSPNet, and more architectures
+- Additional model backbones and decoder heads
+
+**Transformers Extra (`[transformers]`)**:
+- `transformers` - HuggingFace Transformers library
+- `tokenizers` - Fast tokenization
+- Support for SegFormer, Mask2Former, and other transformer-based models
+
+**All Extra (`[full]`)**:
+- Combines both SMP and Transformers extras
+- Full model support across all available architectures
 
 ## 📦 Dependencies
 
-### Core Dependencies
-The framework automatically installs these core dependencies:
+### 🔧 Core Dependencies
 
-```python
-# Core ML libraries
-torch>=1.12.0
-torchvision>=0.13.0
-numpy>=1.21.0
-Pillow>=8.0.0
+The framework requires these core dependencies:
 
-# Data processing
-pandas>=1.3.0
-tqdm>=4.62.0
+- **PyTorch** (2.6.0) - Deep learning framework
+- **torchvision** (0.21.0) - Computer vision utilities
+- **numpy** (≥2.3.0) - Numerical computing
+- **matplotlib** (≥3.10.0) - Plotting and visualization
+- **PyYAML** (≥6.0.2) - Configuration file parsing
+- **tqdm** (≥4.67.1) - Progress bars
+- **pandas** (≥2.3.1) - Data manipulation
 
-# Visualization
-matplotlib>=3.5.0
+### 📚 Optional Dependencies
 
-# Configuration
-pydantic>=1.9.0
-PyYAML>=6.0
-```
+These are installed automatically with the corresponding extras:
 
-### Optional Dependencies
+- **segmentation-models-pytorch** (≥0.5.0) - Additional segmentation models
+- **transformers** (≥4.53.1) - HuggingFace model support
 
-Install additional dependencies for extended functionality:
+## GPU Support
 
-```bash
-# For HuggingFace models
-pip install transformers>=4.20.0
-
-# For SMP models
-pip install segmentation-models-pytorch>=0.3.0
-
-# For development
-pip install pytest>=7.0.0
-pip install ruff>=0.5.7
-```
-
-### GPU Support
-
-For CUDA acceleration, install PyTorch with CUDA support:
+For GPU acceleration, install PyTorch with CUDA support:
 
 ```bash
 # For CUDA 11.8
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu118
 
 # For CUDA 12.1
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu121
+
+# For CUDA 12.4
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
 
 # For CPU only
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
 ```
 
-## 🔧 Environment Setup
+### Checking GPU Support
 
-### Using Conda (Recommended)
+After installation, verify GPU support:
 
-```bash
-# Create a new conda environment
-conda create -n seg-robust python=3.10
-conda activate seg-robust
-
-# Install PyTorch with CUDA
-conda install pytorch torchvision pytorch-cuda=11.8 -c pytorch -c nvidia
-
-# Install the framework
-pip install segmentation-robustness-framework[full]
+```python
+import torch
+print(f"PyTorch version: {torch.__version__}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"CUDA version: {torch.version.cuda}")
+    print(f"GPU count: {torch.cuda.device_count()}")
+    print(f"Current device: {torch.cuda.current_device()}")
+    print(f"Device name: {torch.cuda.get_device_name()}")
 ```
 
-### Using Virtual Environment
+## Verification
+
+After installation, verify that everything works:
 
 ```bash
-# Create virtual environment
-python -m venv seg-robust-env
-source seg-robust-env/bin/activate  # On Windows: seg-robust-env\Scripts\activate
+# Test basic import
+python -c "import segmentation_robustness_framework; print('Installation successful!')"
+
+# Test CLI
+python -m segmentation_robustness_framework.cli.main --help
+
+# List available components
+python -m segmentation_robustness_framework.cli.main list
+
+# Run tests
+python -m segmentation_robustness_framework.cli.main test
+```
+
+### Quick Test
+
+Run a minimal test to verify the framework works:
+
+```python
+from segmentation_robustness_framework.pipeline import PipelineConfig
+
+# Test configuration
+config = {
+    "model": {
+        "type": "torchvision",
+        "config": {"name": "deeplabv3_resnet50", "num_classes": 21}
+    },
+    "dataset": {
+        "name": "voc",
+        "split": "val",
+        "root": "./data",
+        "image_shape": [256, 256],
+        "download": True
+    },
+    "attacks": [{"name": "fgsm", "eps": 0.02}],
+    "pipeline": {
+        "batch_size": 2,
+        "device": "cpu",
+        "output_dir": "./test_run",
+        "auto_resize_masks": True,
+        "output_formats": ["json"]
+    },
+    "metrics": {
+        "ignore_index": 255,
+        "selected_metrics": ["mean_iou", "pixel_accuracy"]
+    }
+}
+
+# Create pipeline config (this tests the configuration system)
+pipeline_config = PipelineConfig.from_dict(config)
+print("Configuration loaded successfully!")
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Import Errors
+
+If you encounter import errors:
+
+```bash
+# Check if the package is installed
+pip list | grep segmentation-robustness-framework
+
+# Reinstall if needed
+pip uninstall segmentation-robustness-framework
+pip install segmentation-robustness-framework
+```
+
+#### 2. CUDA Issues
+
+If CUDA is not working:
+
+```bash
+# Check CUDA availability
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+
+# Install CPU version if needed
+pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+```
+
+#### 3. Missing Dependencies
+
+If you get missing dependency errors:
+
+```bash
+# Install with extras (recommended)
+pip install "segmentation-robustness-framework[full]"
+
+# Or install from source with all dependencies
+git clone https://github.com/wntic/segmentation-robustness-framework.git
+cd segmentation-robustness-framework
+pip install -e ".[full]"
+```
+
+#### 4. Virtual Environment Issues
+
+If you're having issues with virtual environments:
+
+```bash
+# Create a fresh virtual environment
+python -m venv fresh_env
+source fresh_env/bin/activate  # On Windows: fresh_env\Scripts\activate
 
 # Upgrade pip
 pip install --upgrade pip
@@ -126,117 +249,64 @@ pip install --upgrade pip
 pip install segmentation-robustness-framework[full]
 ```
 
-## ✅ Verification
+#### 5. Permission Issues
 
-### Test Installation
-
-Create a test script to verify your installation:
-
-```python
-# test_installation.py
-import torch
-from segmentation_robustness_framework.engine.pipeline import SegmentationRobustnessPipeline
-from segmentation_robustness_framework.utils.metrics import MetricsCollection
-from segmentation_robustness_framework.attacks import FGSM
-
-print("✅ PyTorch version:", torch.__version__)
-print("✅ CUDA available:", torch.cuda.is_available())
-if torch.cuda.is_available():
-    print("✅ CUDA version:", torch.version.cuda)
-
-# Test framework imports
-print("✅ Framework imported successfully")
-
-# Test basic functionality
-try:
-    metrics = MetricsCollection(num_classes=21)
-    print("✅ Metrics collection created")
-    
-    # Create a simple model for testing
-    model = torch.nn.Conv2d(3, 21, kernel_size=3, padding=1)
-    attack = FGSM(model, eps=2/255)
-    print("✅ Attack created")
-    
-    print("🎉 Installation successful!")
-except Exception as e:
-    print(f"❌ Installation test failed: {e}")
-```
-
-Run the test:
+If you encounter permission errors:
 
 ```bash
-python test_installation.py
+# Use --user flag for user installation
+pip install --user segmentation-robustness-framework
+
+# Or use virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate
+pip install segmentation-robustness-framework
 ```
 
-### Test GPU Support
-
-```python
-# test_gpu.py
-import torch
-from segmentation_robustness_framework.utils.model_utils import get_model_output_size
-
-# Create a simple model
-model = torch.nn.Conv2d(3, 10, kernel_size=3, padding=1)
-
-# Test on CPU
-output_size_cpu = get_model_output_size(model, (3, 224, 224), "cpu")
-print(f"✅ CPU test passed: {output_size_cpu}")
-
-# Test on GPU if available
-if torch.cuda.is_available():
-    output_size_gpu = get_model_output_size(model, (3, 224, 224), "cuda")
-    print(f"✅ GPU test passed: {output_size_gpu}")
-else:
-    print("⚠️  CUDA not available, skipping GPU test")
-```
-
-## 🔄 Updating
-
-### Update the Framework
-
-```bash
-# Update to latest version
-pip install --upgrade segmentation-robustness-framework
-
-# Update from source
-cd segmentation-robustness-framework
-git pull
-pip install -e .
-```
-
-### Update Dependencies
-
-```bash
-# Update all dependencies
-pip install --upgrade -r requirements.txt
-
-# Update specific packages
-pip install --upgrade torch torchvision
-```
-
-## 📚 Next Steps
-
-After successful installation:
-
-1. **Quick Start**: Follow the [Quick Start Guide](quickstart.md)
-2. **Basic Usage**: Read the [User Guide](user_guide.md)
-3. **Examples**: Check the [Practical Example](practical_example.md) and [Custom Datasets Guide](custom_datasets_guide.md)
-
-## 🆘 Getting Help
+### Getting Help
 
 If you encounter issues:
 
-1. **Search existing issues** on GitHub
+1. Check the [troubleshooting section](user_guide.md#troubleshooting) in the User Guide
+2. Search existing [GitHub issues](https://github.com/wntic/segmentation-robustness-framework/issues)
+3. Create a new issue with detailed error information including:
+   - Python version
+   - PyTorch version
+   - Operating system
+   - Full error traceback
 
-2. **Create a new issue** with:
+## Next Steps
 
-   - Your operating system and Python version
-   - Complete error message
-   - Steps to reproduce the issue
-   - Output of `python test_installation.py`
+Once installation is complete:
 
----
+1. [Quick Start Guide](quick_start.md) - Get up and running in 5 minutes
+2. [User Guide](user_guide.md) - Learn how to use the framework
+3. [API Reference](api_reference/index.md) - Explore the complete API
+4. [Basic Examples](examples/basic_examples.md) - Try out the framework with examples
 
-**Ready to get started?** 🚀
+## Development Setup
 
-Proceed to the [Quick Start Guide](quickstart.md) to run your first evaluation! 
+For contributors and developers:
+
+```bash
+# Clone the repository
+git clone https://github.com/wntic/segmentation-robustness-framework.git
+cd segmentation-robustness-framework
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install in development mode with all extras
+pip install -e ".[full]"
+
+# Install development dependencies
+pip install -e ".[full,test,lint,docs]"
+
+# Run tests
+python -m segmentation_robustness_framework.cli.main test
+
+# Build documentation
+mkdocs build
+mkdocs serve
+```

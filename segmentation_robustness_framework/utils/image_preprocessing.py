@@ -50,7 +50,7 @@ def prepare_inputs(sample, maybe_bundle, device="cuda"):
     Args:
         sample (PIL.Image | np.ndarray | torch.Tensor): Input image sample.
         maybe_bundle (HFSegmentationBundle | nn.Module): Model or bundle, possibly with a processor.
-        device (str): Device to move tensors to (default: "cuda").
+        device (str): Device to move tensors to. Defaults to "cuda".
 
     Returns:
         dict[str, torch.Tensor]: Dictionary of model input tensors.

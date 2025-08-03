@@ -1,0 +1,49 @@
+# Example configuration for Torchvision model with VOC dataset
+# This configuration demonstrates how to use a pre-trained Torchvision segmentation model
+
+# Model configuration
+model:
+  type: "torchvision"
+  config:
+    name: "deeplabv3_resnet50"
+    num_classes: 21
+    weights: "COCO_WITH_VOC_LABELS_V1"  # Use pre-trained weights
+  weights_path: null
+  weight_type: "full"
+  adapter: null
+
+# Dataset configuration
+dataset:
+  name: "ade20k"
+  split: "val"
+  root: data  # Will use cache directory
+  image_shape: [256, 256]
+  download: true
+
+# Attack configurations
+attacks:
+  - name: "fgsm"
+    eps: 0.02
+
+# Pipeline configuration
+pipeline:
+  batch_size: 2
+  device: "cuda"
+  output_dir: "./runs/torchvision_ade20k"
+  auto_resize_masks: true
+  output_formats: ["json", "csv"]
+
+# Metrics configuration
+metrics:
+  ignore_index: 255
+  # Select specific metrics to compute (optional - if not specified, all metrics are computed)
+  selected_metrics:
+    - "mean_iou"  # Will use macro averaging by default
+    - "precision"
+    - "recall"
+    - "pixel_accuracy"
+    - {"name": "dice_score", "average": "micro"}  # Specify averaging strategy
+    - "custom_dice_score"
+    - "weighted_iou"
+    - "f1_score"
+  # include_pixel_accuracy: true  # Only used when selected_metrics is not specified

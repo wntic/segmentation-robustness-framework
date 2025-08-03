@@ -1,0 +1,34 @@
+# Example configuration with metric precision control
+# This demonstrates how to control the number of decimal places in metric outputs
+
+model:
+  type: "torchvision"
+  config:
+    name: "deeplabv3_resnet50"
+    num_classes: 21
+    weights: "COCO_WITH_VOC_LABELS_V1"
+
+dataset:
+  name: "voc"
+  root: "data"
+  split: "val"
+  image_shape: [256, 256]
+  download: true
+
+attacks:
+  - name: "fgsm"
+    eps: 0.02
+
+pipeline:
+  batch_size: 4
+  device: "cuda"
+  output_dir: "./runs/metric_precision_example"
+  metric_precision: 2  # Only 2 decimal places for cleaner output
+
+metrics:
+  ignore_index: 255
+  selected_metrics:
+    - "mean_iou"
+    - "pixel_accuracy"
+    - "custom_dice_score"
+    - "weighted_iou" 

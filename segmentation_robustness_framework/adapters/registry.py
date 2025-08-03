@@ -4,7 +4,7 @@ ADAPTER_REGISTRY: dict[str, type] = {}
 
 
 def register_adapter(name: str) -> Callable:
-    """Decorator to register a segmentation model adapter class.
+    """Register a segmentation model adapter class.
 
     Args:
         name (str): Name to register the adapter under.
@@ -29,7 +29,7 @@ def register_adapter(name: str) -> Callable:
 
 
 def get_adapter(name: str) -> type:
-    """Retrieve a registered adapter class by name.
+    """Get a registered adapter class by name.
 
     Args:
         name (str): Name of the registered adapter.

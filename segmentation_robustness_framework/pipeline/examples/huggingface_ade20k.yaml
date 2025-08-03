@@ -1,0 +1,59 @@
+# Example configuration for HuggingFace model with ADE20K dataset
+# This configuration demonstrates how to use a pre-trained HuggingFace segmentation model
+# with safe settings to prevent hanging issues
+
+# Model configuration
+model:
+  type: "huggingface"
+  config:
+    model_name: "nvidia/segformer-b2-finetuned-ade-512-512"
+    task: "semantic_segmentation"
+    num_labels: 150
+    trust_remote_code: false
+    return_processor: false  # Disable processor to prevent hanging
+
+# Dataset configuration
+dataset:
+  name: "ade20k"
+  root: "data"  # Will use cache directory
+  split: "val"
+  image_shape: [128, 128]
+  download: true
+
+# Attack configurations - start with just one attack for testing
+attacks:
+  - name: "fgsm"
+    eps: 0.02
+  # Uncomment these attacks once FGSM works
+  # - name: "pgd"
+  #   eps: 0.02
+  #   alpha: 0.01
+  #   iters: 10
+  #   targeted: false
+  # - name: "rfgsm"
+  #   eps: 0.02
+  #   alpha: 0.01
+  #   iters: 10
+  #   targeted: false
+
+# Pipeline configuration - optimized for HuggingFace models
+pipeline:
+  batch_size: 1  # Start with batch size 1 to prevent hanging
+  device: "cuda"
+  output_dir: "./runs/huggingface_ade20k"
+  auto_resize_masks: true
+  output_formats: ["json", "csv"]
+  num_workers: 0  # Single process to avoid multiprocessing issues
+  pin_memory: false  # Disable pin memory to prevent memory issues
+  persistent_workers: false  # Disable persistent workers for stability
+  timeout_seconds: 300  # 5 minutes timeout for operations
+
+# Metrics configuration
+metrics:
+  ignore_index: 255
+  # Select specific metrics to compute
+  selected_metrics:
+    - "mean_iou"
+    - "precision"
+    - "recall"
+    - "pixel_accuracy" 
