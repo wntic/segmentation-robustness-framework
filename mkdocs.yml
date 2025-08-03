@@ -1,17 +1,64 @@
 site_url: https://segmentation-robustness-framework.readthedocs.io/latest/
 site_name: Segmentation Robustness Framework
+site_description: A comprehensive framework for evaluating segmentation model robustness against adversarial attacks
+site_author: Segmentation Robustness Framework Team
+
+
+repo_url: https://github.com/wntic/segmentation-robustness-framework
+repo_name: segmentation-robustness-framework
+
+edit_uri: edit/main/docs/
+
 theme:
   name: material
   features:
     - content.code.copy
+    - content.code.select
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - navigation.tracking
+    - navigation.sidebar
+    - search.highlight
+    - search.share
+  palette:
+    - media: "(prefers-color-scheme)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
 
 plugins:
   - search
+  - autorefs
   - mkdocstrings:
       handlers:
         python:
           options:
             docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_category_heading: true
+            show_signature_annotations: true
+            show_bases: true
+            heading_level: 1
+            members_order: source
+            merge_init_into_class: true
+            show_submodules: true
+            filters: ["!^_"]
+            preload_modules: []
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -21,23 +68,66 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.arithmatex:
+      generic: true
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/wntic/segmentation-robustness-framework
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
   - Getting Started:
     - Installation: installation.md
-    - Quick Start: quickstart.md
+    - Quick Start: quick_start.md
     - User Guide: user_guide.md
   - Core Concepts:
-    - Framework Concepts: concepts.md
-    - Custom Components: custom_components.md
-  # - Advanced Usage:
-  #   - Advanced Usage: advanced_usage.md
-  #   - API Reference: api_reference.md
-  # - Reference:
-  #   - Model Loaders: model_loaders.md
-  #   - Configuration Guide: configuration_guide.md
-  #   - Universal Configuration: universal_configuration_guide.md
-  #   - Custom Datasets: custom_datasets_guide.md
-  #   - Data Formats: data_formats_reference.md
-  #   - Practical Example: practical_example.md
+    - Framework Concepts: core_concepts.md
+  - Configuration:
+    - Configuration Guide: configuration_guide.md
+  - API Reference:
+    - Overview: api_reference/index.md
+    - Pipeline: api_reference/pipeline.md
+    - Model Loaders: api_reference/model_loaders.md
+    - Adapters: api_reference/adapters.md
+    - Attacks: api_reference/attacks.md
+    - Datasets: api_reference/datasets.md
+    - Metrics: api_reference/metrics.md
+    - CLI: api_reference/cli.md
+  - Examples:
+    - Basic Examples: examples/basic_examples.md
+    - Advanced Examples: examples/advanced_examples.md
+  - Contributing:
+    - Contributing: contributing/index.md
+    - Development Setup: contributing/development_setup.md
+    - Code Style: contributing/code_style.md
+    - Testing Guide: contributing/testing_guide.md
+    - Documentation Guide: contributing/documentation_guide.md
+    - Release Guide: contributing/release_guide.md
