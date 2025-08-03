@@ -257,6 +257,7 @@ We welcome contributions! Please see our [Contributing Guide](https://segmentati
 ## 📞 **Support**
 
 - 📖 **Documentation**: Browse the guides above
+- 📋 **Changelog**: See what's new in [CHANGELOG.md](CHANGELOG.md)
 - 🐛 **Issues**: Report bugs and request features on [GitHub](https://github.com/wntic/segmentation-robustness-framework/issues)
 - 💬 **Discussions**: Join our community discussions
 - 📧 **Contact**: Reach out to the maintainers
