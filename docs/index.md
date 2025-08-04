@@ -132,5 +132,5 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 <div align="center">
   <strong>Ready to evaluate your segmentation models?</strong>
   <br><br>
-  <a href="quick_start.md" class="md-button md-button--primary">Get Started Now &rarr;</a>
+  <a href="quick_start" class="md-button md-button--primary">Get Started Now &rarr;</a>
 </div>
