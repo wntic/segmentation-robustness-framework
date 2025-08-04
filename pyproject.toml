@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "segmentation-robustness-framework"
-version = "0.3.0"
+version = "0.3.1"
 description = "Segmentation Robustness Framework - a powerful toolkit for evaluating the robustness of semantic segmentation models against adversarial attacks."
 license = "MIT"
 authors = ["Egor Vorobyev <voro6yov.egor@gmail.com>"]
