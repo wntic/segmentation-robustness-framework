@@ -93,25 +93,25 @@ pipeline.print_summary()
 ## 📚 Documentation Structure
 
 ### 🚀 **Getting Started**
-- **[Installation Guide](https://segmentation-robustness-framework.readthedocs.io/latest/installation.md)** - Setup and installation instructions
-- **[Quick Start Guide](https://segmentation-robustness-framework.readthedocs.io/latest/quick_start.html)** - Your first evaluation in 5 minutes
-- **[Core Concepts](https://segmentation-robustness-framework.readthedocs.io/latest/core_concepts.html)** - Understanding the framework architecture
+- **[Installation Guide](https://segmentation-robustness-framework.readthedocs.io/latest/installation)** - Setup and installation instructions
+- **[Quick Start Guide](https://segmentation-robustness-framework.readthedocs.io/latest/quick_start)** - Your first evaluation in 5 minutes
+- **[Core Concepts](https://segmentation-robustness-framework.readthedocs.io/latest/core_concepts)** - Understanding the framework architecture
 
 ### 📖 **User Guides**
-- **[User Guide](https://segmentation-robustness-framework.readthedocs.io/latest/user_guide.html)** - Complete guide for using the framework
-- **[Configuration Guide](https://segmentation-robustness-framework.readthedocs.io/latest/configuration_guide.html)** - How to write configuration files
-- **[Examples](https://segmentation-robustness-framework.readthedocs.io/latest/examples/basic_examples.html)** - Real-world examples and use cases
+- **[User Guide](https://segmentation-robustness-framework.readthedocs.io/latest/user_guide)** - Complete guide for using the framework
+- **[Configuration Guide](https://segmentation-robustness-framework.readthedocs.io/latest/configuration_guide)** - How to write configuration files
+- **[Examples](https://segmentation-robustness-framework.readthedocs.io/latest/examples/basic_examples)** - Real-world examples and use cases
 
 ### 🔧 **Technical Reference**
-- **[API Reference](https://segmentation-robustness-framework.readthedocs.io/latest/api_reference/index.html)** - Complete API documentation
-- **[Contributing Guide](https://segmentation-robustness-framework.readthedocs.io/latest/contributing/index.html)** - How to contribute to the project
+- **[API Reference](https://segmentation-robustness-framework.readthedocs.io/latest/api_reference)** - Complete API documentation
+- **[Contributing Guide](https://segmentation-robustness-framework.readthedocs.io/latest/contributing)** - How to contribute to the project
 
 ### 🎓 **Learning Path**
 
-1. **Start Here**: [Installation Guide](https://segmentation-robustness-framework.readthedocs.io/latest/installation.html) → [Quick Start](https://segmentation-robustness-framework.readthedocs.io/latest/quick_start.html)
-2. **Basic Usage**: [User Guide](https://segmentation-robustness-framework.readthedocs.io/latest/user_guide.html)
-3. **Configuration**: [Configuration Guide](https://segmentation-robustness-framework.readthedocs.io/latest/configuration_guide.html)
-4. **Advanced Usage**: [Advanced Examples](https://segmentation-robustness-framework.readthedocs.io/latest/examples/advanced_examples.html)
+1. **Start Here**: [Installation Guide](https://segmentation-robustness-framework.readthedocs.io/latest/installation) → [Quick Start](https://segmentation-robustness-framework.readthedocs.io/latest/quick_start)
+2. **Basic Usage**: [User Guide](https://segmentation-robustness-framework.readthedocs.io/latest/user_guide)
+3. **Configuration**: [Configuration Guide](https://segmentation-robustness-framework.readthedocs.io/latest/configuration_guide)
+4. **Advanced Usage**: [Advanced Examples](https://segmentation-robustness-framework.readthedocs.io/latest/examples/advanced_examples)
 
 ## 🎯 **Key Features**
 
@@ -246,7 +246,7 @@ The framework follows a modular architecture with clear separation of concerns:
 
 ## 🤝 **Contributing**
 
-We welcome contributions! Please see our [Contributing Guide](https://segmentation-robustness-framework.readthedocs.io/latest/contributing/index.html) for details on:
+We welcome contributions! Please see our [Contributing Guide](https://segmentation-robustness-framework.readthedocs.io/latest/contributing) for details on:
 
 - 🐛 **Bug Reports** - Help us identify and fix issues
 - 💡 **Feature Requests** - Suggest new features or improvements
@@ -270,7 +270,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Ready to evaluate your segmentation models?** 🚀
 
-Start with our [Quick Start Guide](https://segmentation-robustness-framework.readthedocs.io/latest/quick_start.html) and have your first evaluation running in minutes!
+Start with our [Quick Start Guide](https://segmentation-robustness-framework.readthedocs.io/latest/quick_start) and have your first evaluation running in minutes!
 
 **🎯 Key Benefits:**
 - ⚡ **Fast Setup** - Get running in 5 minutes
